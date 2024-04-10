@@ -1,0 +1,276 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+
+}
+
+body {
+    height: 100vh;
+    width: 100vw;
+    background: rgb(131, 58, 180);
+    background: linear-gradient(90deg, rgba(131, 58, 180, 1) 0%, rgba(253, 29, 29, 1) 50%, rgba(252, 176, 69, 1) 100%);
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.wrapper{
+    width: 90%;
+    background-color: white;
+    border-radius: 0.6em;
+    padding: 3%;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.5s ease-in;
+    position: relative;
+
+
+}
+
+.container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #000000;
+}
+
+
+#addButton {
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+.underline{
+    width: 100%;
+    margin-top: 1%;
+    border-bottom: 1px solid black;
+    margin-bottom: 1%;
+
+}
+
+#addButton:hover {
+    background-color: #003a80;
+}
+
+.element-list{
+    width: 70%;
+    height: 100%;
+}
+
+.element {
+    display: flex;
+    align-items: center;
+    margin-top: 1%;
+    box-sizing: border-box;
+}
+
+.element img {
+    max-width: 5%;
+    width: auto;
+}
+
+.element button {
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-left: auto;
+    cursor: pointer;
+}
+
+.element button.edit-button {
+    background-color: #5bc0de;
+    margin-right: 10px;
+}
+
+.element button:hover {
+    background-color: #c9302c;
+}
+
+.element button.edit-button:hover {
+    background-color: #2e6da4;
+}
+
+.captchta-canvas {
+    width: fit-content;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+.cube {
+    cursor: crosshair;
+}
+
+.cube:hover {
+    background-color: red;
+    opacity: 0.5;
+}
+
+.cube.selected {
+    background-color: yellow;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #000000;
+}
+
+.canvas {
+    display: grid;
+    grid-template-columns: repeat(31, 1em);
+    grid-template-rows: repeat(31, 1em);
+    box-sizing: border-box;
+    margin-bottom: 20px;
+    border: 3px solid black;
+    border-radius: 5px;
+    max-width: 100%;
+    width: fit-content;
+    background-position: center;
+    background-size: 50%;
+    background-repeat: no-repeat;
+
+}
+
+.canvas>* {
+    border: 1px black;
+    box-sizing: border-box;
+}
+
+.controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.submit-button {
+    width: 80%;
+}
+
+.reset-button {
+    width: 20%;
+}
+
+
+
+button:hover {
+    background-color: #0056b3;
+}
+
+img {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+}
+
+.upload-area {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+
+}
+
+
+.container-write {
+    display: flex;
+    height: 50%;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: white;
+    border-radius: 0.6em;
+    padding: 3%;
+    animation: fadeIn 0.5s ease-in;
+}
+
+
+.container-content {
+    background-color: white;
+    border-radius: 0.6em;
+    padding: 3%;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.5s ease-in;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    border: none !important;
+    width: 30%;
+    height: 70%;
+}
+
+.parent-container{
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    flex-direction: column;
+   
+}
+
+.captcha-wrapper{
+    width: 100%;
+    height: 90%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.crud-controls{
+    width: 100%;
+    height: 10%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
