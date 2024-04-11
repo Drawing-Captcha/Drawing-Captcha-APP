@@ -1,26 +1,15 @@
-const serverPull = "/getElements";
-const container = document.querySelector(".container")
-const contentContainer = document.querySelector(".content-container")
-const parentContainer = document.querySelector(".parent-container")
-const wrapper = document.querySelector(".wrapper")
-const canvas = document.querySelectorAll(".canvas")
-const cubeTrue = document.querySelectorAll(".cube-true")
-const cubeMin = document.querySelectorAll(".cube-min")
-const cubeMax = document.querySelectorAll(".cube-max")
-const cubeID = document.querySelectorAll("#id")
+document.addEventListener("DOMContentLoaded", initialize);
 let tmpPool = [];
 let pool;
 var isDelete;
 
-document.addEventListener("DOMContentLoaded", initialize);
-
 async function initialize() {
-    await getPool();
+    await getDeletedBin();
 }
 
-async function getPool() {
+async function getDeletedBin() {
     try {
-        const response = await fetch(`${serverPull}`, {
+        const response = await fetch("/deletedArchive/fetch", {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -30,11 +19,11 @@ async function getPool() {
 
         if (response.ok) {
             const data = await response.json();
-            const pool = data.pool;
+            const deletedBin = data.deletedBin;
 
             const wrapper = document.querySelector(".stacked-list1_list-wrapper");
 
-            pool.forEach(elementData => {
+            deletedBin.forEach(elementData => {
                 const item = document.createElement("div");
                 item.classList.add("stacked-list1_item");
             
@@ -79,13 +68,13 @@ async function getPool() {
                 deleteButton.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V19C19 19.5304 18.7893 20.0391 18.4142 20.4142C18.0391 20.7893 17.5304 21 17 21H7C6.46957 21 5.96086 20.7893 5.58579 20.4142C5.21071 20.0391 5 19.5304 5 19V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
                 deleteButton.addEventListener("click", () => deleteComponent(elementData));
             
-                const editButton = document.createElement("button");
-                editButton.classList.add("iconButton", "is-icon-only");
-                editButton.innerHTML = '<svg width="fit-content" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 4L20.327 4.673L19 3.345L19.673 2.672C19.875 2.471 19.875 2.128 19.673 1.927L18.073 0.327C17.872 0.126 17.529 0.126 17.328 0.327L16.655 1C15.788 1.867 14.212 1.867 13.345 1L3 11.345V15H6.655L16 5.655L17.345 4.309C17.546 4.108 17.889 4.108 18.09 4.309L19.691 5.909C19.892 6.11 19.892 6.453 19.691 6.654L19 7.345L21 5.345L21 4ZM3 17H4V20H21V19H5V17H3V17Z" fill="currentColor"/></svg>';
-                editButton.addEventListener("click", () => getComponent(elementData));
+                const returnButton = document.createElement("button");
+                returnButton.classList.add("iconButton", "is-icon-only");
+                returnButton.innerHTML = '<svg fill="none" height="24" viewBox="0 0 48 48" width="24" xmlns="http://www.w3.org/2000/svg"><path d="m0 0h48v48h-48z" fill="#fff" fill-opacity=".01"/><g stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="m12.3638 8-6.36399 6.364 6.36399 6.3639"/><path d="m6 14.364h22.6722c6.8848 0 12.54 5.4388 12.8083 12.3184.2836 7.2696-5.5331 13.3176-12.8083 13.3176h-16.6722"/></g></svg>';
+                returnButton.addEventListener("click", () => getBack(elementData));
             
                 droppDownToggle.appendChild(deleteButton);
-                droppDownToggle.appendChild(editButton);
+                droppDownToggle.appendChild(returnButton);
                 dropdownComponent.appendChild(droppDownToggle);
                 contentRight.appendChild(dropdownComponent);
                 item.appendChild(avatar);
@@ -102,6 +91,7 @@ async function getPool() {
     }
 }
 
+
 function deleteComponent(e) {
     pool = e
     tmpPool.push(pool)
@@ -109,8 +99,16 @@ function deleteComponent(e) {
     pushToServer()
 }
 
+function getBack(e){
+    pool = e
+    tmpPool.push(pool)
+    isDelete = false
+    pushToServer()
+
+}
+
 function pushToServer() {
-    fetch("/crud", {
+    fetch("/dashboard/deletedArchive", {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'

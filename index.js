@@ -18,18 +18,43 @@ const cookieParser = require('cookie-parser');
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 
 let pool;
+let deletedBin;
 const captchaSession = new Map();
 
 
 async function initializePool() {
     try {
         const contents = await fsPromises.readFile("./src/pool.txt", 'utf-8');
-        pool = JSON.parse(contents);
+        if (contents.trim() === "") {
+            console.log("Die Datei 'pool.txt' ist leer.");
+            pool = [];
+        } else {
+            pool = JSON.parse(contents);
+        }
     } catch (err) {
-        console.log(err);
+        console.log("Fehler beim Parsen der JSON-Daten:", err);
         pool = [];
     }
 }
+
+
+async function initializeBin() {
+    try {
+        const contents = await fsPromises.readFile("./src/deletedBin.txt", 'utf-8');
+        if (contents.trim() === "") {
+            console.log("Die Datei 'deletedBin.txt' ist leer.");
+            deletedBin = [];
+        } else {
+            deletedBin = JSON.parse(contents);
+        }
+    } catch (err) {
+        console.log("Fehler beim Parsen der JSON-Daten:", err);
+        deletedBin = [];
+    }
+}
+initializeBin().then(() => {
+    console.log("bin initialized")
+});
 initializePool().then(() => {
     console.log("pool initialized")
 });
@@ -47,42 +72,42 @@ const csrfProtection = csrf({ cookie: true });
 const mongoURI = "mongodb://localhost:3000/sessions"
 
 mongoose.connect(mongoURI)
-.then(() => {
-    console.log("MongoDB connected");
-}).catch(err => console.error("MongoDB connection error:", err));
+    .then(() => {
+        console.log("MongoDB connected");
+    }).catch(err => console.error("MongoDB connection error:", err));
 
 
-const store = new MongoDBSession ({
+const store = new MongoDBSession({
     uri: mongoURI,
     collection: "mySessions",
 })
 
 app.set("view engine", "ejs")
-app.use(express.urlencoded({ extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     secret: "nmhSe2OEOcVNBYIe7E0h",
     resave: false,
     saveUninitialized: false,
-    store: store, 
+    store: store,
 }));
 
 
 const isAuth = (req, res, next) => {
-    if(req.session.isAuth){
+    if (req.session.isAuth) {
         next()
     }
-    else{
+    else {
         res.redirect("/login")
     }
 }
 
 app.get("/", (req, res) => {
     res.render("landing");
-}); 
+});
 
 app.get('/login', generateCSRFToken, (req, res) => {
-    res.render('login', { message: req.session.message, csrfToken: req.session.csrfToken  });
+    res.render('login', { message: req.session.message, csrfToken: req.session.csrfToken });
 });
 
 app.post('/reload', generateCSRFToken, (req, res) => {
@@ -98,23 +123,83 @@ app.get('/getElements', validateCSRFToken, (req, res) => {
 
 });
 
-app.post("/login", validateCSRFToken, async (req, res) =>{
-    const {email, password} = req.body;
-    let user = await UserModel.findOne({email});
+app.put("/crud", validateCSRFToken, (req, res) => {
+    initializePool();
+    initializeBin();
+    let deletedObject;
+    let tmpPool = req.body.tmpPool;
+    let index
+    console.log(tmpPool)
+    if (Array.isArray(tmpPool)) {
+        tmpPool.map(x => {
+            index = pool.findIndex(b => b.ID === x.ID);
+        });
 
-    if(!user){
+        if (req.body.isDelete) {
+            deletedObject = pool.splice(index, 1)[0];
+            console.log("deleted object: ", deletedObject)
+            console.log("current pool: ", pool)
+            deletedBin.push(deletedObject)
+
+            fs.writeFile('./src/deletedBin.txt', JSON.stringify(deletedBin, null, 2), 'utf-8', (err) => {
+                if (err) {
+                    console.error('Fehler beim Speichern der JSON-Datei:', err);
+                } else {
+                    console.log('Daten wurden zu deletedBin.txt hinzugefügt.');
+                }
+            });
+
+            fs.writeFile('./src/pool.txt', JSON.stringify(pool, null, 2), 'utf-8', (err) => {
+                if (err) {
+                    console.error('Fehler beim Speichern der JSON-Datei:', err);
+                } else {
+                    console.log('Daten wurden zu pool.txt hinzugefügt.');
+                }
+            });
+            initializePool();
+            initializeBin();
+
+        } else {
+            pool[index].ValidateF = tmpPool[0].ValidateF
+            pool[index].validateMinCubes = tmpPool[0].validateMinCubes
+            pool[index].validateMaxCubes = tmpPool[0].validateMaxCubes
+            pool[index].MaxTolerance = (tmpPool[0].validateMaxCubes.length * 1) / tmpPool[0].ValidateF.length;
+            pool[index].MinTolerance = (tmpPool[0].validateMinCubes.length * 1) / tmpPool[0].ValidateF.length;
+
+        }
+
+
+
+
+        isGood = true;
+    } else {
+        console.log("Problem mit dem Array")
+    }
+
+
+
+
+    res.json({ isGood })
+
+
+})
+app.post("/login", validateCSRFToken, async (req, res) => {
+    const { email, password } = req.body;
+    let user = await UserModel.findOne({ email });
+
+    if (!user) {
         req.session.message = "Benutzername oder Passwort falsch.";
         return res.redirect("/login");
     }
 
     const isMatch = await bcrypt.compare(password, user.password)
 
-    if(!isMatch){
+    if (!isMatch) {
         req.session.message = "Benutzername oder Passwort falsch.";
         return res.redirect("/login");
     }
     req.session.message = "";
-    
+
     req.session.isAuth = true
 
     res.redirect("/dashboard")
@@ -122,12 +207,12 @@ app.post("/login", validateCSRFToken, async (req, res) =>{
 
 app.get("/register", (req, res) => {
     res.render("register");
-}); 
-app.post("/register", async (req, res) =>{
-    const {username, email, password} = req.body;
-    let user = await UserModel.findOne({email})
+});
+app.post("/register", async (req, res) => {
+    const { username, email, password } = req.body;
+    let user = await UserModel.findOne({ email })
 
-    if(user){
+    if (user) {
         return res.redirect('register');
     }
 
@@ -138,23 +223,91 @@ app.post("/register", async (req, res) =>{
         email,
         password: hashedPassword
     })
-    
+
     await user.save();
 
     res.redirect("/login");
 
 });
 
-app.get("/dashboard", isAuth, (req, res) => { 
+app.get("/dashboard", isAuth, validateCSRFToken, (req, res) => {
     res.render("dashboard");
 })
 
 app.post("/logout", (req, res) => {
     req.session.destroy((err) => {
-        if(err) throw err;
+        if (err) throw err;
         res.redirect("/")
     })
-}) 
+})
+
+app.get('/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
+    res.render("deletedArchive")
+})
+
+app.put('/dashboard/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
+    initializePool();
+    initializeBin();
+    let deletedObject;
+    let tmpPool = req.body.tmpPool;
+    let index
+    console.log(tmpPool)
+    if (Array.isArray(tmpPool)) {
+        tmpPool.map(x => {
+            index = pool.findIndex(b => b.ID === x.ID);
+        });
+
+        if (req.body.isDelete) {
+            deletedObject = deletedBin.splice(index, 1)[0];
+            fs.writeFile('./src/deletedBin.txt', JSON.stringify(deletedBin, null, 2), 'utf-8', (err) => {
+                if (err) {
+                    console.error('Fehler beim Speichern der JSON-Datei:', err);
+                } else {
+                    console.log('Daten wurden zu deletedBin.txt hinzugefügt.');
+                }
+            });
+            initializeBin();
+
+        } else {
+            deletedObject = deletedBin.splice(index, 1)[0];
+            pool.push(deletedObject)
+
+            fs.writeFile('./src/pool.txt', JSON.stringify(pool, null, 2), 'utf-8', (err) => {
+                if (err) {
+                    console.error('Fehler beim Speichern der JSON-Datei:', err);
+                } else {
+                    console.log('Daten wurden zu pool.txt hinzugefügt.');
+                }
+            });
+            fs.writeFile('./src/deletedBin.txt', JSON.stringify(deletedBin, null, 2), 'utf-8', (err) => {
+                if (err) {
+                    console.error('Fehler beim Speichern der JSON-Datei:', err);
+                } else {
+                    console.log('Daten wurden zu deletedBin.txt hinzugefügt.');
+                }
+            });
+            initializePool();
+            initializeBin();
+        }
+
+        isGood = true;
+    } else {
+        console.log("Problem mit dem Array")
+    }
+
+
+
+
+    res.json({ isGood })
+})
+
+app.get('/deletedArchive/fetch', isAuth, validateCSRFToken, (req, res) => {
+    initializeBin();
+    if (deletedBin) {
+        res.json({ deletedBin });
+    }
+    else ("deletedBin nicht definiert")
+});
 
 app.get('/getImage', validateCSRFToken, (req, res) => {
 
@@ -244,7 +397,7 @@ app.post('/checkCubes', (req, res) => {
 
         const isValid = successfullySelectedFields >= expectedFieldsMinTolerance && selectedFields.length <= selectedFieldsMaxTolerance;
 
-        console.log({   
+        console.log({
             isValid,
             expectedFields: client.expectedFields,
             successfullySelectedFields,
@@ -277,8 +430,8 @@ async function deleteFile(filePath) {
             console.log(`Die Datei ${filePath} existiert nicht.`);
             return;
         }
-      
-        await fs.unlink(filePath, () => {});
+
+        await fs.unlink(filePath, () => { });
         console.log(`${filePath} erfolgreich gelöscht!`);
     } catch (err) {
         console.error(`Fehler beim Löschen der Datei ${filePath}: ${err}`);
