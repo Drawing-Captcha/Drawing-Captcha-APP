@@ -761,6 +761,17 @@ figcaption {
   text-decoration: none;
 }
 
+.iconButton .is-icon-only{
+  border: none;
+  background-color: none;
+  color: black;
+  text-align: center;
+  padding: .75rem 1.5rem;
+  text-decoration: none;
+}
+
+.button
+
 .button.is-link {
   color: var(--base-color-neutral--black);
   background-color: rgba(0, 0, 0, 0);
