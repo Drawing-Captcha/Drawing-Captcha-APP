@@ -21,7 +21,7 @@ let pool;
 let deletedBin;
 const captchaSession = new Map();
 
-
+  
 async function initializePool() {
     try {
         const contents = await fsPromises.readFile("./src/pool.txt", 'utf-8');
@@ -232,6 +232,10 @@ app.post("/register", async (req, res) => {
 
 app.get("/dashboard", isAuth, validateCSRFToken, (req, res) => {
     res.render("dashboard");
+})
+
+app.get("/createItem", isAuth, validateCSRFToken, (req, res) => {
+    res.render("createItem");
 })
 
 app.post("/logout", (req, res) => {

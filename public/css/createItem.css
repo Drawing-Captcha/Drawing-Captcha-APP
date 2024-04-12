@@ -1,0 +1,69 @@
+
+.createItemWrapper{
+    border-radius: 30px;
+    background: linear-gradient(45deg, #FC466B, #3F5EFB);
+    height: 40vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column; 
+    color: white;
+    gap: 7em;
+
+}
+
+input{
+    border-radius: 8px;
+    background-color: white;
+    color: black;
+    padding: 2%;
+}
+
+button{
+    color: black;
+    border-radius: 8px;
+    background-color: white;
+}
+
+.captchta-canvas{
+    display: none;
+}
+form{
+    display: flex;
+    justify-content: space-around;
+    flex-direction: column;
+    gap: 2em;
+    width: 100%;
+
+}
+#myFileinput{
+    display: none;
+}
+.changeImgBtn{
+    display: none;
+}
+.discard{
+    display: none;
+}
+.upload-area input{
+    background: none;
+}
+
+.innerToDoBox{
+    display: flex;
+    justify-content: center;
+    background: rgba(255,255,255,0.3);
+    padding: 2em;
+    width: 40%;
+    height: fit-content;
+    border-radius: 20px;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    border-top: 1px solid rgba(255,255,255,0.3);
+    backdrop-filter: blur(10px);
+    box-shadow: 20px 20px 40px -6px rgba(0,0,0,0.2);
+    text-align: center;
+    position: relative;
+    font-size: x-large;
+
+}
+
