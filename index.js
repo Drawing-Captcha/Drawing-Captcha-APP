@@ -26,13 +26,13 @@ async function initializePool() {
     try {
         const contents = await fsPromises.readFile("./src/pool.txt", 'utf-8');
         if (contents.trim() === "") {
-            console.log("Die Datei 'pool.txt' ist leer.");
+            console.log("The file pool.txt is empty");
             pool = [];
         } else {
             pool = JSON.parse(contents);
         }
     } catch (err) {
-        console.log("Fehler beim Parsen der JSON-Daten:", err);
+        console.log("Error parsing JSON data:", err);
         pool = [];
     }
 }
@@ -42,13 +42,13 @@ async function initializeBin() {
     try {
         const contents = await fsPromises.readFile("./src/deletedBin.txt", 'utf-8');
         if (contents.trim() === "") {
-            console.log("Die Datei 'deletedBin.txt' ist leer.");
+            console.log("The file 'deletedBin.txt' is empty.");
             deletedBin = [];
         } else {
             deletedBin = JSON.parse(contents);
         }
     } catch (err) {
-        console.log("Fehler beim Parsen der JSON-Daten:", err);
+        console.log("Error parsing JSON data:", err);
         deletedBin = [];
     }
 }
@@ -61,6 +61,8 @@ initializePool().then(() => {
 
 const app = express();
 deleteAllFilesInDir("./tmpimg").then(console.log("All files deleted in ./tmpimg"))
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static("public"));
 app.use('/tmpimg', express.static('tmpimg'));
 app.use(bodyParser.json());
@@ -119,7 +121,7 @@ app.get('/getElements', validateCSRFToken, (req, res) => {
     if (pool) {
         res.json({ pool });
     }
-    else ("pool nicht definiert")
+    else console.error("pool not defined");
 
 });
 
@@ -143,17 +145,17 @@ app.put("/crud", validateCSRFToken, (req, res) => {
 
             fs.writeFile('./src/deletedBin.txt', JSON.stringify(deletedBin, null, 2), 'utf-8', (err) => {
                 if (err) {
-                    console.error('Fehler beim Speichern der JSON-Datei:', err);
+                    console.error('Error saving JSON file:', err);
                 } else {
-                    console.log('Daten wurden zu deletedBin.txt hinzugefügt.');
+                    console.log('Data added to deletedBin.txt.');
                 }
             });
 
             fs.writeFile('./src/pool.txt', JSON.stringify(pool, null, 2), 'utf-8', (err) => {
                 if (err) {
-                    console.error('Fehler beim Speichern der JSON-Datei:', err);
+                    console.error('Error saving JSON file:', err);
                 } else {
-                    console.log('Daten wurden zu pool.txt hinzugefügt.');
+                    console.log('Data added to pool.txt.');
                 }
             });
             initializePool();
@@ -173,7 +175,7 @@ app.put("/crud", validateCSRFToken, (req, res) => {
 
         isGood = true;
     } else {
-        console.log("Problem mit dem Array")
+        console.error("Problem with the array")
     }
 
 
@@ -188,14 +190,14 @@ app.post("/login", validateCSRFToken, async (req, res) => {
     let user = await UserModel.findOne({ email });
 
     if (!user) {
-        req.session.message = "Benutzername oder Passwort falsch.";
+        req.session.message = "Incorrect username or password.";
         return res.redirect("/login");
     }
 
     const isMatch = await bcrypt.compare(password, user.password)
 
     if (!isMatch) {
-        req.session.message = "Benutzername oder Passwort falsch.";
+        req.session.message = "Incorrect username or password.";
         return res.redirect("/login");
     }
     req.session.message = "";
@@ -265,9 +267,9 @@ app.put('/dashboard/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
             deletedObject = deletedBin.splice(index, 1)[0];
             fs.writeFile('./src/deletedBin.txt', JSON.stringify(deletedBin, null, 2), 'utf-8', (err) => {
                 if (err) {
-                    console.error('Fehler beim Speichern der JSON-Datei:', err);
+                    console.error('Error saving JSON file:', err);
                 } else {
-                    console.log('Daten wurden zu deletedBin.txt hinzugefügt.');
+                    console.log('Data added to deletedBin.txt.');
                 }
             });
             initializeBin();
@@ -278,16 +280,16 @@ app.put('/dashboard/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
 
             fs.writeFile('./src/pool.txt', JSON.stringify(pool, null, 2), 'utf-8', (err) => {
                 if (err) {
-                    console.error('Fehler beim Speichern der JSON-Datei:', err);
+                    console.error('Error saving JSON file:', err);
                 } else {
-                    console.log('Daten wurden zu pool.txt hinzugefügt.');
+                    console.log('Data added to pool.txt.');
                 }
             });
             fs.writeFile('./src/deletedBin.txt', JSON.stringify(deletedBin, null, 2), 'utf-8', (err) => {
                 if (err) {
-                    console.error('Fehler beim Speichern der JSON-Datei:', err);
+                    console.error('Error saving JSON file:', err);
                 } else {
-                    console.log('Daten wurden zu deletedBin.txt hinzugefügt.');
+                    console.log('Data added to deletedBin.txt.');
                 }
             });
             initializePool();
@@ -296,7 +298,7 @@ app.put('/dashboard/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
 
         isGood = true;
     } else {
-        console.log("Problem mit dem Array")
+        console.error("Problem with the array")
     }
 
 
@@ -310,7 +312,7 @@ app.get('/deletedArchive/fetch', isAuth, validateCSRFToken, (req, res) => {
     if (deletedBin) {
         res.json({ deletedBin });
     }
-    else ("deletedBin nicht definiert")
+    else console.error("deletedBin not defined")
 });
 
 app.get('/getImage', validateCSRFToken, (req, res) => {
@@ -361,10 +363,10 @@ app.get('/getImage', validateCSRFToken, (req, res) => {
 
             fs.writeFile(savePath, imageBuffer, (err) => {
                 if (err) {
-                    console.error(`Fehler beim Speichern der Datei: ${err}`);
-                    return res.status(500).json({ error: 'Fehler beim Speichern der Datei.' });
+                    console.error(`Error saving file: ${err}`);
+                    return res.status(500).json({ error: 'Error saving file.' });
                 } else {
-                    console.log(`Datei erfolgreich gespeichert unter: ${savePath}`);
+                    console.log(`File successfully saved at: ${savePath}`);
                 }
             });
         } else {
@@ -379,13 +381,13 @@ app.get('/getImage', validateCSRFToken, (req, res) => {
 
     } catch (err) {
         console.error("Error:", err);
-        return res.status(500).json({ error: 'Fehler bei der Serveranfrage.' });
+        return res.status(500).json({ error: 'Server request error.' });
     }
 
 
 });
 
-app.post('/checkCubes', (req, res) => {
+app.post('/checkCubes', validateCSRFToken, (req, res) => {
     console.log(req.body)
     const selectedFields = req.body.selectedIds;
     const selectedId = req.body.clientData.ID;
@@ -416,14 +418,84 @@ app.post('/checkCubes', (req, res) => {
     } else {
         console.log("Deleting: ", req.session.uniqueFileName)
         deleteFile(`./tmpimg/${req.session.uniqueFileName}`)
-        res.status(400).json({ error: 'Client-Daten nicht gefunden' });
+        res.status(400).json({ error: 'Client data not found' });
     }
 
     captchaSession.delete(selectedId);
 });
 
+app.post('/newValidation', isAuth, validateCSRFToken, (req, res) => {
+    const ID = crypto.randomUUID();
+    const validateTrueCubes = req.body.validateTrueCubes;
+    const validateMinCubes = req.body.validateMinCubes;
+    const validateMaxCubes = req.body.validateMaxCubes;
+    const componentName = req.body.sessionComponentName;
+    const backgroundImage = req.body.backgroundImage;
+
+    let isValid = false;
+
+    if (validateTrueCubes && validateMinCubes && validateMaxCubes && componentName) {
+        isValid = true;
+
+        const MaxTolerance = (validateMaxCubes.length * 1) / validateTrueCubes.length;
+        const MinTolerance = (validateMinCubes.length * 1) / validateTrueCubes.length;
+
+        fs.readFile('./src/pool.txt', 'utf-8', (err, data) => {
+            if (err && err.code !== 'ENOENT') {
+                console.error('Error reading pool.txt:', err);
+                isValid = false;
+                res.json({ isValid });
+                return;
+            }
+
+            let tmpPool = [
+                {
+                    "ID": ID,
+                    "Name": componentName,
+                    "URL": backgroundImage,
+                    "MaxTolerance": MaxTolerance,
+                    "MinTolerance": MinTolerance,
+                    "ValidateF": validateTrueCubes,
+                    "validateMinCubes": validateMinCubes,
+                    "validateMaxCubes": validateMaxCubes
+                }
+            ];
+
+            if (data) {
+                const pool = JSON.parse(data);
+                tmpPool = tmpPool.concat(pool);
+            }
+
+            const jsonContent = JSON.stringify(tmpPool, null, 2);
+            fs.writeFile('./src/pool.txt', jsonContent, 'utf-8', (err) => {
+                if (err) {
+                    console.error('Error saving JSON file:', err);
+                    isValid = false;
+                } else {
+                    console.log('Data added to pool.txt.');
+                }
+                res.json({ isValid });
+            });
+        });
+    } else {
+        console.log("Error retrieving data from client");
+        res.json({ isValid });
+    }
+});
+
+app.post('/newValidation/nameExists', isAuth, validateCSRFToken, (req, res) => {
+    let nameExists = false;
+    pool.forEach(item => {
+        if (item.Name === req.body.sessionComponentName) {
+            nameExists = true;
+            return;
+        }
+    });
+    res.json({ nameExists });
+});
+
 app.listen(port, () => {
-    console.log(`Server Running on http://localhost:${port}/`);
+    console.log(`Server Running on port: ${port}`);
 });
 
 
@@ -431,14 +503,14 @@ async function deleteFile(filePath) {
     try {
         const exists = fs.existsSync(filePath);
         if (!exists) {
-            console.log(`Die Datei ${filePath} existiert nicht.`);
+            console.log(`The file ${filePath} does not exist.`);
             return;
         }
 
         await fs.unlink(filePath, () => { });
-        console.log(`${filePath} erfolgreich gelöscht!`);
+        console.log(`${filePath} successfully deleted!`);
     } catch (err) {
-        console.error(`Fehler beim Löschen der Datei ${filePath}: ${err}`);
+        console.error(`Error deleting file ${filePath}: ${err}`);
     }
 }
 
@@ -495,4 +567,3 @@ function deleteAndLog() {
         .then(() => console.log("All files deleted in ./tmpimg"))
         .catch(error => console.error("Error deleting files:", error));
 }
-

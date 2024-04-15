@@ -10,6 +10,7 @@
   <link href="css/normalize-webAppUI.css" rel="stylesheet" type="text/css">
   <link href="css/webflow-webAppUI.css" rel="stylesheet" type="text/css">
   <link href="css/webAppUI.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="css/viewOnBiggerScreen.css">
   <link rel="stylesheet" href="css/createItem.css">
   <style>
     @media (max-width:991px) and (min-width:768px) {
@@ -47,6 +48,9 @@
 </head>
 
 <body>
+  <div class="viewOnBiggerScreen">
+    <h1>To utilize the app's UI, please view it on a larger screen width.📵</h1>
+  </div>
   <div class="page-wrapper">
     <div class="global-styles w-embed">
       <style>
@@ -605,7 +609,7 @@ a,
                   <div class="sidebar1_menu-bottom">
                     <div class="line-divider"></div>
                     <div class="sidebar1_link-list">
-                      <a href="#" class="sidebar1_link w-inline-block">
+                      <a href="mailto:info@wpesic.dev" class="sidebar1_link w-inline-block">
                         <div class="sidebar1_link-wrapper">
                           <div class="icon-embed-xsmall w-embed"><svg width="100%" height="100%" viewbox="0 0 24 24"
                               fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -694,7 +698,7 @@ a,
                         <div class="max-width-large">
                           <h1 class="heading-style-h2">Create a new item 🛸</h1>
                           <div class="margin-top margin-xxsmall">
-                            <div>Here you can create a item for your Drawing-Captcha.</div>
+                            <div>Here, you can create an item for your Drawing Captcha. The canvas will guide you through the creation process.</div>
                           </div>
                         </div>
                         <div class="page-header3_content-right">
@@ -708,7 +712,7 @@ a,
             <div class="padding-horizontal padding-medium">
               <div class="container-large">
                 <div class="padding-top padding-large">
-                  <div class="createItemWrapper">
+                  <div class="ItemWrapper">
                     <h3>Give your item a name</h3>
                     <div class="innerToDoBox">
                       <form name="Capture" action="" method="get" id="Capture">
@@ -717,100 +721,38 @@ a,
                         <button id="Continue" value="submit">Continue</button>
                       </form>
                       <button class="changeImgBtn" onclick="changeImg()">Change Image</button>
-                      <button class="discard" onclick="discard()">Discard</button>
+                      <button class="discard" onclick="location.reload()">Discard</button>
                       <div class="upload-area">
                         <input type="file" id="myFileinput">
                       </div>
+                    </div>
+                    <div class="captcha-container">
                       <div class="captchta-canvas">
-                        <div class="canvas">
-
-                        </div>
-                        <div class="controls">
-                          <button class="reset-button" onclick="reset()">
-                            <img src="../img/refresh.svg" alt="Reset">
-                          </button>
-                          <button class="submit-button" onclick="Continue()">Submit</button>
-                        </div>
+                        <div class="canvas"></div>
+                      </div>
+                      <div class="controls">
+                        <button class="reset-button" onclick="reset()">
+                          <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
+                            xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645"
+                            xml:space="preserve" stroke="#ffffff">
+                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                            <g id="SVGRepo_iconCarrier">
+                              <g>
+                                <path
+                                  d="M460.656,132.911c-58.7-122.1-212.2-166.5-331.8-104.1c-9.4,5.2-13.5,16.6-8.3,27c5.2,9.4,16.6,13.5,27,8.3 c99.9-52,227.4-14.9,276.7,86.3c65.4,134.3-19,236.7-87.4,274.6c-93.1,51.7-211.2,17.4-267.6-70.7l69.3,14.5 c10.4,2.1,21.8-4.2,23.9-15.6c2.1-10.4-4.2-21.8-15.6-23.9l-122.8-25c-20.6-2-25,16.6-23.9,22.9l15.6,123.8 c1,10.4,9.4,17.7,19.8,17.7c12.8,0,20.8-12.5,19.8-23.9l-6-50.5c57.4,70.8,170.3,131.2,307.4,68.2 C414.856,432.511,548.256,314.811,460.656,132.911z">
+                                </path>
+                              </g>
+                            </g>
+                          </svg>
+                        </button>
+                        <button class="submit-button" onclick="continueValid()">Submit</button>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <!-- <div class="captcha-items-wrapper">
-              <div class="captcha-container">
-                <h1 class="title">${captchaTitle}</h1>
-                <div class="captchta-canvas">
-                  <div class="canvas"></div>
-                </div>
-                <div class="controls">
-                  <button class="reset-button">
-                    <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
-                      xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645" xml:space="preserve"
-                      stroke="#ffffff">
-                      <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                      <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                      <g id="SVGRepo_iconCarrier">
-                        <g>
-                          <path
-                            d="M460.656,132.911c-58.7-122.1-212.2-166.5-331.8-104.1c-9.4,5.2-13.5,16.6-8.3,27c5.2,9.4,16.6,13.5,27,8.3 c99.9-52,227.4-14.9,276.7,86.3c65.4,134.3-19,236.7-87.4,274.6c-93.1,51.7-211.2,17.4-267.6-70.7l69.3,14.5 c10.4,2.1,21.8-4.2,23.9-15.6c2.1-10.4-4.2-21.8-15.6-23.9l-122.8-25c-20.6-2-25,16.6-23.9,22.9l15.6,123.8 c1,10.4,9.4,17.7,19.8,17.7c12.8,0,20.8-12.5,19.8-23.9l-6-50.5c57.4,70.8,170.3,131.2,307.4,68.2 C414.856,432.511,548.256,314.811,460.656,132.911z">
-                          </path>
-                        </g>
-                      </g>
-                    </svg>
-                  </button>
-                  <button class="submit-button">Submit</button>
-                </div>
-              </div>
-              <div class="captcha-container">
-                <h1 class="title">${captchaTitle}</h1>
-                <div class="captchta-canvas">
-                  <div class="canvas"></div>
-                </div>
-                <div class="controls">
-                  <button class="reset-button">
-                    <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
-                      xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645" xml:space="preserve"
-                      stroke="#ffffff">
-                      <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                      <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                      <g id="SVGRepo_iconCarrier">
-                        <g>
-                          <path
-                            d="M460.656,132.911c-58.7-122.1-212.2-166.5-331.8-104.1c-9.4,5.2-13.5,16.6-8.3,27c5.2,9.4,16.6,13.5,27,8.3 c99.9-52,227.4-14.9,276.7,86.3c65.4,134.3-19,236.7-87.4,274.6c-93.1,51.7-211.2,17.4-267.6-70.7l69.3,14.5 c10.4,2.1,21.8-4.2,23.9-15.6c2.1-10.4-4.2-21.8-15.6-23.9l-122.8-25c-20.6-2-25,16.6-23.9,22.9l15.6,123.8 c1,10.4,9.4,17.7,19.8,17.7c12.8,0,20.8-12.5,19.8-23.9l-6-50.5c57.4,70.8,170.3,131.2,307.4,68.2 C414.856,432.511,548.256,314.811,460.656,132.911z">
-                          </path>
-                        </g>
-                      </g>
-                    </svg>
-                  </button>
-                  <button class="submit-button">Submit</button>
-                </div>
-              </div>
-              <div class="captcha-container">
-                <h1 class="title">${captchaTitle}</h1>
-                <div class="captchta-canvas">
-                  <div class="canvas"></div>
-                </div>
-                <div class="controls">
-                  <button class="reset-button">
-                    <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
-                      xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645" xml:space="preserve"
-                      stroke="#ffffff">
-                      <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                      <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                      <g id="SVGRepo_iconCarrier">
-                        <g>
-                          <path
-                            d="M460.656,132.911c-58.7-122.1-212.2-166.5-331.8-104.1c-9.4,5.2-13.5,16.6-8.3,27c5.2,9.4,16.6,13.5,27,8.3 c99.9-52,227.4-14.9,276.7,86.3c65.4,134.3-19,236.7-87.4,274.6c-93.1,51.7-211.2,17.4-267.6-70.7l69.3,14.5 c10.4,2.1,21.8-4.2,23.9-15.6c2.1-10.4-4.2-21.8-15.6-23.9l-122.8-25c-20.6-2-25,16.6-23.9,22.9l15.6,123.8 c1,10.4,9.4,17.7,19.8,17.7c12.8,0,20.8-12.5,19.8-23.9l-6-50.5c57.4,70.8,170.3,131.2,307.4,68.2 C414.856,432.511,548.256,314.811,460.656,132.911z">
-                          </path>
-                        </g>
-                      </g>
-                    </svg>
-                  </button>
-                  <button class="submit-button">Submit</button>
-                </div>
-              </div>
-            </div> -->
           </main>
         </div>
       </div>
