@@ -114,6 +114,7 @@ app.get('/login', generateCSRFToken, (req, res) => {
 
 app.post('/reload', generateCSRFToken, (req, res) => {
     deleteFile(`./tmpimg/${req.session.uniqueFileName}`);
+
 });
 
 app.get('/getElements', validateCSRFToken, (req, res) => {
@@ -212,6 +213,9 @@ app.post("/login", validateCSRFToken, async (req, res) => {
         req.session.message = "Incorrect username or password.";
         return res.redirect("/login");
     }
+
+    req.session.user = user;
+
     req.session.message = "";
 
     req.session.isAuth = true
@@ -245,22 +249,22 @@ app.post("/register", async (req, res) => {
 });
 
 app.get("/dashboard", isAuth, validateCSRFToken, (req, res) => {
-    res.render("dashboard");
+    res.render("dashboard", {username: req.session.user.username, email: req.session.user.email});
 })
 
 app.get("/createItem", isAuth, validateCSRFToken, (req, res) => {
-    res.render("createItem");
+    res.render("createItem", {username: req.session.user.username, email: req.session.user.email});
 })
 
-app.post("/logout", (req, res) => {
+app.post("/logout", isAuth, validateCSRFToken, (req, res) => {
     req.session.destroy((err) => {
         if (err) throw err;
-        res.redirect("/")
+        res.redirect("/login")
     })
 })
 
 app.get('/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
-    res.render("deletedArchive")
+    res.render("deletedArchive", {username: req.session.user.username, email: req.session.user.email})
 })
 
 app.put('/dashboard/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
@@ -508,6 +512,13 @@ app.post('/newValidation/nameExists', isAuth, validateCSRFToken, (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server Running on port: ${port}`);
+    store.collection.deleteMany({}, (err) => {
+        if (err) {
+            console.error('Fehler beim Löschen der Sessions:', err);
+        } else {
+            console.log('Alle Sessions erfolgreich gelöscht.');
+        }
+    });
 });
 
 

@@ -2231,6 +2231,7 @@ figcaption {
 
 .sidebar1_dropdown-link {
   padding: .5rem 1rem;
+  cursor: pointer;
 }
 
 .sidebar1_dropdown-link.w--current {

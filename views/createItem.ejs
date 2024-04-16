@@ -565,11 +565,14 @@ a,
                         </a>
                         <a href="/createItem" class="sidebar1_link is-indent w-inline-block">
                           <div class="sidebar1_link-wrapper">
-                            <div class="icon-embed-xsmall w-embed"><svg width="100%" height="100%" viewbox="0 0 24 24"
-                                fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                  d="M20 7H16V4C16 2.897 15.103 2 14 2H10C8.897 2 8 2.897 8 4V9H4C2.897 9 2 9.897 2 11V20C2 20.2652 2.10536 20.5196 2.29289 20.7071C2.48043 20.8946 2.73478 21 3 21H21C21.2652 21 21.5196 20.8946 21.7071 20.7071C21.8946 20.5196 22 20.2652 22 20V9C22 7.897 21.103 7 20 7ZM4 11H8V19H4V11ZM10 4H14V19H10V4ZM20 19H16V9H20V19Z"
-                                  fill="currentColor"></path>
+                            <div class="icon-embed-xsmall w-embed"><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+                              <svg fill="#000000" height="800px" width="800px" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" xmlns:xlink="http://www.w3.org/1999/xlink" enable-background="new 0 0 512 512">
+                                <g>
+                                  <g>
+                                    <path d="M256,11C120.9,11,11,120.9,11,256s109.9,245,245,245s245-109.9,245-245S391.1,11,256,11z M256,460.2    c-112.6,0-204.2-91.6-204.2-204.2S143.4,51.8,256,51.8S460.2,143.4,460.2,256S368.6,460.2,256,460.2z"/>
+                                    <path d="m357.6,235.6h-81.2v-81.2c0-11.3-9.1-20.4-20.4-20.4-11.3,0-20.4,9.1-20.4,20.4v81.2h-81.2c-11.3,0-20.4,9.1-20.4,20.4s9.1,20.4 20.4,20.4h81.2v81.2c0,11.3 9.1,20.4 20.4,20.4 11.3,0 20.4-9.1 20.4-20.4v-81.2h81.2c11.3,0 20.4-9.1 20.4-20.4s-9.1-20.4-20.4-20.4z"/>
+                                  </g>
+                                </g>
                               </svg></div>
                             <div>Create new Item</div>
                           </div>
@@ -645,11 +648,19 @@ a,
                           class="sidebar1_avatar-image-wrapper"><img
                             src="images/6191a88a1c0e39463c2bf022_placeholder-image.svg" loading="lazy" alt=""
                             class="sidebar1_avatar-image"></div>
-                        <div id="w-node-_1a30a1e4-8a69-abdf-86cf-348aa176e564-0240322d"
-                          class="sidebar1_avatar-text-wrapper">
-                          <div class="text-size-small text-weight-medium">Williams Pesic</div>
-                          <div class="text-size-small">hello@relume.io</div>
-                        </div>
+                            <div id="w-node-_1a30a1e4-8a69-abdf-86cf-348aa176e564-0240322d"
+                            class="sidebar1_avatar-text-wrapper">
+                              <% if (username) { %>
+                                <div class="text-size-small text-weight-medium">
+                                  <%= username %>
+                                </div>
+                                <% } %>
+                                  <% if (email) { %>
+                                    <div class="text-size-small">
+                                      <%= email %>
+                                    </div>
+                                    <% } %>
+                          </div>
                       </div>
                       <div data-hover="false" data-delay="200" data-w-id="1a30a1e4-8a69-abdf-86cf-348aa176e569"
                         class="sidebar1_dropdown w-dropdown">
