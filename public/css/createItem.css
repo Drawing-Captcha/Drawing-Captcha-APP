@@ -1,14 +1,21 @@
 
-.createItemWrapper{
+* {
+    padding: 0;
+    margin: 0;
+}
+.ItemWrapper{
+    box-shadow: 20px 20px 40px -6px rgba(0,0,0,0.2);
+    margin-bottom: 2vh;
     border-radius: 30px;
     background: linear-gradient(45deg, #FC466B, #3F5EFB);
-    height: 40vw;
+    height: fit-content;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column; 
     color: white;
     gap: 7em;
+    padding: 7em;
 
 }
 
@@ -52,9 +59,11 @@ form{
 .innerToDoBox{
     display: flex;
     justify-content: center;
+    flex-direction: column;
     background: rgba(255,255,255,0.3);
     padding: 2em;
-    width: 40%;
+    min-width: 24em;
+    width: fit-content;
     height: fit-content;
     border-radius: 20px;
     border-left: 1px solid rgba(255,255,255,0.3);
@@ -67,3 +76,187 @@ form{
 
 }
 
+
+/* Captcha Stylings */
+
+
+
+.captcha-wrapper{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    
+}
+.captcha-container {
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    max-width: 41em;
+    width: auto;
+    display: none;
+    flex-direction: column;
+    background-color: white;
+    border-radius: 0.6em;
+    padding: 3%;
+    text-align: center;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.5s ease-in;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.captchta-canvas > * {
+    grid-column: 1;
+    grid-row: 1;
+
+}
+
+.captchta-canvas {
+    width: max-content;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    margin: 0 auto;
+    max-width: 100%;
+    align-items: end;
+    overflow: overlay;
+    max-height: 90vh;
+}
+
+.cube {
+    cursor: crosshair;
+}
+.cube:hover {
+    background-color: red;
+    opacity: 0.5;
+}
+.cube.selected {
+    background-color: yellow;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.title {
+    font-size: x-large;
+    margin-bottom: 20px;
+    color: #000000;
+}
+
+.canvas {
+    display: grid;
+    grid-template-columns: repeat(31, 1em); 
+    grid-template-rows: repeat(31, 1em); 
+    margin-bottom: 20px;
+    border: 3px solid black;
+    border-radius: 5px;
+    max-width: 100%; 
+    width: fit-content;
+    background-position: center;
+    background-size: 50%;
+    background-repeat: no-repeat;
+
+}
+
+.canvas > * {
+    border: 1px  black;
+    box-sizing: border-box;
+}
+
+.controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+button {
+    height: 2.5em;
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button .buttonDefault{
+    background-color: none !important;
+}
+.submit-button{
+    width: 80%;
+}
+.reset-button{
+    width: 20%;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+svg {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+}
+
+.close-button {
+    position: absolute;
+    top: 0;
+    right: 0.5em;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 2em;
+    color: white;
+    border-radius: 100%;
+}
+
+button .close-button:hover{
+    background-color: transparent;
+}
+
+@media screen and (max-width: 676px){
+  
+    .canvas {
+        grid-template-columns: repeat(31, 0.7em) !important;
+        grid-template-rows: repeat(31, 0.7em) !important;
+    }
+    .title{
+        font-size: large;
+    }
+    .submit-button {
+        height: 2em;
+    }
+    .reset-button {
+        height: 2em;
+    }
+
+}
+
+@media screen and (max-width: 400px){
+    .captcha-container{
+        max-width: 39em;
+        padding: 4%;
+    }
+
+    .canvas {
+        grid-template-columns: repeat(31, 0.65em) !important;
+        grid-template-rows: repeat(31, 0.65em) !important;
+    }
+
+}
