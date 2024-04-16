@@ -831,12 +831,12 @@ a,
                             <label for="captchaItemName">Item name:</label>
                             <input type="text" id="captchaItemName" name="captchaItemName" onclick="this.focus()">
                           </div>
-                          <div class="captcha-container">
+                          <div class="captcha-container" id="True">
                             <div class="captchta-canvas">
                               <div class="canvas"></div>
                             </div>
                             <div class="controls">
-                              <button class="reset-button" onclick="reset()">
+                              <button class="reset-button" onclick="resetElement(this.parentNode)">
                                 <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
                                   xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645"
                                   xml:space="preserve" stroke="#ffffff">
@@ -854,12 +854,12 @@ a,
                               <button class="submit-button" onclick="">Submit</button>
                             </div>
                           </div>
-                          <div class="captcha-container">
+                          <div class="captcha-container" id="Min">
                             <div class="captchta-canvas">
                               <div class="canvas"></div>
                             </div>
                             <div class="controls">
-                              <button class="reset-button" onclick="reset()">
+                              <button class="reset-button" onclick="resetElement(this.parentNode)">
                                 <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
                                   xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645"
                                   xml:space="preserve" stroke="#ffffff">
@@ -877,12 +877,12 @@ a,
                               <button class="submit-button" onclick="">Submit</button>
                             </div>
                           </div>
-                          <div class="captcha-container">
+                          <div class="captcha-container" id="Max">
                             <div class="captchta-canvas">
                               <div class="canvas"></div>
                             </div>
                             <div class="controls">
-                              <button class="reset-button" onclick="reset()">
+                              <button class="reset-button" onclick="resetElement(this.parentNode)">
                                 <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
                                   xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645"
                                   xml:space="preserve" stroke="#ffffff">
@@ -899,6 +899,10 @@ a,
                               </button>
                               <button class="submit-button" onclick="">Submit</button>
                             </div>
+                          </div>
+                          <div class="innerToDoBox">
+                            <button onclick="window.location.reload()">Discard Changes</button>
+                            <button onclick="finishUpdate()">Save Changes</button>
                           </div>
                         </div>
                       </div>

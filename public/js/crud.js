@@ -18,6 +18,10 @@ const header = document.querySelector(".section-header2_content-wrapper");
 let tmpPool = [];
 let pool;
 var isDelete;
+let validateTrueCubes;
+let validateMinCubes;
+let validateMaxCubes;
+let itemName;
 
 document.addEventListener("DOMContentLoaded", initialize);
 
@@ -136,19 +140,71 @@ async function getPool() {
     }
 }
 
-function getComponent(e){
+function getComponent(e) {
     toDo.innerHTML = `Edit item: ${e.Name}`
     wrapper.style.display = "none";
     ItemWrapper.style.display = "flex";
     header.style.display = "none";
+    buildCubes();
+    pool = e
+    tmpPool.push(pool)
     captchaContainer.forEach(container => {
         container.style.display = "flex";
+        let mouseIsDown = false
+        let containerCubes
+
+        container.addEventListener('mousedown', event => {
+            mouseIsDown = true
+            drawEventListener(event, true)
+        })
+        container.addEventListener('mouseup', event => (mouseIsDown = false))
+        let drawEventListener
+        container.querySelector('.canvas').addEventListener('mouseover', drawEventListener = (event, toggle = false) => {
+            event.preventDefault()
+            if (mouseIsDown) {
+                const firstElement = event.composedPath()[0]
+                if (firstElement.classList.contains("cube")) {
+                    firstElement.classList[toggle ? "toggle" : "add"]("selected")
+                }
+            }
+        })
+
+        let containerCanvas = container.querySelector(".canvas");
+
+        containerCanvas.style.backgroundImage = `url(${e.URL})`;
+
+
+        switch(container.getAttribute("id")){
+            case "True":
+                containerCubes = containerCanvas.querySelectorAll(".cube");
+                containerCubes.forEach(cube => {
+                    if(e.ValidateF.includes(cube.getAttribute("id"))){
+                        cube.classList.add("selected");
+                    }
+                })
+                break;
+            case "Min":
+                containerCubes = containerCanvas.querySelectorAll(".cube");
+                containerCubes.forEach(cube => {
+                    if(e.validateMinCubes.includes(cube.getAttribute("id"))){
+                        cube.classList.add("selected");
+                    }
+                })
+                break;
+            case "Max":
+                containerCubes = containerCanvas.querySelectorAll(".cube");
+                containerCubes.forEach(cube => {
+                    if(e.validateMaxCubes.includes(cube.getAttribute("id"))){
+                        cube.classList.add("selected");
+                    }
+                })
+                break;
+            default:
+                console.log("no cubes to fill out");
+        }
+
     })
-    buildCubes();
-    captchaItemName.value = `${e.Name}`;    
-
-    
-
+    captchaItemName.value = `${e.Name}`;
 
 }
 
@@ -205,33 +261,62 @@ function buildCubes() {
             cube.setAttribute('id', i);
             canvasItem.appendChild(cube);
         }
-
     })
 }
 
-let mouseIsDown = false
-
-addEventListener('mousedown', event => {
-    mouseIsDown = true
-    drawEventListener(event, true)
-})
-addEventListener('mouseup', event => (mouseIsDown = false))
-let drawEventListener
-document.querySelector('.canvas').addEventListener('mouseover', drawEventListener = (event, toggle = false) => {
-    event.preventDefault()
-    if (mouseIsDown) {
-        const firstElement = event.composedPath()[0]
-        if (firstElement.classList.contains("cube")) {
-            firstElement.classList[toggle ? "toggle" : "add"]("selected")
-        }
+function resetElement(button) {
+    const container = button.closest('.captcha-container');
+    if (container) {
+        reset(container);
+    } else {
+        console.error("Parent container not found.");
     }
-})
+}
 
-function reset() {
-    const cubes = document.querySelectorAll('.cube');
+function reset(container) {
+    const canvas = container.querySelector('.canvas');
+    const cubes = canvas.querySelectorAll('.cube');
     cubes.forEach(cube => {
         if (cube.classList.contains('selected')) {
             cube.classList.remove('selected');
         }
     });
+}
+
+function finishUpdate(){
+
+    itemName = ItemWrapper.querySelector("#captchaItemName").value
+
+    captchaContainer.forEach(container => {
+        let containerCanvas = container.querySelector(".canvas");
+
+        switch(container.getAttribute("id")){
+            case "True":
+                validateTrueCubes = Array.from(containerCanvas.querySelectorAll(".cube"))
+                .filter(cube => cube.classList.contains("selected"))
+                .map(cube => cube.getAttribute("id"));
+                break;
+            case "Min":
+                validateMinCubes = Array.from(containerCanvas.querySelectorAll(".cube"))
+                .filter(cube => cube.classList.contains("selected"))
+                .map(cube => cube.getAttribute("id"));
+                break;
+            case "Max":
+                validateMaxCubes = Array.from(containerCanvas.querySelectorAll(".cube"))
+                .filter(cube => cube.classList.contains("selected"))
+                .map(cube => cube.getAttribute("id"));
+                break;
+            default:
+                console.log("no cubes to fill out");
+        }
+    })
+
+    tmpPool[0].Name = itemName;
+    tmpPool[0].ValidateF = validateTrueCubes;
+    tmpPool[0].validateMinCubes = validateMinCubes;
+    tmpPool[0].validateMaxCubes = validateMaxCubes;
+
+    console.log(tmpPool)
+
+    pushToServer()
 }

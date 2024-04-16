@@ -162,16 +162,28 @@ app.put("/crud", validateCSRFToken, (req, res) => {
             initializeBin();
 
         } else {
+            pool[index].Name = tmpPool[0].Name
             pool[index].ValidateF = tmpPool[0].ValidateF
             pool[index].validateMinCubes = tmpPool[0].validateMinCubes
             pool[index].validateMaxCubes = tmpPool[0].validateMaxCubes
             pool[index].MaxTolerance = (tmpPool[0].validateMaxCubes.length * 1) / tmpPool[0].ValidateF.length;
             pool[index].MinTolerance = (tmpPool[0].validateMinCubes.length * 1) / tmpPool[0].ValidateF.length;
 
+            fs.writeFile('./src/pool.txt', JSON.stringify(pool, null, 2), 'utf-8', (err) => {
+                if (err) {
+                    console.error('Error saving JSON file:', err);
+                } else {
+                    console.log('Data added to pool.txt.');
+                }
+            });
+
+            initializePool();
+
+
         }
 
-
-
+        initializePool();
+        
 
         isGood = true;
     } else {
