@@ -3,6 +3,7 @@ const session = require("express-session");
 const MongoDBSession = require("connect-mongodb-session")(session);
 const mongoose = require("mongoose");
 const UserModel = require("./models/user.js");
+const ApiKeyModel = require("./models/ApiKey.js")
 const bcrypt = require("bcryptjs")
 const { promises: fsPromises } = require('fs');
 const bodyParser = require('body-parser');
@@ -71,7 +72,7 @@ app.use(cookieParser());
 const csrfProtection = csrf({ cookie: true });
 
 
-const mongoURI = "mongodb://localhost:3000/sessions"
+const mongoURI = "mongodb://localhost:3000/drawing-captcha";
 
 mongoose.connect(mongoURI)
     .then(() => {
@@ -226,27 +227,122 @@ app.post("/login", validateCSRFToken, async (req, res) => {
 app.get("/register", (req, res) => {
     res.render("register");
 });
-app.post("/register", async (req, res) => {
-    const { username, email, password } = req.body;
-    let user = await UserModel.findOne({ email })
 
-    if (user) {
-        return res.redirect('register');
+app.get("/apiKey", isAuth, validateCSRFToken, (req, res) => {
+    
+    res.render("apiKeys", {username: req.session.user.username, email: req.session.user.email});
+
+})
+
+app.put("/apiKey", isAuth, validateCSRFToken, async (req, res) => {
+    if (req.body.isDelete) {
+        let key = req.body.key; 
+        let isKeyDeleted = false;
+        try {
+            let keyExists = await ApiKeyModel.findOne({ apiKey: key });
+            if (keyExists) {
+                let keyDeleted = await ApiKeyModel.deleteOne({ apiKey: key });
+                isKeyDeleted = true;
+                if (keyDeleted.deletedCount === 0) {
+                    throw new Error("Error deleting API key");
+                }
+            } else {
+                return res.status(404).json({ error: "The given key does not exist" });
+            }
+        } catch (err) {
+            console.log("Error while trying to delete API key ", err);
+            return res.status(500).json({ error: "An error occurred while deleting the API key" });
+        }
+        res.json({ keyDeleted });
+    } else {
+        return res.status(400).json({ error: "Invalid request: 'isDelete' is not true" });
+    }
+});
+
+
+app.get("/apiKey/fetch", isAuth, validateCSRFToken, async (req, res) => {
+    try {
+        let apiKeys = await ApiKeyModel.find();
+        res.json({ apiKeys });
+    } catch (error) {
+        console.error("Error fetching API keys:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+app.post("/apiKey/deleteAll" , isAuth, validateCSRFToken, async (req, res) =>{
+    let deleteAll;
+    try{
+        const result = await ApiKeyModel.deleteMany({});
+        deleteAll = true
+        console.log("All API keys have been successfully deleted.")
+
+    }
+    catch(err){
+        deleteAll = false
+        console.log("The deletion of all API keys has failed.")
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    res.json({deleteAll})
 
-    user = new UserModel({
-        username,
-        email,
-        password: hashedPassword
-    })
+}) 
 
-    await user.save();
+app.post("/apiKey", isAuth, validateCSRFToken, async (req, res) => {
+    let successfully; 
+    try{
+        let name = req.body.apiKeyName;
+        let apiKey = crypto.randomUUID();
+        while ((await doesApiKeyExist(apiKey))){
+            apiKey = crypto.randomUUID();
+        }
+    
+        api = new ApiKeyModel ({
+            apiKey,
+            name
+        })
+    
+        await api.save();
+        successfully = true;
 
-    res.redirect("/login");
 
+        console.log("Successfully created an API Key")
+
+    }
+    catch (err){
+        console.log("Creating a Api key failed ", err)
+        successfully = false;
+    }
+    
+    res.json({successfully});
+})
+
+app.post("/register", async (req, res) => {
+    const { username, email, password } = req.body;
+    
+    try {
+        let user = await UserModel.findOne({ email });
+
+        if (user) {
+            return res.redirect('register');
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        user = new UserModel({
+            username,
+            email,
+            password: hashedPassword
+        });
+
+        await user.save();
+
+        res.redirect("/login");
+    } catch (error) {
+        console.error("Error occurred during registration:", error);
+        res.status(500).send("Internal Server Error");
+    }
 });
+
 
 app.get("/dashboard", isAuth, validateCSRFToken, (req, res) => {
     res.render("dashboard", {username: req.session.user.username, email: req.session.user.email});
@@ -400,8 +496,8 @@ app.get('/getImage', validateCSRFToken, (req, res) => {
         return res.status(500).json({ error: 'Server request error.' });
     }
 
-
 });
+
 
 app.post('/checkCubes', validateCSRFToken, (req, res) => {
     console.log(req.body)
@@ -512,13 +608,13 @@ app.post('/newValidation/nameExists', isAuth, validateCSRFToken, (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server Running on port: ${port}`);
-    store.collection.deleteMany({}, (err) => {
-        if (err) {
-            console.error('Fehler beim Löschen der Sessions:', err);
-        } else {
-            console.log('Alle Sessions erfolgreich gelöscht.');
-        }
-    });
+    // store.collection.deleteMany({}, (err) => {
+    //     if (err) {
+    //         console.error('Fehler beim Löschen der Sessions:', err);
+    //     } else {
+    //         console.log('Alle Sessions erfolgreich gelöscht.');
+    //     }
+    // });
 });
 
 
@@ -573,6 +669,10 @@ function generateCSRFToken(req, res, next) {
     next();
 }
 
+async function doesApiKeyExist(key){
+    let apiKeyExists = await ApiKeyModel.findOne({key})
+    return apiKeyExists;
+}
 
 function validateCSRFToken(req, res, next) {
     const csrfToken = req.cookies.mycsrfToken;
@@ -583,10 +683,10 @@ function validateCSRFToken(req, res, next) {
     }
 }
 
-
-
 function deleteAndLog() {
     deleteAllFilesInDir("./tmpimg")
         .then(() => console.log("All files deleted in ./tmpimg"))
         .catch(error => console.error("Error deleting files:", error));
 }
+
+
