@@ -12,7 +12,6 @@
   <link rel="stylesheet" href="css/viewOnBiggerScreen.css">
   <link href="css/webAppUI.css" rel="stylesheet" type="text/css">
   <link rel="stylesheet" href="css/createItem.css">
-  <link rel="stylesheet" href="css/editItem.css">
 
   <style>
     @media (max-width:991px) and (min-width:768px) {
@@ -731,21 +730,15 @@ a,
           </div>
           <main class="shell2_main-wrapper">
             <div class="section_page-header3">
-              <div class="page-header3_image-wrapper"><img src="images/tobias-keller-fTX1qhzx3e0-unsplash.jpg"
-                  loading="lazy" sizes="(max-width: 991px) 100vw, 97vw"
-                  srcset="images/tobias-keller-fTX1qhzx3e0-unsplash.jpg 500w, images/tobias-keller-fTX1qhzx3e0-unsplash.jpg 800w, images/tobias-keller-fTX1qhzx3e0-unsplash.jpg 1080w, images/tobias-keller-fTX1qhzx3e0-unsplash.jpg 1600w, images/tobias-keller-fTX1qhzx3e0-unsplash.jpg 2000w, images/tobias-keller-fTX1qhzx3e0-unsplash.jpg 2600w, images/tobias-keller-fTX1qhzx3e0-unsplash.jpg 3200w, images/tobias-keller-fTX1qhzx3e0-unsplash.jpg 5155w"
-                  alt="" class="page-header3_image"></div>
               <div class="padding-horizontal padding-medium">
                 <div class="container-large">
                   <div class="padding-top padding-large">
                     <div class="page-header3_component">
                       <div class="page-header3_content-wrapper">
                         <div class="max-width-large">
-                          <% if (username) { %>
-                          <h1 class="heading-style-h2">Wellcome back, <%= username %>! 🚀</h1>
-                          <% } %>
+                          <h1 class="heading-style-h2">Add an API Key 🔑</h1>
                           <div class="margin-top margin-xxsmall">
-                            <div>🌟 Dream big, work hard, be kind, and 🌱 grow a little more every day. 🚀</div>
+                            <div>ℹ️⚠️ You can integrate these keys into your external Captcha. With them, you'll gain access to the following endpoints: "/getImage" and "/checkCubes".</div>
                           </div>
                         </div>
                         <div class="page-header3_content-right">
@@ -783,9 +776,9 @@ a,
                           <div class="padding-bottom padding-small">
                             <div class="section-header2_content-wrapper">
                               <div class="max-width-large">
-                                <h2 class="heading-style-h5">Your Item&#x27;s</h2>
+                                <h2 class="heading-style-h5">Your Key's</h2>
                                 <div class="margin-top margin-xxsmall">
-                                  <div>Hier hast du die Übersicht über deine Items</div>
+                                  <div>Here you have the Overview over your API Key's</div>
                                 </div>
                               </div>
                               <div class="section-header2_content-right">
@@ -860,89 +853,6 @@ a,
                         </div>
                         <div class="stacked-list1_list-wrapper">
                         </div>
-                        <div class="ItemWrapper">
-                          <h3>Edit item:</h3>
-                          <div class="innerToDoBox">
-                            <label for="captchaItemName">Item name:</label>
-                            <input type="text" id="captchaItemName" name="captchaItemName" onclick="this.focus()">
-                          </div>
-                          <h4>Edit valid cubes:</h4>
-                          <div class="captcha-container" id="True">
-                            <div class="captchta-canvas">
-                              <div class="canvas"></div>
-                            </div>
-                            <div class="controls">
-                              <button class="reset-button" onclick="resetElement(this.parentNode)">
-                                <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
-                                  xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645"
-                                  xml:space="preserve" stroke="#ffffff">
-                                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                  <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                                  <g id="SVGRepo_iconCarrier">
-                                    <g>
-                                      <path
-                                        d="M460.656,132.911c-58.7-122.1-212.2-166.5-331.8-104.1c-9.4,5.2-13.5,16.6-8.3,27c5.2,9.4,16.6,13.5,27,8.3 c99.9-52,227.4-14.9,276.7,86.3c65.4,134.3-19,236.7-87.4,274.6c-93.1,51.7-211.2,17.4-267.6-70.7l69.3,14.5 c10.4,2.1,21.8-4.2,23.9-15.6c2.1-10.4-4.2-21.8-15.6-23.9l-122.8-25c-20.6-2-25,16.6-23.9,22.9l15.6,123.8 c1,10.4,9.4,17.7,19.8,17.7c12.8,0,20.8-12.5,19.8-23.9l-6-50.5c57.4,70.8,170.3,131.2,307.4,68.2 C414.856,432.511,548.256,314.811,460.656,132.911z">
-                                      </path>
-                                    </g>
-                                  </g>
-                                </svg>
-                              </button>
-                              <button class="submit-button" onclick="">Submit</button>
-                            </div>
-                          </div>
-                          <h4>Edit min cubes:</h4>
-                          <div class="captcha-container" id="Min">
-                            <div class="captchta-canvas">
-                              <div class="canvas"></div>
-                            </div>
-                            <div class="controls">
-                              <button class="reset-button" onclick="resetElement(this.parentNode)">
-                                <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
-                                  xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645"
-                                  xml:space="preserve" stroke="#ffffff">
-                                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                  <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                                  <g id="SVGRepo_iconCarrier">
-                                    <g>
-                                      <path
-                                        d="M460.656,132.911c-58.7-122.1-212.2-166.5-331.8-104.1c-9.4,5.2-13.5,16.6-8.3,27c5.2,9.4,16.6,13.5,27,8.3 c99.9-52,227.4-14.9,276.7,86.3c65.4,134.3-19,236.7-87.4,274.6c-93.1,51.7-211.2,17.4-267.6-70.7l69.3,14.5 c10.4,2.1,21.8-4.2,23.9-15.6c2.1-10.4-4.2-21.8-15.6-23.9l-122.8-25c-20.6-2-25,16.6-23.9,22.9l15.6,123.8 c1,10.4,9.4,17.7,19.8,17.7c12.8,0,20.8-12.5,19.8-23.9l-6-50.5c57.4,70.8,170.3,131.2,307.4,68.2 C414.856,432.511,548.256,314.811,460.656,132.911z">
-                                      </path>
-                                    </g>
-                                  </g>
-                                </svg>
-                              </button>
-                              <button class="submit-button" onclick="">Submit</button>
-                            </div>
-                          </div>
-                          <h4>Edit max cubes:</h4>
-                          <div class="captcha-container" id="Max">
-                            <div class="captchta-canvas">
-                              <div class="canvas"></div>
-                            </div>
-                            <div class="controls">
-                              <button class="reset-button" onclick="resetElement(this.parentNode)">
-                                <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
-                                  xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645"
-                                  xml:space="preserve" stroke="#ffffff">
-                                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                  <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                                  <g id="SVGRepo_iconCarrier">
-                                    <g>
-                                      <path
-                                        d="M460.656,132.911c-58.7-122.1-212.2-166.5-331.8-104.1c-9.4,5.2-13.5,16.6-8.3,27c5.2,9.4,16.6,13.5,27,8.3 c99.9-52,227.4-14.9,276.7,86.3c65.4,134.3-19,236.7-87.4,274.6c-93.1,51.7-211.2,17.4-267.6-70.7l69.3,14.5 c10.4,2.1,21.8-4.2,23.9-15.6c2.1-10.4-4.2-21.8-15.6-23.9l-122.8-25c-20.6-2-25,16.6-23.9,22.9l15.6,123.8 c1,10.4,9.4,17.7,19.8,17.7c12.8,0,20.8-12.5,19.8-23.9l-6-50.5c57.4,70.8,170.3,131.2,307.4,68.2 C414.856,432.511,548.256,314.811,460.656,132.911z">
-                                      </path>
-                                    </g>
-                                  </g>
-                                </svg>
-                              </button>
-                              <button class="submit-button" onclick="">Submit</button>
-                            </div>
-                          </div>
-                          <div class="innerToDoBox">
-                            <button onclick="window.location.reload()">Discard Changes</button>
-                            <button onclick="finishUpdate()">Save Changes</button>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -958,7 +868,7 @@ a,
     type="text/javascript" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
     crossorigin="anonymous"></script>
   <script src="js/webAppUI.js" type="text/javascript"></script>
-  <script src="js/crud.js" type="text/javascript"></script>
+  <script src="js/apiKeys.js" type="text/javascript"></script>
 
 </body>
 

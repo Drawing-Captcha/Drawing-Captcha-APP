@@ -3,6 +3,7 @@ const errorMessage = document.querySelector(".captcha-error-message");
 const successMessage = document.querySelector(".captcha-success-message");
 const form = document.querySelector("form");
 const captchaTitle = "Captcha Component Prototype 1.2";
+
 class CaptchaComponent extends HTMLElement {
     constructor() {
         super();
@@ -105,7 +106,6 @@ class CaptchaComponent extends HTMLElement {
         display: grid;
         grid-template-columns: repeat(31, 1em); 
         grid-template-rows: repeat(31, 1em); 
-        margin-bottom: 20px;
         border: 3px solid black;
         border-radius: 5px;
         max-width: 100%; 
@@ -127,6 +127,7 @@ class CaptchaComponent extends HTMLElement {
         align-items: center;
         justify-content: center;
         width: 100%;
+        margin-top: 20px;
     }
     button {
         padding: 10px 20px;
@@ -168,6 +169,12 @@ class CaptchaComponent extends HTMLElement {
         font-size: 2em;
         color: white;
         border-radius: 100%;
+    }
+
+    .background-pattern {
+        position: relative;
+        width: fit-content;
+        height: fit-content;
     }
 
     button .close-button:hover{
@@ -212,7 +219,9 @@ class CaptchaComponent extends HTMLElement {
         <div class="close-button">×</div> 
         <h1 class="title">${captchaTitle}</h1>
         <div class="captchta-canvas">
-            <div class="canvas"></div>
+            <div class="background-pattern">
+                <div class="canvas"></div>
+            </div>
         </div>
         <div class="controls">
             <button class="reset-button">
@@ -230,7 +239,6 @@ class CaptchaComponent extends HTMLElement {
 
     connectedCallback() {
         const exitButton = this.shadowRoot.querySelector(".close-button").addEventListener("click", () => removeCaptcha());
-
 
         this.initialize();
         this.captchaTitle = this.shadowRoot.querySelector(".title");
@@ -461,3 +469,5 @@ async function submitForm(username, password) {
 
     form.submit();
 }
+
+
