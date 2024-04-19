@@ -22,7 +22,7 @@ let pool;
 let deletedBin;
 const captchaSession = new Map();
 
-  
+
 async function initializePool() {
     try {
         const contents = await fsPromises.readFile("./src/pool.txt", 'utf-8');
@@ -185,7 +185,7 @@ app.put("/crud", validateCSRFToken, (req, res) => {
         }
 
         initializePool();
-        
+
 
         isGood = true;
     } else {
@@ -229,14 +229,14 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/apiKey", isAuth, validateCSRFToken, (req, res) => {
-    
-    res.render("apiKeys", {username: req.session.user.username, email: req.session.user.email});
+
+    res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email });
 
 })
 
 app.put("/apiKey", isAuth, validateCSRFToken, async (req, res) => {
     if (req.body.isDelete) {
-        let key = req.body.key; 
+        let key = req.body.key;
         let isKeyDeleted = false;
         try {
             let keyExists = await ApiKeyModel.findOne({ apiKey: key });
@@ -253,7 +253,7 @@ app.put("/apiKey", isAuth, validateCSRFToken, async (req, res) => {
             console.log("Error while trying to delete API key ", err);
             return res.status(500).json({ error: "An error occurred while deleting the API key" });
         }
-        res.json({ keyDeleted });
+        res.json({ isKeyDeleted });
     } else {
         return res.status(400).json({ error: "Invalid request: 'isDelete' is not true" });
     }
@@ -270,55 +270,74 @@ app.get("/apiKey/fetch", isAuth, validateCSRFToken, async (req, res) => {
     }
 });
 
-app.post("/apiKey/deleteAll" , isAuth, validateCSRFToken, async (req, res) =>{
+app.post("/apiKey/deleteAll", isAuth, validateCSRFToken, async (req, res) => {
     let deleteAll;
-    try{
-        const result = await ApiKeyModel.deleteMany({});
-        deleteAll = true
-        console.log("All API keys have been successfully deleted.")
+    console.log("deleting all api keys....")
+    try {
+        const keys = await ApiKeyModel.find({});
+        if (keys.length > 0) {
+            const result = await ApiKeyModel.deleteMany({});
+            if (result) {
+                deleteAll = "All API keys have been successfully deleted."
+            }
+        }
+        else {
+            deleteAll = "No existing Keys"
+        }
 
     }
-    catch(err){
-        deleteAll = false
-        console.log("The deletion of all API keys has failed.")
+    catch (err) {
+        deleteAll = "The deletion of all API keys has failed."
     }
 
-    res.json({deleteAll})
+    console.log(deleteAll)
 
-}) 
+    res.json({ deleteAll })
+
+})
 
 app.post("/apiKey", isAuth, validateCSRFToken, async (req, res) => {
-    let successfully; 
-    try{
+    let successfully;
+    let message;
+    try {
         let name = req.body.apiKeyName;
-        let apiKey = crypto.randomUUID();
-        while ((await doesApiKeyExist(apiKey))){
-            apiKey = crypto.randomUUID();
+        let doesNameExist = await ApiKeyModel.findOne({ name: name });
+        if (!doesNameExist) {
+            let apiKey = crypto.randomUUID();
+            while ((await doesApiKeyExist(apiKey))) {
+                apiKey = crypto.randomUUID();
+            }
+            api = new ApiKeyModel({
+                apiKey,
+                name
+            })
+
+            await api.save();
+            successfully = true;
+
+
+            message = "Successfully created an API Key"
+            console.log(message)
         }
-    
-        api = new ApiKeyModel ({
-            apiKey,
-            name
-        })
-    
-        await api.save();
-        successfully = true;
+        else {
+            successfully = false;
+            message = "Api key name already exists"
+            console.log(message)
+        }
 
-
-        console.log("Successfully created an API Key")
 
     }
-    catch (err){
+    catch (err) {
         console.log("Creating a Api key failed ", err)
         successfully = false;
     }
-    
-    res.json({successfully});
+
+    res.json({ successfully, message });
 })
 
 app.post("/register", async (req, res) => {
     const { username, email, password } = req.body;
-    
+
     try {
         let user = await UserModel.findOne({ email });
 
@@ -345,11 +364,11 @@ app.post("/register", async (req, res) => {
 
 
 app.get("/dashboard", isAuth, validateCSRFToken, (req, res) => {
-    res.render("dashboard", {username: req.session.user.username, email: req.session.user.email});
+    res.render("dashboard", { username: req.session.user.username, email: req.session.user.email });
 })
 
 app.get("/createItem", isAuth, validateCSRFToken, (req, res) => {
-    res.render("createItem", {username: req.session.user.username, email: req.session.user.email});
+    res.render("createItem", { username: req.session.user.username, email: req.session.user.email });
 })
 
 app.post("/logout", isAuth, validateCSRFToken, (req, res) => {
@@ -360,7 +379,7 @@ app.post("/logout", isAuth, validateCSRFToken, (req, res) => {
 })
 
 app.get('/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
-    res.render("deletedArchive", {username: req.session.user.username, email: req.session.user.email})
+    res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email })
 })
 
 app.put('/dashboard/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
@@ -427,7 +446,7 @@ app.get('/deletedArchive/fetch', isAuth, validateCSRFToken, (req, res) => {
     else console.error("deletedBin not defined")
 });
 
-app.get('/getImage', validateCSRFToken, (req, res) => {
+app.post('/getImage', validateCSRFOrExternalKey, async (req, res) => {
 
     initializePool();
 
@@ -499,7 +518,7 @@ app.get('/getImage', validateCSRFToken, (req, res) => {
 });
 
 
-app.post('/checkCubes', validateCSRFToken, (req, res) => {
+app.post('/checkCubes', validateCSRFOrExternalKey, async (req, res) => {
     console.log(req.body)
     const selectedFields = req.body.selectedIds;
     const selectedId = req.body.clientData.ID;
@@ -669,8 +688,8 @@ function generateCSRFToken(req, res, next) {
     next();
 }
 
-async function doesApiKeyExist(key){
-    let apiKeyExists = await ApiKeyModel.findOne({key})
+async function doesApiKeyExist(key) {
+    let apiKeyExists = await ApiKeyModel.findOne({ apiKey: key })
     return apiKeyExists;
 }
 
@@ -687,6 +706,44 @@ function deleteAndLog() {
     deleteAllFilesInDir("./tmpimg")
         .then(() => console.log("All files deleted in ./tmpimg"))
         .catch(error => console.error("Error deleting files:", error));
+}
+
+async function validateGeneralCSRFToken(req, res, next) {
+    const csrfToken = req.cookies.mycsrfToken;
+    if (req.session.csrfToken === csrfToken && req.session.csrfToken != null && csrfToken != null) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+async function validateExternalKey(req, res, next) {
+    const apiKey = req.body.apiKey;
+    let doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
+    if(doesExist){
+        return true;
+    }
+    else{
+        return false
+    }
+    // return doesExist ? true : false;
+}
+
+
+async function validateCSRFOrExternalKey(req, res, next) {
+    let failed = false;
+    let apiKey = await validateExternalKey(req, res, next);
+    if (apiKey === true) {
+        next();
+    } else {
+        let CSRFToken = await validateGeneralCSRFToken(req, res, next);
+        if (CSRFToken === true) {
+            next();
+        } else {
+            failed = true;
+            res.status(403).json({ error: "CSRF Token or API Key validation failed" });
+        }
+    }
 }
 
 

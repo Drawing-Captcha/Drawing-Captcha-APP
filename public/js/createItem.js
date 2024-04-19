@@ -1,4 +1,4 @@
-const createItemWrapper = document.querySelector(".createItemWrapper");
+const createItemWrapper = document.querySelector(".itemWrapper");
 const toDo = createItemWrapper.querySelector("h3");
 const CaptureForm = document.querySelector("#Capture");
 const innerBox = createItemWrapper.querySelector(".innerToDoBox");
@@ -10,7 +10,14 @@ const captchaContainer = document.querySelector(".captcha-container");
 const canvas = captchaContainer.querySelector(".canvas");
 const cube = document.querySelectorAll(".cube");
 const cnameInput = document.querySelector("#ComponentName");
+const ItemWrapper = document.querySelector(".itemWrapper");
 
+document.addEventListener("DOMContentLoaded", initialize);
+
+function initialize(){
+   ItemWrapper.style.display = "flex";
+
+}
 
 let sessionComponentName;
 let backgroundImage;

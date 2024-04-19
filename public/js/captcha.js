@@ -334,20 +334,39 @@ class CaptchaComponent extends HTMLElement {
 
     async pullImage() {
         try {
-            const response = await fetch("/getImage");
-            if (response.ok) {
-                const data = await response.json();
-                this.clientData = data.clientData;
-                console.log(this.clientData)
-                const backgroundImageUrl = data.finishedURL;
-                const background = this.shadowRoot.querySelector('.canvas');
-                background.style.backgroundImage = `url(${backgroundImageUrl})`;
-            } else {
-                throw new Error('Fehler bei der Serveranfrage.');
-            }
+            await fetch(`/getImage`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Error in server request.');
+                }
+            })
+            .then(data => {
+                if (data.clientData) {
+                    console.log(data)
+                    this.clientData = data.clientData;
+                    const backgroundImageUrl = data.finishedURL;
+                    const background = this.shadowRoot.querySelector('.canvas');
+                    background.style.backgroundImage = `url(${backgroundImageUrl})`;
+    
+                } else {
+                    throw new Error('Error in server request.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            });
+    
         } catch (error) {
-            console.error('Fehler:', error);
-            console.log('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
+            console.error('Error:', error);
+            console.log('An error occurred. Please try again later.');
         }
     }
 
