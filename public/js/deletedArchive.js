@@ -9,7 +9,7 @@ async function initialize() {
 
 async function getDeletedBin() {
     try {
-        const response = await fetch("/deletedArchive/fetch", {
+        const response = await fetch("/deletedArchive", {
             method: 'GET',
             credentials: 'include',
             headers: {

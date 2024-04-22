@@ -1,8 +1,9 @@
-const wrapper = document.querySelector(".stacked-list1_list-wrapper");
+const wrapper = document.querySelector(".stacked-list1_list-wrapper.apiKey");
 const itemPageWrapper = document.querySelector(".itemPageWrapper");
-const apiForm = itemPageWrapper.querySelector("form");
-const apiNameForm = apiForm.querySelector("input");
+const createForm = itemPageWrapper.querySelector("form");
+const formName = createForm.querySelector("input");
 const ItemWrapper = document.querySelector(".itemWrapper");
+const toDo = ItemWrapper.querySelector("h3");
 
 
 let Keys;
@@ -12,11 +13,12 @@ document.addEventListener("DOMContentLoaded", initialize);
 
 async function initialize(){
     await getKeys();
+    await getOrigins();
 }
 
 async function getKeys(){
     try {
-        const response = await fetch("/apiKey/fetch", {
+        const response = await fetch("/apiKey", {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -208,7 +210,14 @@ function deleteAllKeys() {
     }
 }
 
-function addNewKey(){
+function addApiKey(){
+    toDo.innerHTML = "Add API Key 🔑"
+    createForm.setAttribute("onsubmit", "submitApi(); return false;")
+    addFrom()
+
+    
+}
+function addFrom(){
     itemPageWrapper.style.display = "flex";
     ItemWrapper.style.display = "flex";
     setTimeout(() => {
@@ -218,17 +227,17 @@ function addNewKey(){
 
 }
 
-function closeApiForm(){
+function closeForm(){
     itemPageWrapper.style.opacity = '0';
     setTimeout(() => {
         itemPageWrapper.style.display = "none";
     }, 300); 
-    apiNameForm.value = "";
+    formName.value = "";
 
 }
 
 function submitApi(){
-    apiName = apiNameForm.value;
+   let apiName = formName.value;
     
     fetch("/apiKey", {
         method: "POST",

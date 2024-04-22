@@ -4,6 +4,7 @@ const MongoDBSession = require("connect-mongodb-session")(session);
 const mongoose = require("mongoose");
 const UserModel = require("./models/user.js");
 const ApiKeyModel = require("./models/ApiKey.js")
+const AllowedOriginModel = require("./models/AllowedOrigins.js");
 const bcrypt = require("bcryptjs")
 const { promises: fsPromises } = require('fs');
 const bodyParser = require('body-parser');
@@ -59,6 +60,9 @@ initializeBin().then(() => {
 initializePool().then(() => {
     console.log("pool initialized")
 });
+// initializeAllowedOrigins().then(() => {
+//     console.log("allowed Origins initialized")
+// });
 
 const app = express();
 deleteAllFilesInDir("./tmpimg").then(console.log("All files deleted in ./tmpimg"))
@@ -68,11 +72,22 @@ app.use(express.static("public"));
 app.use('/tmpimg', express.static('tmpimg'));
 app.use(bodyParser.json());
 app.use(cookieParser());
-
 const csrfProtection = csrf({ cookie: true });
 
 
-const mongoURI = "mongodb://localhost:3000/drawing-captcha";
+const allowedOrigins = ['http://localhost:90',];
+
+app.use(cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
+  }));
+
+const mongoURI = "mongodb://mongodb:90/drawing-captcha";
 
 mongoose.connect(mongoURI)
     .then(() => {
@@ -228,7 +243,7 @@ app.get("/register", (req, res) => {
     res.render("register");
 });
 
-app.get("/apiKey", isAuth, validateCSRFToken, (req, res) => {
+app.get("/dashboard/apiKey", isAuth, validateCSRFToken, (req, res) => {
 
     res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email });
 
@@ -260,7 +275,7 @@ app.put("/apiKey", isAuth, validateCSRFToken, async (req, res) => {
 });
 
 
-app.get("/apiKey/fetch", isAuth, validateCSRFToken, async (req, res) => {
+app.get("/apiKey", isAuth, validateCSRFToken, async (req, res) => {
     try {
         let apiKeys = await ApiKeyModel.find();
         res.json({ apiKeys });
@@ -367,7 +382,7 @@ app.get("/dashboard", isAuth, validateCSRFToken, (req, res) => {
     res.render("dashboard", { username: req.session.user.username, email: req.session.user.email });
 })
 
-app.get("/createItem", isAuth, validateCSRFToken, (req, res) => {
+app.get("/dashboard/createItem", isAuth, validateCSRFToken, (req, res) => {
     res.render("createItem", { username: req.session.user.username, email: req.session.user.email });
 })
 
@@ -378,11 +393,11 @@ app.post("/logout", isAuth, validateCSRFToken, (req, res) => {
     })
 })
 
-app.get('/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
+app.get('/dashboard/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
     res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email })
 })
 
-app.put('/dashboard/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
+app.put('/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
     initializePool();
     initializeBin();
     let deletedObject;
@@ -438,7 +453,7 @@ app.put('/dashboard/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
     res.json({ isGood })
 })
 
-app.get('/deletedArchive/fetch', isAuth, validateCSRFToken, (req, res) => {
+app.get('/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
     initializeBin();
     if (deletedBin) {
         res.json({ deletedBin });
@@ -625,6 +640,81 @@ app.post('/newValidation/nameExists', isAuth, validateCSRFToken, (req, res) => {
     res.json({ nameExists });
 });
 
+app.get('/allowedOrigins', isAuth, validateCSRFToken, async (req, res) => {
+    try {
+        let message;
+        let allowedOrigins = await AllowedOriginModel.find({});
+        if (allowedOrigins.length > 0) {
+            message = "allowed origins found"
+            console.log(message)
+        }
+        else {
+            message = "no allowed origins found"
+            console.log(message);
+        }
+
+        res.json({ allowedOrigins, message })
+    }
+    catch (err) {
+        console.log("Error while trying to get AllowedOrigins", err);
+        return res.status(500).json({ error: "An error occurred while trying to get the AllowedOrigins" });
+    }
+
+})
+app.post('/allowedOrigins', isAuth, validateCSRFToken, async (req, res) => {
+    try {
+        let message;
+        let originName = req.body.originName;
+        let doesOriginExist = await AllowedOriginModel.findOne({ allowedOrigin: originName });
+        console.log(doesOriginExist)
+        if (originName && !doesOriginExist) {
+            let origin = new AllowedOriginModel({
+                allowedOrigin: originName
+            });
+
+            await origin.save();
+            // initializeAllowedOrigins();
+            message = "Allowed origin successfully created";
+            console.log(message);
+        } else {
+            message = `${originName} is undefined or already exists`;
+            console.log(message);
+        }
+
+        res.json({ message });
+    } catch (err) {
+        console.log("Error while trying to create AllowedOrigins", err);
+        return res.status(500).json({ error: "An error occurred while trying to create AllowedOrigins" });
+    }
+});
+
+app.put("/allowedOrigins", isAuth, validateCSRFToken, async (req, res) => {
+    if (req.body.isDelete) {
+        let origin = req.body.allowedOrigin;
+        let isOriginDeleted = false;
+        try {
+            let originExists = await AllowedOriginModel.findOne({ allowedOrigin: origin });
+            if (originExists) {
+                let originDeleted = await AllowedOriginModel.deleteOne({ allowedOrigin: origin });
+                originDeleted = true;
+                // initializeAllowedOrigins();
+                if (originDeleted.deletedCount === 0) {
+                    throw new Error("Error deleting allowed Origin");
+                }
+            } else {
+                return res.status(404).json({ error: "The given Origin does not exist" });
+            }
+        } catch (err) {
+            console.log("Error while trying to delete allowed Origin ", err);
+            return res.status(500).json({ error: "An error occurred while deleting the allowed origin" });
+        }
+        res.json({ isOriginDeleted });
+    } else {
+        return res.status(400).json({ error: "Invalid request: 'isDelete' is not true" });
+    }
+});
+
+
 app.listen(port, () => {
     console.log(`Server Running on port: ${port}`);
     // store.collection.deleteMany({}, (err) => {
@@ -720,13 +810,12 @@ async function validateGeneralCSRFToken(req, res, next) {
 async function validateExternalKey(req, res, next) {
     const apiKey = req.body.apiKey;
     let doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
-    if(doesExist){
+    if (doesExist) {
         return true;
     }
-    else{
+    else {
         return false
     }
-    // return doesExist ? true : false;
 }
 
 
