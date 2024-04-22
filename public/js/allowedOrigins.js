@@ -93,7 +93,7 @@ async function getOrigins() {
 
 
 function addOrigin() {
-    toDo.innerHTML = "Add new Origin 🔒";
+    toDo.innerHTML = "Add new Origin 🔒 Important: if the domain has a seperate port please define it so you can access it properly.";
     createForm.setAttribute("onsubmit", "proofRegex(); return false;")
     addFrom();
 }
@@ -118,7 +118,11 @@ function proofRegex() {
         alert("Regex error: please define your origin like this schema: https://yourdomain.com");
     }
 }
-
+function deleteOrigin(elementData){
+    let isDeleted = true;
+    let origin = elementData.allowedOrigin;
+    putOrigin(origin, isDeleted)
+}
 function submitOrigin() {
 
     originName = formName.value;
@@ -147,5 +151,33 @@ function submitOrigin() {
         .catch(error => {
             console.error('Error:', error);
             alert('An error occurred. Please try again later.');
+        });
+}
+
+function putOrigin(origin, isDeleted) {
+
+    fetch("/allowedOrigins", {
+        method: "PUT",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ allowedOrigin: origin, isDeleted })
+    })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Error server while trying to request the server');
+            }
+        })
+        .then(data => {
+            if (data.isOriginDeleted) {
+                alert("Origin successfully deleted!")
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred, while trying to delete Origin. Please try again later.');
         });
 }

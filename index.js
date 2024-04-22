@@ -9,7 +9,7 @@ const bcrypt = require("bcryptjs")
 const { promises: fsPromises } = require('fs');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const port = 90;
+const port = 9090;
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
@@ -22,6 +22,24 @@ setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 let pool;
 let deletedBin;
 const captchaSession = new Map();
+let defaultOrigin = [`http://localhost:${port}`];
+
+
+async function initializeAllowedOrigins() {
+    try {
+        allowedOrigins = await AllowedOriginModel.find({});
+        if (allowedOrigins.length > 0) {
+            allowedOrigins.forEach(origin =>{
+                defaultOrigin.push(origin.allowedOrigin)
+            })
+            console.log("Allowed origins: ", defaultOrigin);
+        } else {
+            console.log("Allowed origins are currently empty. Added localhost as default.");
+        }
+    } catch (err) {
+        console.log("Error parsing JSON data while initializing allowedOrigins:", err);
+    }
+}
 
 
 async function initializePool() {
@@ -60,9 +78,9 @@ initializeBin().then(() => {
 initializePool().then(() => {
     console.log("pool initialized")
 });
-// initializeAllowedOrigins().then(() => {
-//     console.log("allowed Origins initialized")
-// });
+initializeAllowedOrigins().then(() => {
+    console.log("allowed Origins initialized")
+});
 
 const app = express();
 deleteAllFilesInDir("./tmpimg").then(console.log("All files deleted in ./tmpimg"))
@@ -74,12 +92,9 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 const csrfProtection = csrf({ cookie: true });
 
-
-const allowedOrigins = ['http://localhost:90',];
-
 app.use(cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || defaultOrigin.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
@@ -87,7 +102,7 @@ app.use(cors({
     }
   }));
 
-const mongoURI = "mongodb://mongodb:90/drawing-captcha";
+const mongoURI = "mongodb://localhost:3000/drawing-captcha";
 
 mongoose.connect(mongoURI)
     .then(() => {
@@ -673,7 +688,7 @@ app.post('/allowedOrigins', isAuth, validateCSRFToken, async (req, res) => {
             });
 
             await origin.save();
-            // initializeAllowedOrigins();
+            initializeAllowedOrigins();
             message = "Allowed origin successfully created";
             console.log(message);
         } else {
@@ -696,8 +711,8 @@ app.put("/allowedOrigins", isAuth, validateCSRFToken, async (req, res) => {
             let originExists = await AllowedOriginModel.findOne({ allowedOrigin: origin });
             if (originExists) {
                 let originDeleted = await AllowedOriginModel.deleteOne({ allowedOrigin: origin });
-                originDeleted = true;
-                // initializeAllowedOrigins();
+                isOriginDeleted = true;
+                initializeAllowedOrigins();
                 if (originDeleted.deletedCount === 0) {
                     throw new Error("Error deleting allowed Origin");
                 }
