@@ -8,10 +8,10 @@ const cubeMin = document.querySelectorAll(".cube-min")
 const cubeMax = document.querySelectorAll(".cube-max")
 const cubeID = document.querySelectorAll("#id")
 const wrapper = document.querySelector(".stacked-list1_list-wrapper");
-const ItemWrapper = document.querySelector(".dashboard-itemWrapper");
+const itemPageWrapper = document.querySelector(".itemPageWrapper");
 const captchaContainer = document.querySelectorAll(".captcha-container");
 const captchaItemName = document.querySelector("#captchaItemName");
-const toDo = ItemWrapper.querySelector("h3");
+const toDo = itemPageWrapper.querySelector("h3");
 const header = document.querySelector(".section-header2_content-wrapper");
 
 
@@ -142,8 +142,10 @@ async function getPool() {
 
 function getComponent(e) {
     toDo.innerHTML = `Edit item: ${e.Name}`
-    wrapper.style.display = "none";
-    ItemWrapper.style.display = "flex";
+    // itemPageWrapper.style.display = "flex";
+    // setTimeout(() => {
+    //     itemPageWrapper.style.opacity = '1';
+    // }, 50);
     
     buildCubes();
     pool = e
@@ -285,7 +287,7 @@ function reset(container) {
 
 function finishUpdate(){
 
-    itemName = ItemWrapper.querySelector("#captchaItemName").value
+    itemName = itemPageWrapper.querySelector("#captchaItemName").value
 
     captchaContainer.forEach(container => {
         let containerCanvas = container.querySelector(".canvas");
@@ -319,4 +321,13 @@ function finishUpdate(){
     console.log(tmpPool)
 
     pushToServer()
+}
+
+function closeForm(){
+    itemPageWrapper.style.opacity = '0';
+    setTimeout(() => {
+        itemPageWrapper.style.display = "none";
+    }, 300); 
+    formName.value = "";
+
 }

@@ -22,7 +22,7 @@ setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 let pool;
 let deletedBin;
 const captchaSession = new Map();
-let defaultOrigin = [`http://localhost:${port}`];
+let defaultOrigin = [`http://localhost:${port}`, "http://127.0.0.1:5500/"];
 
 
 async function initializeAllowedOrigins() {
@@ -143,7 +143,8 @@ app.get('/login', generateCSRFToken, (req, res) => {
     res.render('login', { message: req.session.message, csrfToken: req.session.csrfToken });
 });
 
-app.post('/reload', generateCSRFToken, (req, res) => {
+app.post('/reload', validateCSRFOrExternalKey, (req, res) => {
+    console.log("Session files: ",req.session.uniqueFileName)
     deleteFile(`./tmpimg/${req.session.uniqueFileName}`);
 
 });
@@ -825,6 +826,8 @@ async function validateGeneralCSRFToken(req, res, next) {
 async function validateExternalKey(req, res, next) {
     const apiKey = req.body.apiKey;
     let doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
+    console.log("given key: ", apiKey)
+    console.log("does exist: ", doesExist)
     if (doesExist) {
         return true;
     }
