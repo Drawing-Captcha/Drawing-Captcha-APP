@@ -8,7 +8,7 @@ const cubeMin = document.querySelectorAll(".cube-min")
 const cubeMax = document.querySelectorAll(".cube-max")
 const cubeID = document.querySelectorAll("#id")
 const wrapper = document.querySelector(".stacked-list1_list-wrapper");
-const ItemWrapper = document.querySelector(".ItemWrapper");
+const ItemWrapper = document.querySelector(".dashboard-itemWrapper");
 const captchaContainer = document.querySelectorAll(".captcha-container");
 const captchaItemName = document.querySelector("#captchaItemName");
 const toDo = ItemWrapper.querySelector("h3");
@@ -144,7 +144,7 @@ function getComponent(e) {
     toDo.innerHTML = `Edit item: ${e.Name}`
     wrapper.style.display = "none";
     ItemWrapper.style.display = "flex";
-    header.style.display = "none";
+    
     buildCubes();
     pool = e
     tmpPool.push(pool)

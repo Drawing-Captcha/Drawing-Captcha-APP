@@ -4,11 +4,12 @@ const MongoDBSession = require("connect-mongodb-session")(session);
 const mongoose = require("mongoose");
 const UserModel = require("./models/user.js");
 const ApiKeyModel = require("./models/ApiKey.js")
+const AllowedOriginModel = require("./models/AllowedOrigins.js");
 const bcrypt = require("bcryptjs")
 const { promises: fsPromises } = require('fs');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const port = 90;
+const port = 9090;
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
@@ -21,8 +22,26 @@ setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 let pool;
 let deletedBin;
 const captchaSession = new Map();
+let defaultOrigin = [`http://localhost:${port}`];
 
-  
+
+async function initializeAllowedOrigins() {
+    try {
+        allowedOrigins = await AllowedOriginModel.find({});
+        if (allowedOrigins.length > 0) {
+            allowedOrigins.forEach(origin =>{
+                defaultOrigin.push(origin.allowedOrigin)
+            })
+            console.log("Allowed origins: ", defaultOrigin);
+        } else {
+            console.log("Allowed origins are currently empty. Added localhost as default.");
+        }
+    } catch (err) {
+        console.log("Error parsing JSON data while initializing allowedOrigins:", err);
+    }
+}
+
+
 async function initializePool() {
     try {
         const contents = await fsPromises.readFile("./src/pool.txt", 'utf-8');
@@ -59,6 +78,9 @@ initializeBin().then(() => {
 initializePool().then(() => {
     console.log("pool initialized")
 });
+initializeAllowedOrigins().then(() => {
+    console.log("allowed Origins initialized")
+});
 
 const app = express();
 deleteAllFilesInDir("./tmpimg").then(console.log("All files deleted in ./tmpimg"))
@@ -68,9 +90,17 @@ app.use(express.static("public"));
 app.use('/tmpimg', express.static('tmpimg'));
 app.use(bodyParser.json());
 app.use(cookieParser());
-
 const csrfProtection = csrf({ cookie: true });
 
+app.use(cors({
+    origin: function (origin, callback) {
+      if (!origin || defaultOrigin.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
+  }));
 
 const mongoURI = "mongodb://localhost:3000/drawing-captcha";
 
@@ -185,7 +215,7 @@ app.put("/crud", validateCSRFToken, (req, res) => {
         }
 
         initializePool();
-        
+
 
         isGood = true;
     } else {
@@ -228,15 +258,15 @@ app.get("/register", (req, res) => {
     res.render("register");
 });
 
-app.get("/apiKey", isAuth, validateCSRFToken, (req, res) => {
-    
-    res.render("apiKeys", {username: req.session.user.username, email: req.session.user.email});
+app.get("/dashboard/apiKey", isAuth, validateCSRFToken, (req, res) => {
+
+    res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email });
 
 })
 
 app.put("/apiKey", isAuth, validateCSRFToken, async (req, res) => {
     if (req.body.isDelete) {
-        let key = req.body.key; 
+        let key = req.body.key;
         let isKeyDeleted = false;
         try {
             let keyExists = await ApiKeyModel.findOne({ apiKey: key });
@@ -253,14 +283,14 @@ app.put("/apiKey", isAuth, validateCSRFToken, async (req, res) => {
             console.log("Error while trying to delete API key ", err);
             return res.status(500).json({ error: "An error occurred while deleting the API key" });
         }
-        res.json({ keyDeleted });
+        res.json({ isKeyDeleted });
     } else {
         return res.status(400).json({ error: "Invalid request: 'isDelete' is not true" });
     }
 });
 
 
-app.get("/apiKey/fetch", isAuth, validateCSRFToken, async (req, res) => {
+app.get("/apiKey", isAuth, validateCSRFToken, async (req, res) => {
     try {
         let apiKeys = await ApiKeyModel.find();
         res.json({ apiKeys });
@@ -270,55 +300,74 @@ app.get("/apiKey/fetch", isAuth, validateCSRFToken, async (req, res) => {
     }
 });
 
-app.post("/apiKey/deleteAll" , isAuth, validateCSRFToken, async (req, res) =>{
+app.post("/apiKey/deleteAll", isAuth, validateCSRFToken, async (req, res) => {
     let deleteAll;
-    try{
-        const result = await ApiKeyModel.deleteMany({});
-        deleteAll = true
-        console.log("All API keys have been successfully deleted.")
+    console.log("deleting all api keys....")
+    try {
+        const keys = await ApiKeyModel.find({});
+        if (keys.length > 0) {
+            const result = await ApiKeyModel.deleteMany({});
+            if (result) {
+                deleteAll = "All API keys have been successfully deleted."
+            }
+        }
+        else {
+            deleteAll = "No existing Keys"
+        }
 
     }
-    catch(err){
-        deleteAll = false
-        console.log("The deletion of all API keys has failed.")
+    catch (err) {
+        deleteAll = "The deletion of all API keys has failed."
     }
 
-    res.json({deleteAll})
+    console.log(deleteAll)
 
-}) 
+    res.json({ deleteAll })
+
+})
 
 app.post("/apiKey", isAuth, validateCSRFToken, async (req, res) => {
-    let successfully; 
-    try{
+    let successfully;
+    let message;
+    try {
         let name = req.body.apiKeyName;
-        let apiKey = crypto.randomUUID();
-        while ((await doesApiKeyExist(apiKey))){
-            apiKey = crypto.randomUUID();
+        let doesNameExist = await ApiKeyModel.findOne({ name: name });
+        if (!doesNameExist) {
+            let apiKey = crypto.randomUUID();
+            while ((await doesApiKeyExist(apiKey))) {
+                apiKey = crypto.randomUUID();
+            }
+            api = new ApiKeyModel({
+                apiKey,
+                name
+            })
+
+            await api.save();
+            successfully = true;
+
+
+            message = "Successfully created an API Key"
+            console.log(message)
         }
-    
-        api = new ApiKeyModel ({
-            apiKey,
-            name
-        })
-    
-        await api.save();
-        successfully = true;
+        else {
+            successfully = false;
+            message = "Api key name already exists"
+            console.log(message)
+        }
 
-
-        console.log("Successfully created an API Key")
 
     }
-    catch (err){
+    catch (err) {
         console.log("Creating a Api key failed ", err)
         successfully = false;
     }
-    
-    res.json({successfully});
+
+    res.json({ successfully, message });
 })
 
 app.post("/register", async (req, res) => {
     const { username, email, password } = req.body;
-    
+
     try {
         let user = await UserModel.findOne({ email });
 
@@ -345,11 +394,11 @@ app.post("/register", async (req, res) => {
 
 
 app.get("/dashboard", isAuth, validateCSRFToken, (req, res) => {
-    res.render("dashboard", {username: req.session.user.username, email: req.session.user.email});
+    res.render("dashboard", { username: req.session.user.username, email: req.session.user.email });
 })
 
-app.get("/createItem", isAuth, validateCSRFToken, (req, res) => {
-    res.render("createItem", {username: req.session.user.username, email: req.session.user.email});
+app.get("/dashboard/createItem", isAuth, validateCSRFToken, (req, res) => {
+    res.render("createItem", { username: req.session.user.username, email: req.session.user.email });
 })
 
 app.post("/logout", isAuth, validateCSRFToken, (req, res) => {
@@ -359,11 +408,11 @@ app.post("/logout", isAuth, validateCSRFToken, (req, res) => {
     })
 })
 
-app.get('/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
-    res.render("deletedArchive", {username: req.session.user.username, email: req.session.user.email})
+app.get('/dashboard/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
+    res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email })
 })
 
-app.put('/dashboard/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
+app.put('/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
     initializePool();
     initializeBin();
     let deletedObject;
@@ -419,7 +468,7 @@ app.put('/dashboard/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
     res.json({ isGood })
 })
 
-app.get('/deletedArchive/fetch', isAuth, validateCSRFToken, (req, res) => {
+app.get('/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
     initializeBin();
     if (deletedBin) {
         res.json({ deletedBin });
@@ -427,7 +476,7 @@ app.get('/deletedArchive/fetch', isAuth, validateCSRFToken, (req, res) => {
     else console.error("deletedBin not defined")
 });
 
-app.get('/getImage', validateCSRFToken, (req, res) => {
+app.post('/getImage', validateCSRFOrExternalKey, async (req, res) => {
 
     initializePool();
 
@@ -499,7 +548,7 @@ app.get('/getImage', validateCSRFToken, (req, res) => {
 });
 
 
-app.post('/checkCubes', validateCSRFToken, (req, res) => {
+app.post('/checkCubes', validateCSRFOrExternalKey, async (req, res) => {
     console.log(req.body)
     const selectedFields = req.body.selectedIds;
     const selectedId = req.body.clientData.ID;
@@ -606,6 +655,81 @@ app.post('/newValidation/nameExists', isAuth, validateCSRFToken, (req, res) => {
     res.json({ nameExists });
 });
 
+app.get('/allowedOrigins', isAuth, validateCSRFToken, async (req, res) => {
+    try {
+        let message;
+        let allowedOrigins = await AllowedOriginModel.find({});
+        if (allowedOrigins.length > 0) {
+            message = "allowed origins found"
+            console.log(message)
+        }
+        else {
+            message = "no allowed origins found"
+            console.log(message);
+        }
+
+        res.json({ allowedOrigins, message })
+    }
+    catch (err) {
+        console.log("Error while trying to get AllowedOrigins", err);
+        return res.status(500).json({ error: "An error occurred while trying to get the AllowedOrigins" });
+    }
+
+})
+app.post('/allowedOrigins', isAuth, validateCSRFToken, async (req, res) => {
+    try {
+        let message;
+        let originName = req.body.originName;
+        let doesOriginExist = await AllowedOriginModel.findOne({ allowedOrigin: originName });
+        console.log(doesOriginExist)
+        if (originName && !doesOriginExist) {
+            let origin = new AllowedOriginModel({
+                allowedOrigin: originName
+            });
+
+            await origin.save();
+            initializeAllowedOrigins();
+            message = "Allowed origin successfully created";
+            console.log(message);
+        } else {
+            message = `${originName} is undefined or already exists`;
+            console.log(message);
+        }
+
+        res.json({ message });
+    } catch (err) {
+        console.log("Error while trying to create AllowedOrigins", err);
+        return res.status(500).json({ error: "An error occurred while trying to create AllowedOrigins" });
+    }
+});
+
+app.put("/allowedOrigins", isAuth, validateCSRFToken, async (req, res) => {
+    if (req.body.isDelete) {
+        let origin = req.body.allowedOrigin;
+        let isOriginDeleted = false;
+        try {
+            let originExists = await AllowedOriginModel.findOne({ allowedOrigin: origin });
+            if (originExists) {
+                let originDeleted = await AllowedOriginModel.deleteOne({ allowedOrigin: origin });
+                isOriginDeleted = true;
+                initializeAllowedOrigins();
+                if (originDeleted.deletedCount === 0) {
+                    throw new Error("Error deleting allowed Origin");
+                }
+            } else {
+                return res.status(404).json({ error: "The given Origin does not exist" });
+            }
+        } catch (err) {
+            console.log("Error while trying to delete allowed Origin ", err);
+            return res.status(500).json({ error: "An error occurred while deleting the allowed origin" });
+        }
+        res.json({ isOriginDeleted });
+    } else {
+        return res.status(400).json({ error: "Invalid request: 'isDelete' is not true" });
+    }
+});
+
+
 app.listen(port, () => {
     console.log(`Server Running on port: ${port}`);
     // store.collection.deleteMany({}, (err) => {
@@ -669,8 +793,8 @@ function generateCSRFToken(req, res, next) {
     next();
 }
 
-async function doesApiKeyExist(key){
-    let apiKeyExists = await ApiKeyModel.findOne({key})
+async function doesApiKeyExist(key) {
+    let apiKeyExists = await ApiKeyModel.findOne({ apiKey: key })
     return apiKeyExists;
 }
 
@@ -687,6 +811,43 @@ function deleteAndLog() {
     deleteAllFilesInDir("./tmpimg")
         .then(() => console.log("All files deleted in ./tmpimg"))
         .catch(error => console.error("Error deleting files:", error));
+}
+
+async function validateGeneralCSRFToken(req, res, next) {
+    const csrfToken = req.cookies.mycsrfToken;
+    if (req.session.csrfToken === csrfToken && req.session.csrfToken != null && csrfToken != null) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+async function validateExternalKey(req, res, next) {
+    const apiKey = req.body.apiKey;
+    let doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
+    if (doesExist) {
+        return true;
+    }
+    else {
+        return false
+    }
+}
+
+
+async function validateCSRFOrExternalKey(req, res, next) {
+    let failed = false;
+    let apiKey = await validateExternalKey(req, res, next);
+    if (apiKey === true) {
+        next();
+    } else {
+        let CSRFToken = await validateGeneralCSRFToken(req, res, next);
+        if (CSRFToken === true) {
+            next();
+        } else {
+            failed = true;
+            res.status(403).json({ error: "CSRF Token or API Key validation failed" });
+        }
+    }
 }
 
 
