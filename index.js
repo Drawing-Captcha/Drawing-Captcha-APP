@@ -753,13 +753,13 @@ app.put("/allowedOrigins", isAuth, validateCSRFToken, async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server Running on port: ${port}`);
-    // store.collection.deleteMany({}, (err) => {
-    //     if (err) {
-    //         console.error('Fehler beim Löschen der Sessions:', err);
-    //     } else {
-    //         console.log('Alle Sessions erfolgreich gelöscht.');
-    //     }
-    // });
+    store.collection.deleteMany({}, (err) => {
+        if (err) {
+            console.error('Fehler beim Löschen der Sessions:', err);
+        } else {
+            console.log('Alle Sessions erfolgreich gelöscht.');
+        }
+    });
 });
 
 
