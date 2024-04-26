@@ -1,4 +1,6 @@
 const wrapperOrigins = document.querySelector(".stacked-list1_list-wrapper.origins");
+const toDoLabel = createForm.querySelector("label")
+const submitButton = createForm.querySelector("button")
 let originName;
 async function getOrigins() {
     try {
@@ -93,7 +95,9 @@ async function getOrigins() {
 
 
 function addOrigin() {
-    toDo.innerHTML = "Add new Origin 🔒 Important: if the domain has a seperate port please define it so you can access it properly.";
+    toDo.innerHTML = "Add new Origin 🔒";
+    toDoLabel.innerHTML = "Important: if the domain has a seperate port please define it so you can access it properly."
+    submitButton.innerHTML = "Add Origin"
     createForm.setAttribute("onsubmit", "proofRegex(); return false;")
     addFrom();
 }
@@ -109,7 +113,7 @@ function addFrom(){
 
 function proofRegex() {
     originName = formName.value;
-    const expression = /^(https?:\/\/)?(((([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})|(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})))(:\d{1,5})?((\/\w+)*\/)?(\w+\.[\w]{3,4})?(\?[\w%&=]*)?(#[\w]*)?$/;
+    const expression = /(?:https?:\/\/)?(?:[\w.-]+|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(?::\d+)?(?:\/\S*)?/;
     const regex = new RegExp(expression);
 
     if (regex.test(originName)) {
@@ -154,14 +158,14 @@ function submitOrigin() {
         });
 }
 
-function putOrigin(origin, isDeleted) {
+function putOrigin(origin, isDelete) {
 
     fetch("/allowedOrigins", {
         method: "PUT",
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ allowedOrigin: origin, isDeleted })
+        body: JSON.stringify({ allowedOrigin: origin, isDelete })
     })
         .then(response => {
             if (response.ok) {

@@ -119,12 +119,11 @@ app.set("view engine", "ejs")
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
-    secret: "nmhSe2OEOcVNBYIe7E0h",
+    secret: "nmhSe2OEOadfasd5%%%cVNBYIe7E0h",
     resave: false,
     saveUninitialized: false,
     store: store,
 }));
-
 
 const isAuth = (req, res, next) => {
     if (req.session.isAuth) {
@@ -135,6 +134,16 @@ const isAuth = (req, res, next) => {
     }
 }
 
+const isHuman = (req, res, next) =>{
+    if (req.session.isHuman) {
+        next()
+    }
+    else {
+        res.status(403).json({ error: "Invalid request" });    
+    }
+
+}
+
 app.get("/", (req, res) => {
     res.render("landing");
 });
@@ -143,7 +152,10 @@ app.get('/login', generateCSRFToken, (req, res) => {
     res.render('login', { message: req.session.message, csrfToken: req.session.csrfToken });
 });
 
-app.post('/reload', generateCSRFToken, (req, res) => {
+app.post('/reload', validateCSRFOrExternalKey, (req, res) => {
+    if (req.body.session && req.body.session.uniqueFileName) {
+        req.session.uniqueFileName = req.body.session.uniqueFileName;
+    }
     deleteFile(`./tmpimg/${req.session.uniqueFileName}`);
 
 });
@@ -478,9 +490,18 @@ app.get('/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
 
 app.post('/getImage', validateCSRFOrExternalKey, async (req, res) => {
 
+
     initializePool();
 
     try {
+        if(req.body.session){
+            req.session.cookie = req.body.session.cookie;
+            req.session.authMethod = req.body.session.authMethod;
+            req.session.apiKey = req.body.session.apiKey;
+            req.session.clientSpecificData = req.body.session.clientSpecificData;
+            req.session.uniqueFileName = req.body.session.uniqueFileName;
+
+        }
         const captchaIdentifier = uuid.v4();
         console.log(captchaIdentifier)
 
@@ -537,7 +558,7 @@ app.post('/getImage', validateCSRFOrExternalKey, async (req, res) => {
 
         const finishedURL = `/tmpimg/${uniqueFileName}`;
 
-        res.json({ finishedURL, clientData });
+        res.json({ finishedURL, clientData, session: req.session });
 
 
     } catch (err) {
@@ -813,35 +834,23 @@ function deleteAndLog() {
         .catch(error => console.error("Error deleting files:", error));
 }
 
-async function validateGeneralCSRFToken(req, res, next) {
-    const csrfToken = req.cookies.mycsrfToken;
-    if (req.session.csrfToken === csrfToken && req.session.csrfToken != null && csrfToken != null) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-async function validateExternalKey(req, res, next) {
-    const apiKey = req.body.apiKey;
-    let doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
-    if (doesExist) {
-        return true;
-    }
-    else {
-        return false
-    }
-}
-
-
 async function validateCSRFOrExternalKey(req, res, next) {
     let failed = false;
-    let apiKey = await validateExternalKey(req, res, next);
-    if (apiKey === true) {
+    
+    const apiKey = req.body.apiKey;
+    let doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
+    
+    if (doesExist) {
+        req.session.authMethod = "apiKey";
+        req.session.apiKey = apiKey;
+        
         next();
     } else {
-        let CSRFToken = await validateGeneralCSRFToken(req, res, next);
-        if (CSRFToken === true) {
+        const CSRFToken = req.cookies.mycsrfToken;
+        
+        if (req.session.csrfToken === CSRFToken && req.session.csrfToken != null && CSRFToken != null) {
+            req.session.authMethod = "csrfToken";
+            
             next();
         } else {
             failed = true;
@@ -849,5 +858,4 @@ async function validateCSRFOrExternalKey(req, res, next) {
         }
     }
 }
-
 

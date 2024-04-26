@@ -135,7 +135,7 @@ function getBack(e) {
 }
 
 function pushToServer() {
-    fetch("/dashboard/deletedArchive", {
+    fetch("/deletedArchive", {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'

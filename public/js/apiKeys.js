@@ -212,6 +212,8 @@ function deleteAllKeys() {
 
 function addApiKey(){
     toDo.innerHTML = "Add API Key 🔑"
+    toDoLabel.innerHTML = "Key Name"
+    submitButton.innerHTML = "Add Key"
     createForm.setAttribute("onsubmit", "submitApi(); return false;")
     addFrom()
 
