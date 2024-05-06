@@ -43,30 +43,36 @@ CaptureForm.addEventListener("submit", async function (event) {
 });
 
 fileInput.addEventListener("change", async () => {
-    const reader = new FileReader();
-    reader.addEventListener("load", async () => {
-        const result = reader.result;
+    const file = fileInput.files[0];
+    const fileType = file.type;
 
-        if (result) {
-            backgroundImage = result;
-            captchaContainer.style.display = "flex";
-            canvas.style.backgroundImage = `url(${result})`;
-            buildCubes();
-            toDo.innerHTML = "If your selected image is displayed, please draw the corresponding valid fields for your item. Ensure that the drawn fields cover the entirety of the item you wish to use for validation.";
-            fileInput.style.display = "none";
-            changeImageButton.style.display = "block";
-            discard.style.display = "block";
-            cube.forEach(cube => {
-                cube.classList.remove("selected");
-                cube.style = "cursor: crosshair;";
-            });
-        }
-    });
+    if (fileType === "image/png") {
+        const reader = new FileReader();
+        reader.addEventListener("load", async () => {
+            const result = reader.result;
+            if (result) {
+                backgroundImage = result;
+                captchaContainer.style.display = "flex";
+                canvas.style.backgroundImage = `url(${result})`;
+                buildCubes();
+                toDo.innerHTML = "If your selected image is displayed, please draw the corresponding valid fields for your item. Ensure that the drawn fields cover the entirety of the item you wish to use for validation.";
+                fileInput.style.display = "none";
+                changeImageButton.style.display = "block";
+                discard.style.display = "block";
+                cube.forEach(cube => {
+                    cube.classList.remove("selected");
+                    cube.style = "cursor: crosshair;";
+                });
+            }
+        });
 
-    if (fileInput.files.length > 0) {
-        reader.readAsDataURL(fileInput.files[0]);
+        reader.readAsDataURL(file);
+    } else {
+        alert("Please select a PNG file.");
+        fileInput.value = ""; 
     }
 });
+
 
 function buildCubes() {
     const numbCubes = 961;

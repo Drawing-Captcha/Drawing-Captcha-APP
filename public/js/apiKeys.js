@@ -214,22 +214,27 @@ function addApiKey(){
     toDo.innerHTML = "Add API Key 🔑"
     toDoLabel.innerHTML = "Key Name"
     submitButton.innerHTML = "Add Key"
+    shellLayout.style.display = "none"
+    sectionHeader.style.display = "none"
+    inputName.setAttribute("placeholder", "KeyName")
     createForm.setAttribute("onsubmit", "submitApi(); return false;")
     addFrom()
 
     
 }
 function addFrom(){
+
     itemPageWrapper.style.display = "flex";
     ItemWrapper.style.display = "flex";
     setTimeout(() => {
         itemPageWrapper.style.opacity = '1';
     }, 50);
-    
 
 }
 
 function closeForm(){
+    shellLayout.style.display = "block"
+    sectionHeader.style.display = "block"
     itemPageWrapper.style.opacity = '0';
     setTimeout(() => {
         itemPageWrapper.style.display = "none";

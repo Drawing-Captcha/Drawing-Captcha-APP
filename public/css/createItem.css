@@ -51,7 +51,6 @@ hr{
     display: none;
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(10px);
     position: absolute;
     width:-webkit-fill-available;
     height: -webkit-fill-available;

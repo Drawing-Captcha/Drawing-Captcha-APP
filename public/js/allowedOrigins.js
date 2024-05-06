@@ -1,6 +1,9 @@
 const wrapperOrigins = document.querySelector(".stacked-list1_list-wrapper.origins");
 const toDoLabel = createForm.querySelector("label")
 const submitButton = createForm.querySelector("button")
+const inputName = createForm.querySelector("input")
+const sectionHeader = document.querySelector(".section_page-header3")
+const shellLayout = document.querySelector(".section_shell2-layout")
 let originName;
 async function getOrigins() {
     try {
@@ -98,7 +101,10 @@ function addOrigin() {
     toDo.innerHTML = "Add new Origin 🔒";
     toDoLabel.innerHTML = "Important: if the domain has a seperate port please define it so you can access it properly."
     submitButton.innerHTML = "Add Origin"
-    createForm.setAttribute("onsubmit", "proofRegex(); return false;")
+    shellLayout.style.display = "none"
+    sectionHeader.style.display = "none"
+    inputName.setAttribute("placeholder", "OriginName")
+    createForm.setAttribute("onsubmit", "proofRegex()")
     addFrom();
 }
 
@@ -112,8 +118,15 @@ function addFrom(){
 }
 
 function proofRegex() {
-    originName = formName.value;
-    const expression = /(?:https?:\/\/)?(?:[\w.-]+|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(?::\d+)?(?:\/\S*)?/;
+    console.log(originName)
+    originName = inputName.value.trim();
+    console.log(originName)
+
+    if(originName.endsWith("/")){
+        originName = originName.slice(0, -1)
+        console.log(originName)
+    }
+    const expression = /^(https?:\/\/)(localhost|\b(?:[0-9a-zA-Z.-]+\.[a-zA-Z]{2,}))(?::\d{1,5})?(\/.*)?$/;
     const regex = new RegExp(expression);
 
     if (regex.test(originName)) {
@@ -122,14 +135,14 @@ function proofRegex() {
         alert("Regex error: please define your origin like this schema: https://yourdomain.com");
     }
 }
+
+
 function deleteOrigin(elementData){
     let isDeleted = true;
     let origin = elementData.allowedOrigin;
     putOrigin(origin, isDeleted)
 }
 function submitOrigin() {
-
-    originName = formName.value;
 
     fetch("/allowedOrigins", {
         method: "POST",

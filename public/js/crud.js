@@ -286,7 +286,7 @@ function reset(container) {
 
 function finishUpdate(){
 
-    itemName = itemPageWrapper.querySelector("#captchaItemName").value
+    itemName = document.querySelector("#captchaItemName").value
 
     captchaContainer.forEach(container => {
         let containerCanvas = container.querySelector(".canvas");
