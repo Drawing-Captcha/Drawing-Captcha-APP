@@ -121,6 +121,11 @@ function reset() {
 function continueValid() {
     validateTrueCubes = Array.from(document.querySelectorAll(".cube")).filter(cube => cube.classList.contains("selected")).map(cube => cube.id);
 
+    if(validateTrueCubes.length < 1){
+        alert("The minimum number of cubes cannot be below 1. Please select more.")
+        return
+    }
+
     document.querySelector(".submit-button").setAttribute("onclick", "continueMin()");
 
     toDo.innerHTML = "Fantastic! Now, sketch out the minimum required fields for the item you intend to designate as valid. ✏️"
@@ -131,6 +136,11 @@ function continueValid() {
 
 function continueMin() {
     validateMinCubes = Array.from(document.querySelectorAll(".cube")).filter(cube => cube.classList.contains("selected")).map(cube => cube.id);
+
+    if(validateMinCubes.length < 1){
+        alert("The minimum number of cubes cannot be below 1. Please select more.")
+        return
+    }
 
     document.querySelector(".submit-button").setAttribute("onclick", "continueMax()");
     toDo.innerHTML = "Nice work! Now, for the last step, draw the maximum valid area you want to set. Draw over the item border to allow for some tolerance 🚀."
@@ -147,6 +157,11 @@ function continueMin() {
 
 function continueMax() {
     validateMaxCubes = Array.from(document.querySelectorAll(".cube")).filter(cube => cube.classList.contains("selected")).map(cube => cube.id);
+
+    if(validateMaxCubes.length < 1){
+        alert("The minimum number of cubes cannot be below 1. Please select more.")
+        return
+    }
 
     pushToServer();
 
