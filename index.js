@@ -16,6 +16,7 @@ const path = require("path");
 const uuid = require('uuid');
 const csrf = require('csurf');
 const cookieParser = require('cookie-parser');
+const ColorKit = require("./models/ColorKit.js");
 
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 
@@ -23,13 +24,20 @@ let pool;
 let deletedBin;
 const captchaSession = new Map();
 let defaultOrigin = [`http://localhost:${port}`];
+const defaultColorKit = {
+    buttonColorValue: "#007BFF",
+    buttonColorHoverValue: "#0056b3",
+    selectedCubeColorValue: "#ffff00",
+    canvasOnHoverColorValue: "#ff0000",
+    titleInputValue: "Please draw the object currently being displayed."
+}
 
 
 async function initializeAllowedOrigins() {
     try {
         allowedOrigins = await AllowedOriginModel.find({});
         if (allowedOrigins.length > 0) {
-            allowedOrigins.forEach(origin =>{
+            allowedOrigins.forEach(origin => {
                 defaultOrigin.push(origin.allowedOrigin)
             })
             console.log("Allowed origins: ", defaultOrigin);
@@ -94,13 +102,13 @@ const csrfProtection = csrf({ cookie: true });
 
 app.use(cors({
     origin: function (origin, callback) {
-      if (!origin || defaultOrigin.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
+        if (!origin || defaultOrigin.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
     }
-  }));
+}));
 
 const mongoURI = "mongodb://localhost:3000/drawing-captcha";
 
@@ -134,12 +142,12 @@ const isAuth = (req, res, next) => {
     }
 }
 
-const isHuman = (req, res, next) =>{
+const isHuman = (req, res, next) => {
     if (req.session.isHuman) {
         next()
     }
     else {
-        res.status(403).json({ error: "Invalid request" });    
+        res.status(403).json({ error: "Invalid request" });
     }
 
 }
@@ -409,6 +417,91 @@ app.get("/dashboard", isAuth, validateCSRFToken, (req, res) => {
     res.render("dashboard", { username: req.session.user.username, email: req.session.user.email });
 })
 
+app.get("/dashboard/captchaSettings", isAuth, validateCSRFToken, (req, res) => {
+    res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email });
+})
+
+app.post("/dashboard/captchaSettings", isAuth, validateCSRFToken, async (req, res) => {
+    try {
+        console.log(req.body)
+        const {
+            buttonColorValue,
+            buttonColorHoverValue,
+            selectedCubeColorValue,
+            canvasOnHoverColorValue,
+            titleInputValue,
+            isResetColorKit
+        } = req.body;
+
+        let message;
+
+        if (isResetColorKit) {
+            let deletedKit = await ColorKit.deleteMany({});
+            message = deletedKit ? "ColorKit has been reset to default" : "Failed to reset ColorKit to default";
+        }
+        else {
+
+            let doesColorKitAlreadyExist = await ColorKit.findOne({});
+
+            if (!doesColorKitAlreadyExist) {
+                console.log("found one colorKit")
+                let newColorKit = new ColorKit({
+                    buttonColorValue,
+                    buttonColorHoverValue,
+                    selectedCubeColorValue,
+                    canvasOnHoverColorValue,
+                    titleInputValue
+                });
+                await newColorKit.save();
+                message = "ColorKit has been created successfully."
+            } else {
+                await ColorKit.updateOne({}, {
+                    buttonColorValue,
+                    buttonColorHoverValue,
+                    selectedCubeColorValue,
+                    canvasOnHoverColorValue,
+                    titleInputValue
+                });
+                console.log("update one colorKit")
+                message = "ColorKit has been updated successfully."
+            }
+        }
+
+        res.status(200).json({ message });
+
+    } catch (err) {
+        console.error("Error while processing request:", err);
+        res.status(500).json({ error: "An internal server error occurred." });
+    }
+});
+
+app.post("/captchaSettings", validateCSRFOrExternalKey, async (req, res) => {
+    try {
+        console.log("captcha settings getting fetched..")
+        let returnedColorKit
+        let message
+        let colorKit = await ColorKit.findOne({});
+        if (colorKit) {
+            message = "ColorKit found"
+            console.log(message)
+            returnedColorKit = colorKit
+        } else {
+            message = "No ColorKit found returned the default color Kit"
+            console.log(message);
+            returnedColorKit = defaultColorKit
+        }
+        console.log("returned colorKit: ", returnedColorKit);
+
+        res.status(200).json({ returnedColorKit, message });
+
+    } catch (err) {
+        console.error("Error while processing request:", err);
+        res.status(500).json({ error: "An internal server error occurred." });
+    }
+});
+
+
+
 app.get("/dashboard/createItem", isAuth, validateCSRFToken, (req, res) => {
     res.render("createItem", { username: req.session.user.username, email: req.session.user.email });
 })
@@ -494,7 +587,7 @@ app.post('/getImage', validateCSRFOrExternalKey, async (req, res) => {
     initializePool();
 
     try {
-        if(req.body.session){
+        if (req.body.session) {
             req.session.cookie = req.body.session.cookie;
             req.session.authMethod = req.body.session.authMethod;
             req.session.apiKey = req.body.session.apiKey;
@@ -724,6 +817,7 @@ app.post('/allowedOrigins', isAuth, validateCSRFToken, async (req, res) => {
     }
 });
 
+
 app.put("/allowedOrigins", isAuth, validateCSRFToken, async (req, res) => {
     if (req.body.isDelete) {
         let origin = req.body.allowedOrigin;
@@ -753,13 +847,13 @@ app.put("/allowedOrigins", isAuth, validateCSRFToken, async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server Running on port: ${port}`);
-    // store.collection.deleteMany({}, (err) => {
-    //     if (err) {
-    //         console.error('Fehler beim Löschen der Sessions:', err);
-    //     } else {
-    //         console.log('Alle Sessions erfolgreich gelöscht.');
-    //     }
-    // });
+    store.collection.deleteMany({}, (err) => {
+        if (err) {
+            console.error('Fehler beim Löschen der Sessions:', err);
+        } else {
+            console.log('Alle Sessions erfolgreich gelöscht.');
+        }
+    });
 });
 
 
@@ -836,21 +930,21 @@ function deleteAndLog() {
 
 async function validateCSRFOrExternalKey(req, res, next) {
     let failed = false;
-    
+
     const apiKey = req.body.apiKey;
     let doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
-    
+
     if (doesExist) {
         req.session.authMethod = "apiKey";
         req.session.apiKey = apiKey;
-        
+
         next();
     } else {
         const CSRFToken = req.cookies.mycsrfToken;
-        
+
         if (req.session.csrfToken === CSRFToken && req.session.csrfToken != null && CSRFToken != null) {
             req.session.authMethod = "csrfToken";
-            
+
             next();
         } else {
             failed = true;

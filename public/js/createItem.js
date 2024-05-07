@@ -43,30 +43,36 @@ CaptureForm.addEventListener("submit", async function (event) {
 });
 
 fileInput.addEventListener("change", async () => {
-    const reader = new FileReader();
-    reader.addEventListener("load", async () => {
-        const result = reader.result;
+    const file = fileInput.files[0];
+    const fileType = file.type;
 
-        if (result) {
-            backgroundImage = result;
-            captchaContainer.style.display = "flex";
-            canvas.style.backgroundImage = `url(${result})`;
-            buildCubes();
-            toDo.innerHTML = "If your selected image is displayed, please draw the corresponding valid fields for your item. Ensure that the drawn fields cover the entirety of the item you wish to use for validation.";
-            fileInput.style.display = "none";
-            changeImageButton.style.display = "block";
-            discard.style.display = "block";
-            cube.forEach(cube => {
-                cube.classList.remove("selected");
-                cube.style = "cursor: crosshair;";
-            });
-        }
-    });
+    if (fileType === "image/png") {
+        const reader = new FileReader();
+        reader.addEventListener("load", async () => {
+            const result = reader.result;
+            if (result) {
+                backgroundImage = result;
+                captchaContainer.style.display = "flex";
+                canvas.style.backgroundImage = `url(${result})`;
+                buildCubes();
+                toDo.innerHTML = "If your selected image is displayed, please draw the corresponding valid fields for your item. Ensure that the drawn fields cover the entirety of the item you wish to use for validation.";
+                fileInput.style.display = "none";
+                changeImageButton.style.display = "block";
+                discard.style.display = "block";
+                cube.forEach(cube => {
+                    cube.classList.remove("selected");
+                    cube.style = "cursor: crosshair;";
+                });
+            }
+        });
 
-    if (fileInput.files.length > 0) {
-        reader.readAsDataURL(fileInput.files[0]);
+        reader.readAsDataURL(file);
+    } else {
+        alert("Please select a PNG file.");
+        fileInput.value = ""; 
     }
 });
+
 
 function buildCubes() {
     const numbCubes = 961;
@@ -115,6 +121,11 @@ function reset() {
 function continueValid() {
     validateTrueCubes = Array.from(document.querySelectorAll(".cube")).filter(cube => cube.classList.contains("selected")).map(cube => cube.id);
 
+    if(validateTrueCubes.length < 1){
+        alert("The minimum number of cubes cannot be below 1. Please select more.")
+        return
+    }
+
     document.querySelector(".submit-button").setAttribute("onclick", "continueMin()");
 
     toDo.innerHTML = "Fantastic! Now, sketch out the minimum required fields for the item you intend to designate as valid. ✏️"
@@ -125,6 +136,11 @@ function continueValid() {
 
 function continueMin() {
     validateMinCubes = Array.from(document.querySelectorAll(".cube")).filter(cube => cube.classList.contains("selected")).map(cube => cube.id);
+
+    if(validateMinCubes.length < 1){
+        alert("The minimum number of cubes cannot be below 1. Please select more.")
+        return
+    }
 
     document.querySelector(".submit-button").setAttribute("onclick", "continueMax()");
     toDo.innerHTML = "Nice work! Now, for the last step, draw the maximum valid area you want to set. Draw over the item border to allow for some tolerance 🚀."
@@ -141,6 +157,11 @@ function continueMin() {
 
 function continueMax() {
     validateMaxCubes = Array.from(document.querySelectorAll(".cube")).filter(cube => cube.classList.contains("selected")).map(cube => cube.id);
+
+    if(validateMaxCubes.length < 1){
+        alert("The minimum number of cubes cannot be below 1. Please select more.")
+        return
+    }
 
     pushToServer();
 

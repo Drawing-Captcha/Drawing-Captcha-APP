@@ -111,7 +111,7 @@ class CaptchaComponent extends HTMLElement {
         max-width: 100%; 
         width: fit-content;
         background-position: center;
-        background-size: 50%;
+        background-size: 70%;
         background-repeat: no-repeat;
     
     }

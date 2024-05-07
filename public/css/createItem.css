@@ -9,11 +9,48 @@ hr{
     border-top: dotted;
 }
 
+.editItemParent{
+    display: none;
+}
+
+.editItemWrapper{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 5em;
+    margin-top: 1em;
+}
+
+.upper-section{
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
+    gap: 1em;
+    width: 25%;
+
+}
+.upper-section input{
+    padding: 1em;
+    height: 2.5em;
+}
+
+.middle-section{
+    display: flex;
+    justify-content: space-between;
+}
+
+.lower-section{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 4em;
+}
+
 .itemPageWrapper{
     display: none;
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(10px);
     position: absolute;
     width:-webkit-fill-available;
     height: -webkit-fill-available;
@@ -114,7 +151,7 @@ input{
     border-radius: 8px;
     background-color: white;
     color: black;
-    padding: 2%;
+    padding: 1%;
 }
 
 button{
@@ -190,7 +227,7 @@ form{
     flex-direction: column;
     background-color: white;
     border-radius: 0.6em;
-    padding: 3%;
+    padding: 2em;
     text-align: center;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
     animation: fadeIn 0.5s ease-in;
@@ -253,7 +290,7 @@ form{
     max-width: 100%; 
     width: fit-content;
     background-position: center;
-    background-size: 50%;
+    background-size: 70%;
     background-repeat: no-repeat;
 
 }

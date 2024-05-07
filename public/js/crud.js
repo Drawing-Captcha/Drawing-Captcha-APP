@@ -8,11 +8,12 @@ const cubeMin = document.querySelectorAll(".cube-min")
 const cubeMax = document.querySelectorAll(".cube-max")
 const cubeID = document.querySelectorAll("#id")
 const wrapper = document.querySelector(".stacked-list1_list-wrapper");
-const itemPageWrapper = document.querySelector(".itemPageWrapper");
 const captchaContainer = document.querySelectorAll(".captcha-container");
-const captchaItemName = document.querySelector("#captchaItemName");
-const toDo = itemPageWrapper.querySelector("h3");
+const captchaItemName = document.querySelector("input#captchaItemName");
 const header = document.querySelector(".section-header2_content-wrapper");
+const toDo = document.querySelector(".editToDO")
+const editItemParent = document.querySelector(".editItemParent")
+const currentItems = document.querySelector(".currentItems")
 
 
 let tmpPool = [];
@@ -141,12 +142,10 @@ async function getPool() {
 }
 
 function getComponent(e) {
-    toDo.innerHTML = `Edit item: ${e.Name}`
-    // itemPageWrapper.style.display = "flex";
-    // setTimeout(() => {
-    //     itemPageWrapper.style.opacity = '1';
-    // }, 50);
-    
+    removeCurrentItems();
+    toDo.innerHTML = `Edit item: ${e.Name}`;
+    editItemParent.style.display = "block";
+
     buildCubes();
     pool = e
     tmpPool.push(pool)
@@ -287,7 +286,7 @@ function reset(container) {
 
 function finishUpdate(){
 
-    itemName = itemPageWrapper.querySelector("#captchaItemName").value
+    itemName = document.querySelector("#captchaItemName").value
 
     captchaContainer.forEach(container => {
         let containerCanvas = container.querySelector(".canvas");
@@ -324,10 +323,20 @@ function finishUpdate(){
 }
 
 function closeForm(){
-    itemPageWrapper.style.opacity = '0';
-    setTimeout(() => {
-        itemPageWrapper.style.display = "none";
-    }, 300); 
-    formName.value = "";
+    captchaContainer.forEach(container =>{
+        reset(container)
+    })
+    editItemParent.style.display = "none";
+    displayCurrentItems();
+
 
 }
+
+function removeCurrentItems(){
+    currentItems.style.display = "none"
+}
+
+function displayCurrentItems(){
+    currentItems.style.display = "block"
+}
+

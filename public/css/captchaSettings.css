@@ -1,0 +1,51 @@
+.captcha-settings-wrapper{
+    width: -webkit-fill-available;
+    height: fit-content;
+    display: flex;
+    justify-content: center;
+    justify-content: space-between;
+    flex-direction: column;
+    gap: 2em;
+}
+.captcha-settings-upper{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    
+}
+
+.captcha-settings-upper input{
+    width: fit-content;
+    min-width: 40em;
+}
+
+.captcha-settings-middle{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    gap: 3em;
+}
+
+.side{
+    display: flex;
+    width: -webkit-fill-available;
+    gap: 8em;
+    justify-content: center;
+    flex-direction: column;
+    align-items: space-between;
+    
+}
+
+.middle .side{
+    height: fit-content !important;
+    width: fit-content !important;
+}
+
+
+.side input{
+    width: -webkit-fill-available;
+    height: 2em;
+
+}
