@@ -4,6 +4,28 @@
     margin: 0;
 }
 
+#imageResizer{
+    padding: 0%;
+    width: 88%;
+}
+
+.imageResizerWrapper{
+    display: none;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.todoTitleWrapper{
+    display: none;
+    width: 100%;
+    flex-direction: column;
+}
+textarea{
+    width: 100%;
+    padding: 0.5em;
+    border-radius: 5px;
+    margin-bottom: 1em;
+}
 
 hr{
     border-top: dotted;
@@ -21,12 +43,15 @@ hr{
     margin-top: 1em;
 }
 
+.upper-section #captchaItemName{
+    width: 25%;
+}
 .upper-section{
     display: flex;
     flex-direction: column;
     height: fit-content;
     gap: 1em;
-    width: 25%;
+    width: 100%;
 
 }
 .upper-section input{
@@ -128,8 +153,22 @@ hr{
     color: white;
     gap: 7em;
     padding: 7em;
-    max-width: 100%;;
+    max-width: 100%;
 
+}
+
+.itemWrapper-createItem{
+    margin-bottom: 2vh;
+    border-radius: 30px;
+    height: fit-content;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: rgb(0, 0, 0);
+    gap: 6em;
+    padding: -1em;
+    max-width: 100%;
 }
 
 .subtitles{
@@ -235,7 +274,11 @@ form{
     align-items: center;
 }
 
+.captcha-container-createItem {
+    max-width: 36em;
 
+
+}
 .captchta-canvas > * {
     grid-column: 1;
     grid-row: 1;

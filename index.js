@@ -9,7 +9,7 @@ const bcrypt = require("bcryptjs")
 const { promises: fsPromises } = require('fs');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const port = 9090;
+const port = 9091;
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
@@ -29,7 +29,7 @@ const defaultColorKit = {
     buttonColorHoverValue: "#0056b3",
     selectedCubeColorValue: "#ffff00",
     canvasOnHoverColorValue: "#ff0000",
-    titleInputValue: "Please draw the object currently being displayed."
+    defaultTitle: "Please draw the object currently being displayed."
 }
 
 
@@ -220,6 +220,8 @@ app.put("/crud", validateCSRFToken, (req, res) => {
             pool[index].validateMaxCubes = tmpPool[0].validateMaxCubes
             pool[index].MaxTolerance = (tmpPool[0].validateMaxCubes.length * 1) / tmpPool[0].ValidateF.length;
             pool[index].MinTolerance = (tmpPool[0].validateMinCubes.length * 1) / tmpPool[0].ValidateF.length;
+            pool[index].todoTitle = tmpPool[0].todoTitle
+            pool[index].backgroundSize = tmpPool[0].backgroundSize
 
             fs.writeFile('./src/pool.txt', JSON.stringify(pool, null, 2), 'utf-8', (err) => {
                 if (err) {
@@ -429,7 +431,7 @@ app.post("/dashboard/captchaSettings", isAuth, validateCSRFToken, async (req, re
             buttonColorHoverValue,
             selectedCubeColorValue,
             canvasOnHoverColorValue,
-            titleInputValue,
+            defaultTitle,
             isResetColorKit
         } = req.body;
 
@@ -450,7 +452,7 @@ app.post("/dashboard/captchaSettings", isAuth, validateCSRFToken, async (req, re
                     buttonColorHoverValue,
                     selectedCubeColorValue,
                     canvasOnHoverColorValue,
-                    titleInputValue
+                    defaultTitle
                 });
                 await newColorKit.save();
                 message = "ColorKit has been created successfully."
@@ -460,7 +462,7 @@ app.post("/dashboard/captchaSettings", isAuth, validateCSRFToken, async (req, re
                     buttonColorHoverValue,
                     selectedCubeColorValue,
                     canvasOnHoverColorValue,
-                    titleInputValue
+                    defaultTitle
                 });
                 console.log("update one colorKit")
                 message = "ColorKit has been updated successfully."
@@ -706,6 +708,8 @@ app.post('/newValidation', isAuth, validateCSRFToken, (req, res) => {
     const validateMaxCubes = req.body.validateMaxCubes;
     const componentName = req.body.sessionComponentName;
     const backgroundImage = req.body.backgroundImage;
+    const todoTitle = req.body.todoTitle;
+    const backgroundSize = req.body.backgroundSize;
 
     let isValid = false;
 
@@ -732,9 +736,13 @@ app.post('/newValidation', isAuth, validateCSRFToken, (req, res) => {
                     "MinTolerance": MinTolerance,
                     "ValidateF": validateTrueCubes,
                     "validateMinCubes": validateMinCubes,
-                    "validateMaxCubes": validateMaxCubes
+                    "validateMaxCubes": validateMaxCubes,
+                    "todoTitle": todoTitle,
+                    "backgroundSize": backgroundSize
                 }
             ];
+
+            console.log(tmpPool)
 
             if (data) {
                 const pool = JSON.parse(data);
@@ -847,13 +855,13 @@ app.put("/allowedOrigins", isAuth, validateCSRFToken, async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server Running on port: ${port}`);
-    store.collection.deleteMany({}, (err) => {
-        if (err) {
-            console.error('Fehler beim Löschen der Sessions:', err);
-        } else {
-            console.log('Alle Sessions erfolgreich gelöscht.');
-        }
-    });
+    // store.collection.deleteMany({}, (err) => {
+    //     if (err) {
+    //         console.error('Error while trying to delete Sessions:', err);
+    //     } else {
+    //         console.log('All Sessions successfully.');
+    //     }
+    // });
 });
 
 

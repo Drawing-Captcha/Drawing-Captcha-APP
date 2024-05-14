@@ -18,7 +18,7 @@ let buttonColorValue
 let buttonColorHoverValue
 let selectedCubeColorValue
 let canvasOnHoverColorValue
-let titleInputValue
+let defaultTitle
 let cubes
 let returnedColorKit
 let isResetColorKit = false
@@ -60,7 +60,7 @@ function setColors(){
     buttonColorHoverValue = buttonOnHoverColorPicker.value;
     selectedCubeColorValue = selectedCubeColorPicker.value;
     canvasOnHoverColorValue = canvasOnHoverColorPicker.value;
-    titleInputValue = titleInput.value
+    defaultTitle = titleInput.value
 }
 
 function resetColorKit(){
@@ -91,7 +91,7 @@ async function getColorKit() {
             buttonOnHoverColorPicker.value = returnedColorKit.buttonColorHoverValue
             selectedCubeColorPicker.value = returnedColorKit.selectedCubeColorValue
             canvasOnHoverColorPicker.value = returnedColorKit.canvasOnHoverColorValue
-            titleInput.value = returnedColorKit.titleInputValue
+            titleInput.value = returnedColorKit.defaultTitle
             setColors()
             updateButtonColors()
             updateCubeColors()
@@ -165,7 +165,7 @@ function updateCubeColors() {
 }
 
 function updateTitle(){
-    title.innerHTML = titleInputValue
+    title.innerHTML = defaultTitle
 }
 
 
@@ -190,7 +190,7 @@ canvasOnHoverColor.addEventListener("change", function () {
 });
 
 titleInput.addEventListener("change", function () {
-    titleInputValue = titleInput.value
+    defaultTitle = titleInput.value
     updateTitle()
 
 })
@@ -201,7 +201,7 @@ async function submitColorKit() {
         buttonColorHoverValue: buttonColorHoverValue,
         selectedCubeColorValue: selectedCubeColorValue,
         canvasOnHoverColorValue: canvasOnHoverColorValue,
-        titleInputValue: titleInputValue,
+        defaultTitle: defaultTitle,
         isResetColorKit: isResetColorKit
     };
 

@@ -14,6 +14,9 @@ const header = document.querySelector(".section-header2_content-wrapper");
 const toDo = document.querySelector(".editToDO")
 const editItemParent = document.querySelector(".editItemParent")
 const currentItems = document.querySelector(".currentItems")
+const rangeInput = document.querySelector('input[type="range"]');
+const imageResizeValue = document.querySelector("#imageResizerValue")
+const toDoDescription = document.querySelector("#todoDescription")
 
 
 let tmpPool = [];
@@ -23,8 +26,24 @@ let validateTrueCubes;
 let validateMinCubes;
 let validateMaxCubes;
 let itemName;
+let backgroundSize;
+let todoTitle;
 
 document.addEventListener("DOMContentLoaded", initialize);
+
+rangeInput.addEventListener('change', updateBackgroundSize);
+
+function updateBackgroundSize(){
+    backgroundSize = rangeInput.value + "%";
+    imageResizeValue.innerHTML = backgroundSize
+
+    canvas.forEach(canvas => {
+        var existingStyles = canvas.getAttribute('style')  
+        var updatedStyles = `${existingStyles} background-size: ${backgroundSize};`
+        canvas.setAttribute('style', updatedStyles)  
+    })
+
+}
 
 async function initialize() {
     await getPool();
@@ -205,7 +224,11 @@ function getComponent(e) {
         }
 
     })
-    captchaItemName.value = `${e.Name}`;
+    captchaItemName.value = e.Name
+    rangeInput.value = e.backgroundSize ? e.backgroundSize : 70
+    updateBackgroundSize()
+    toDoDescription.value = e.todoTitle ? e.todoTitle : ""
+
 
 }
 
@@ -287,7 +310,8 @@ function reset(container) {
 function finishUpdate(){
 
     itemName = document.querySelector("#captchaItemName").value
-
+    todoTitle = toDoDescription.value
+    backgroundSize = rangeInput.value
     captchaContainer.forEach(container => {
         let containerCanvas = container.querySelector(".canvas");
 
@@ -316,6 +340,8 @@ function finishUpdate(){
     tmpPool[0].ValidateF = validateTrueCubes;
     tmpPool[0].validateMinCubes = validateMinCubes;
     tmpPool[0].validateMaxCubes = validateMaxCubes;
+    tmpPool[0].todoTitle = todoTitle;
+    tmpPool[0].backgroundSize = backgroundSize;
 
     console.log(tmpPool)
 
@@ -328,7 +354,6 @@ function closeForm(){
     })
     editItemParent.style.display = "none";
     displayCurrentItems();
-
 
 }
 
