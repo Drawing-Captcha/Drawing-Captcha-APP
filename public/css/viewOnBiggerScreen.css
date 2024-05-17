@@ -7,14 +7,16 @@
 @media screen and (max-width: 775px){
     body {
         overflow: hidden;
+        width: 100vw;
+        height: 100vh;
     }
     .viewOnBiggerScreen{
         display: block;
         z-index: 10000;
-        position: absolute;
+        position: fixed;
         backdrop-filter: blur(10px);
-        height: 100vh;
-        width: 100vw;
+        height: -webkit-fill-available;
+        width: -webkit-fill-available;
         overflow: hidden;
         display: flex;
         justify-content: center;

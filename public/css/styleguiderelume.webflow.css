@@ -1,4 +1,5 @@
 :root {
+  --main-inner-color: #bebdd9;
   --background-color--background-primary: var(--base-color-neutral--white);
   --text-color--text-primary: var(--base-color-neutral--black);
   --link-color--link-primary: var(--base-color-neutral--black);
@@ -16,7 +17,7 @@
   --text-color--text-success: var(--base-color-system--success-green);
   --background-color--background-error: var(--base-color-system--error-red-light);
   --text-color--text-error: var(--base-color-system--error-red);
-  --base-color-neutral--neutral-lightest: #eee;
+  --base-color-neutral--neutral-lightest: #dfdfe5;
   --base-color-system--error-red-light: #fef3f2;
   --base-color-brand--black: black;
   --base-color-brand--white: white;
@@ -2205,8 +2206,10 @@ figcaption {
   }
 
   .padding-horizontal {
-    padding-top: 0;
-    padding-bottom: 0;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    background: #e3d7e8 !important;
+
   }
 
   .heading-style-h2 {

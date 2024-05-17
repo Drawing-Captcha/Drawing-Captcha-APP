@@ -25,13 +25,9 @@ class CaptchaComponent extends HTMLElement {
         if (this.shouldRenderCSS()) this.renderCSS()
         if (this.shouldRenderHTML()) {
             this.renderHTML()
-            this.initialize();
-            let title = this.shadowRoot.querySelector('.title')
-            this.getAssets().then(() => {
-  
-            })
+            this.captchaTitle = this.shadowRoot.querySelector('.title')
             this.getColorKit().then(() => {
-                title.textContent = this.captchaTitle
+                this.captchaTitle.textContent = this.colorKitTitle
                 this.customStyle.textContent += /* CSS */`
                     :host {
                         --drawing-captcha-cube-hovering-color: ${this.cubeHoverColor};
@@ -41,8 +37,9 @@ class CaptchaComponent extends HTMLElement {
                     }
                 `
             });
+            this.initialize();
+
         }
-        console.log("Drawing-Captcha Connected")
         this.shadowRoot.querySelector(".close-button").addEventListener("click", () => this.removeCaptcha());
         const submitButton = this.shadowRoot.querySelector('.submit-button');
         this.captchaContainer = this.shadowRoot.querySelector(".captcha-container")
@@ -345,16 +342,15 @@ class CaptchaComponent extends HTMLElement {
     async initialize() {
         await this.siteReload();
         this.buildCubes();
+        this.getAssets();
     }
 
 
     displayCaptcha() {
-        console.log("display")
         this.dialog.showModal();
     }
 
     removeCaptcha() {
-        console.log("close")
         this.dialog.close();
     }
 
@@ -369,18 +365,7 @@ class CaptchaComponent extends HTMLElement {
         }
     }
     captchaFailed() {
-        this.counter -= 1;
-        if (this.counter > 0) {
-            this.resetCaptcha();
-            if (this.counter > 1) {
-                this.captchaTitle.innerHTML = `Captcha failed ` + this.counter + ` Trys left!`;
-            } else {
-                this.captchaTitle.innerHTML = `Captcha failed ` + this.counter + ` Try left!`;
-            }
-
-        } else {
-            location.reload();
-        }
+        location.reload();
     }
 
     async resetCaptcha() {
@@ -389,21 +374,28 @@ class CaptchaComponent extends HTMLElement {
     }
     async getAssets() {
         try {
-            const response = await fetch(`/getImage`, {
+            const response = await fetch(`/getAssets`, {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
-
+    
             if (response.ok) {
                 const data = await response.json();
                 if (data.clientData) {
                     this.clientData = data.clientData;
-                    this.assets = data
+                    this.assets = data;
                     const backgroundImageUrl = this.assets.finishedURL;
                     const background = this.captchaCanvas;
+                    const itemAssets = this.assets.itemAssets
                     background.style.backgroundImage = `url(${backgroundImageUrl})`;
+                    background.style.backgroundSize = `${itemAssets.backgroundSize}%`;
+    
+                    if(itemAssets.itemTitle.length > 0) {
+                        this.captchaTitle.textContent = itemAssets.itemTitle;
+                    }
+    
                 } else {
                     throw new Error('Error in server response: Missing client data.');
                 }
@@ -416,8 +408,7 @@ class CaptchaComponent extends HTMLElement {
             alert('An error occurred. Please try again later.');
         }
     }
-
-
+    
     reset() {
         const cubes = this.shadowRoot.querySelectorAll('.cube');
         cubes.forEach(cube => {
@@ -441,6 +432,7 @@ class CaptchaComponent extends HTMLElement {
             })
             .catch(error => {
                 console.error('Fehler:', error);
+                location.reload()
             });
     }
 
@@ -468,11 +460,12 @@ class CaptchaComponent extends HTMLElement {
             }
         } catch (error) {
             console.error('Error fetching color kit:', error);
+            location.reload()
         }
     }
 
     async applyColorKitStylings() {
-        this.captchaTitle = this.colorKit.defaultTitle ? this.colorKit.defaultTitle : "Testing Verison"
+        this.colorKitTitle = this.colorKit.defaultTitle ? this.colorKit.defaultTitle : "Testing Verison"
         this.buttonColor = this.colorKit.buttonColorValue ? this.colorKit.buttonColorValue : "#007BFF"
         this.buttonHoverColor = this.colorKit.buttonColorHoverValue ? this.colorKit.buttonColorHoverValue : "#0056b3"
         this.selectedCubesColor = this.colorKit.selectedCubeColorValue ? this.colorKit.selectedCubeColorValue : "yellow"
@@ -484,8 +477,6 @@ class CaptchaComponent extends HTMLElement {
         const selectedCubes = Array.from(this.shadowRoot.querySelectorAll('.cube')).filter(cube => cube.classList.contains('selected'));
         const selectedIds = selectedCubes.map(cube => cube.id);
         const countFields = this.shadowRoot.querySelector('.canvas').childElementCount;
-        console.log("selectedids", selectedIds)
-        console.log("clientdata:", this.clientData)
 
         fetch(`/checkCubes`, {
             method: 'POST',

@@ -573,8 +573,7 @@ app.get('/deletedArchive', isAuth, validateCSRFToken, (req, res) => {
     else console.error("deletedBin not defined")
 });
 
-app.post('/getImage', validateCSRFOrExternalKey, async (req, res) => {
-
+app.post('/getAssets', validateCSRFOrExternalKey, async (req, res) => {
 
     initializePool();
 
@@ -614,7 +613,12 @@ app.post('/getImage', validateCSRFOrExternalKey, async (req, res) => {
             ID: captchaIdentifier,
         };
 
-        clientData = req.session.clientSpecificData;
+        let clientData = req.session.clientSpecificData;
+
+        let itemAssets = {
+            itemTitle: selectedContent.todoTitle,
+            backgroundSize: selectedContent.backgroundSize
+        }
 
         let uniqueFileName;
         let savePath;
@@ -643,7 +647,7 @@ app.post('/getImage', validateCSRFOrExternalKey, async (req, res) => {
 
         const finishedURL = `/tmpimg/${uniqueFileName}`;
 
-        res.json({ finishedURL, clientData, session: req.session });
+        res.json({ finishedURL, clientData, session: req.session, itemAssets});
 
 
     } catch (err) {
@@ -660,6 +664,7 @@ app.post('/checkCubes', validateCSRFOrExternalKey, async (req, res) => {
     if (req.body.session && req.body.session.uniqueFileName) {
         req.session.uniqueFileName = req.body.session.uniqueFileName;
     }
+    console.log("unique file name: ", req.session)
 
     let client = captchaSession.get(selectedId);
 
@@ -679,15 +684,14 @@ app.post('/checkCubes', validateCSRFOrExternalKey, async (req, res) => {
             selectedFieldsLength: selectedFields.length,
             selectedFieldsMaxTolerance
         });
-        console.log("Deleting: ", req.session.uniqueFileName)
-        deleteFile(`./tmpimg/${req.session.uniqueFileName}`)
 
         res.json({ isValid });
     } else {
-        console.log("Deleting: ", req.session.uniqueFileName)
-        deleteFile(`./tmpimg/${req.session.uniqueFileName}`)
         res.status(400).json({ error: 'Client data not found' });
     }
+
+    console.log("Deleting: ", req.session.uniqueFileName)
+    deleteFile(`./tmpimg/${req.session.uniqueFileName}`)
 
     captchaSession.delete(selectedId);
 });
