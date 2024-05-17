@@ -18,7 +18,7 @@ const colorKitSchema = new Schema ({
         type: String,
         required: true
     },
-    titleInputValue:{
+    defaultTitle:{
         type: String,
         required: true
     }

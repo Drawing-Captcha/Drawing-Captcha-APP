@@ -421,7 +421,6 @@ a,
     </div>
     <main class="main-wrapper">
       <section class="section_login7">
-        <captcha-component></captcha-component>
         <div class="login7_component login-wrapper">
           <div id="w-node-_9f6cf0bb-81d8-b747-1b94-b8d3b1adb7f5-4ecfad8a" class="login7_content-left">
             <div class="w-layout-blockcontainer container w-container"><img src="images/Frame-18.png" loading="lazy"
@@ -440,9 +439,9 @@ a,
                 </div>
               </div>
               <div class="login7_form-block w-form">
-                <form id="wf-form-Log-in-Form-7" name="wf-form-Log-in-Form-14" data-name="Log in Form 14" method="post"
+                <form drawing-captcha id="wf-form-Log-in-Form-7" name="wf-form-Log-in-Form-14" data-name="Log in Form 14" method="post"
                   action="/login" class="login7_form" data-wf-page-id="65d865058c6fe0c94ecfad8a"
-                  data-wf-element-id="9f6cf0bb-81d8-b747-1b94-b8d3b1adb800" onsubmit="return displayCaptcha()">
+                  data-wf-element-id="9f6cf0bb-81d8-b747-1b94-b8d3b1adb800">
                   <input type="hidden" name="csrfToken" value="<%= csrfToken %>" />
                   <div class="form_field-wrapper">
                     <div class="form_field-label">Email*</div>
@@ -494,8 +493,7 @@ a,
   <script type="text/javascript" src="https://cookieconsent.popupsmart.com/src/js/popper.js"></script>
   <script> window.start.init({ Palette: "palette1", Mode: "floating right", Theme: "classic", Message: "This website uses cookies to ensure you get the best experience on our website.", Time: "10", })</script>
   <script src="js/webflow.js" type="text/javascript"></script>
-  <script src="js/captcha.js"></script>
-
+  <script src="js/captcha.js" onload="(function(){initializeCaptcha()})()"></script>
 </body>
 
 </html>

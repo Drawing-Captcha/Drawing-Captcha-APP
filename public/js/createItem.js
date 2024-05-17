@@ -1,4 +1,4 @@
-const createItemWrapper = document.querySelector(".itemWrapper");
+const createItemWrapper = document.querySelector(".itemWrapper-createItem");
 const toDo = createItemWrapper.querySelector("h3");
 const CaptureForm = document.querySelector("#Capture");
 const innerBox = createItemWrapper.querySelector(".innerToDoBox");
@@ -11,14 +11,16 @@ const canvas = captchaContainer.querySelector(".canvas");
 const cube = document.querySelectorAll(".cube");
 const cnameInput = document.querySelector("#ComponentName");
 const ItemWrapper = document.querySelector(".itemWrapper");
+const imageResizeWrapper = document.querySelector(".imageResizerWrapper")
+const imageResizeValue = imageResizeWrapper.querySelector("label")
+const rangeInput = document.querySelector('input[type="range"]');
+const todoTitleWrapper = document.querySelector(".todoTitleWrapper")
+const todoTextArea = todoTitleWrapper.querySelector("textarea")
+const captchaTitle = captchaContainer.querySelector("h1")
+const submitButton = document.querySelector(".submit-button");
 
-document.addEventListener("DOMContentLoaded", initialize);
 
-function initialize(){
-   ItemWrapper.style.display = "flex";
-
-}
-
+let isDragging = false;
 let sessionComponentName;
 let backgroundImage;
 let validateTrueCubes;
@@ -26,7 +28,37 @@ let validateMinCubes;
 let validateMaxCubes;
 let URL;
 let result;
+let backgroundSize;
+let todoTitle
+document.addEventListener('mousemove', updateSliderValue);
 
+rangeInput.addEventListener('mousedown', () => {
+    isDragging = true;
+});
+
+document.addEventListener('mouseup', () => {
+    isDragging = false;
+});
+
+function updateSliderValue(event) {
+    if (isDragging) {
+        const sliderRect = rangeInput.getBoundingClientRect();
+        const offsetX = event.clientX - sliderRect.left;
+        const percentage = (offsetX / sliderRect.width) * 100;
+        const newValue = (percentage * (rangeInput.max - rangeInput.min)) / 100 + parseInt(rangeInput.min);
+        rangeInput.value = newValue;
+        updateBackgroundSize()
+    }
+}
+
+function updateBackgroundSize(){
+    backgroundSize = rangeInput.value + "%";
+    imageResizeValue.innerHTML = backgroundSize
+    var existingStyles = canvas.getAttribute('style')
+    var updatedStyles = `${existingStyles} background-size: ${backgroundSize};`
+    canvas.setAttribute('style', updatedStyles)
+
+}
 
 CaptureForm.addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -53,12 +85,12 @@ fileInput.addEventListener("change", async () => {
             if (result) {
                 backgroundImage = result;
                 captchaContainer.style.display = "flex";
+                imageResizeWrapper.style.display = "flex";
                 canvas.style.backgroundImage = `url(${result})`;
                 buildCubes();
-                toDo.innerHTML = "If your selected image is displayed, please draw the corresponding valid fields for your item. Ensure that the drawn fields cover the entirety of the item you wish to use for validation.";
+                toDo.innerHTML = "Please resize your image to your desired specifications! ✂️";
                 fileInput.style.display = "none";
                 changeImageButton.style.display = "block";
-                discard.style.display = "block";
                 cube.forEach(cube => {
                     cube.classList.remove("selected");
                     cube.style = "cursor: crosshair;";
@@ -85,10 +117,10 @@ function buildCubes() {
 }
 
 function changeImg(){
-    discard.style.display = "none";
     changeImageButton.style.display = "none";
     fileInput.style.display = "block";
-
+    todoTitle = todoTextArea.value
+    
 }
 
 let mouseIsDown = false
@@ -118,7 +150,27 @@ function reset() {
     });
 }
 
+function continueWidth(){
+    backgroundSize = rangeInput.value + "%";
+    if(backgroundImage){
+        toDo.innerHTML = "Please provide a short description of what you should draw in the Drawing Captcha below. ✏️";
+        imageResizeWrapper.style.display = "none"
+        todoTitleWrapper.style.display = "flex"
+        submitButton.setAttribute("onclick", "continueBeforeValid()")
+
+    }
+}
+
+function continueBeforeValid(){
+    todoTitle = todoTextArea.value
+    innerBox.style.display = "none"
+    todoTitleWrapper.style.display = "none"
+    toDo.innerHTML = "Please draw the cubes on the canvas that you want to count as valid. These cubes will be considered as 'True'.✏️"
+    submitButton.setAttribute("onclick", "continueValid()")
+}
+
 function continueValid() {
+    toDo.innerHTML = "Please draw the cubes on the canvas that you want to count as valid. These cubes will be considered as 'True'.✏️"
     validateTrueCubes = Array.from(document.querySelectorAll(".cube")).filter(cube => cube.classList.contains("selected")).map(cube => cube.id);
 
     if(validateTrueCubes.length < 1){
@@ -192,9 +244,11 @@ function pushToServer() {
         validateMinCubes,
         validateMaxCubes,
         sessionComponentName,
-        backgroundImage
+        backgroundImage,
+        todoTitle,
+        backgroundSize
     };
-
+    console.log(requestData)
     fetch("/newValidation", {
         method: 'POST',
         headers: {
@@ -215,7 +269,7 @@ function pushToServer() {
             innerBox.style.display = "none";
             captchaContainer.style.display = "none";
             setTimeout(() => {
-                window.location.reload();
+                window.location.replace("/dashboard")
             }, 2000);
         } else {
             console.log("An error occurred while trying to fetch data from the server.");

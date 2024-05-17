@@ -1,13 +1,14 @@
 
 .syncWrapper{
   width: 100%;
-  height: 10em;
+  height: 5em;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   margin-top: 5em;
+  margin-bottom: 2em;
 }
 
 .syncWrapper button{
@@ -16,6 +17,7 @@
 
 
 :root {
+  --main-inner-color: #696891;
   --background-color--background-primary: var(--base-color-neutral--white);
   --text-color--text-primary: var(--base-color-neutral--black);
   --link-color--link-primary: var(--base-color-neutral--black);
@@ -33,7 +35,7 @@
   --text-color--text-success: var(--base-color-system--success-green);
   --background-color--background-error: var(--base-color-system--error-red-light);
   --text-color--text-error: var(--base-color-system--error-red);
-  --base-color-neutral--neutral-lightest: #eee;
+  --base-color-neutral--neutral-lightest: #dadae3;
   --base-color-brand--white: white;
   --base-color-brand--black: black;
   --base-color-neutral--neutral-lighter: #ccc;
@@ -50,6 +52,13 @@
   --border-color--border-alternate: var(--base-color-neutral--white);
   --link-color--link-secondary: var(--base-color-neutral--neutral-light);
   --backgru: #161616;
+}
+
+.content_wrapper{
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+  background-color: var(--main-inner-color);
+  border-radius: 2em;
 }
 
 .w-layout-grid {
@@ -121,6 +130,8 @@
   border-width: 4px;
   border-color: #3898ec;
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 body {
   background-color: var(--background-color--background-primary);
@@ -781,6 +792,7 @@ figcaption {
 .button.is-small.is-icon-only {
   padding-left: .5rem;
   padding-right: .5rem;
+  color: white;
 }
 
 .button.is-alternate {
@@ -2012,6 +2024,8 @@ figcaption {
   object-fit: cover;
   width: 100%;
   height: 100%;
+  border-top-left-radius: 2em;
+  border-top-right-radius: 2em;
 }
 
 .page-header3_content-wrapper {
@@ -2086,6 +2100,9 @@ figcaption {
 .sidebar1_link-list {
   flex-direction: column;
   display: flex;
+  padding: 1em;
+  background: #dfdfe5;
+  border-radius: 1em;
 }
 
 .shell2_wrapper {
@@ -2103,9 +2120,20 @@ figcaption {
   display: flex;
 }
 
+.section_page-header3{
+  background: var(--main-inner-color);
+  padding-bottom: 3em;
+  border-radius: 2em;
+  color: white;
+}
+
 .shell2_main-wrapper {
   background-color: var(--base-color-neutral--neutral-lightest);
   flex: 1;
+  padding: 2em;
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
 }
 
 .shell2-layout_component {
@@ -2174,15 +2202,15 @@ figcaption {
 .sidebar1_dropdown-list.w--open {
   border: 1px solid var(--border-color--border-primary);
   background-color: var(--base-color-neutral--white);
-  padding: .5rem;
+  padding: 0.5rem;
   top: auto;
   bottom: 100%;
+  border-radius: 1em;
   left: auto;
   right: 0%;
 }
 
 .sidebar1_component {
-  border-right: 1px solid var(--border-color--border-primary);
   background-color: var(--base-color-brand--white);
   color: var(--base-color-neutral--black);
   flex-direction: column;
@@ -2262,8 +2290,9 @@ figcaption {
 }
 
 .sidebar1_link.w--current {
-  background-color: var(--base-color-neutral--neutral-lightest);
+  background-color: #dfdfe5;
   color: var(--base-color-neutral--black);
+  border-radius: 1em;
 }
 
 .sidebar1_link.is-indent {
@@ -2278,12 +2307,17 @@ figcaption {
   background-color: var(--base-color-neutral--black);
   width: 100%;
   height: 1px;
+  display: none;
 }
 
 .sidebar1_account {
   justify-content: space-between;
   align-items: center;
   display: flex;
+  padding: 1em;
+  background: var(--main-inner-color);
+  color: white;
+  border-radius: 1em;
 }
 
 .sidebar1_accordion-list {
@@ -2355,11 +2389,16 @@ figcaption {
   padding: 0;
   display: flex;
 }
-
+.editItemParent{
+  padding: 3em;
+  background: white;
+  border-radius: 2em;
+}
 .section-header2_component {
   grid-template-rows: auto auto;
   grid-template-columns: 1fr 1fr;
   grid-auto-columns: 1fr;
+
 }
 
 .stacked-list1_avatar {
@@ -2581,8 +2620,10 @@ figcaption {
   }
 
   .padding-horizontal {
-    padding-top: 0;
-    padding-bottom: 0;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    background: #e3d7e8 !important;
+
   }
 
   .heading-style-h2 {
@@ -2892,6 +2933,7 @@ figcaption {
 
   .sidebar1_dropdown-list.w--open {
     position: absolute;
+
   }
 
   .sidebar1_component {

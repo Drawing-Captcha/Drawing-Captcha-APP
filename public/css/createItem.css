@@ -4,6 +4,29 @@
     margin: 0;
 }
 
+#imageResizer{
+    padding: 0%;
+    width: 88%;
+}
+
+.imageResizerWrapper{
+    display: none;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.todoTitleWrapper{
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    gap: 1em;
+}
+textarea{
+    width: 100%;
+    padding: 0.5em;
+    border-radius: 5px;
+    margin-bottom: 1em;
+}
 
 hr{
     border-top: dotted;
@@ -21,12 +44,15 @@ hr{
     margin-top: 1em;
 }
 
+.upper-section #captchaItemName{
+    width: 25%;
+}
 .upper-section{
     display: flex;
     flex-direction: column;
     height: fit-content;
     gap: 1em;
-    width: 25%;
+    width: 100%;
 
 }
 .upper-section input{
@@ -128,8 +154,23 @@ hr{
     color: white;
     gap: 7em;
     padding: 7em;
-    max-width: 100%;;
+    max-width: 100%;
 
+}
+
+.itemWrapper-createItem{
+    margin-bottom: 2vh;
+    border-radius: 30px;
+    height: fit-content;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: rgb(0, 0, 0);
+    gap: 3em;
+    padding: -1em;
+    max-width: 100%;
+    text-align: center;
 }
 
 .subtitles{
@@ -190,8 +231,7 @@ form{
     flex-direction: column;
     background: rgba(255,255,255,0.3);
     padding: 2em;
-    min-width: 24em;
-    width: fit-content;
+    width: 58%;
     height: fit-content;
     border-radius: 20px;
     border-left: 1px solid rgba(255,255,255,0.3);
@@ -235,7 +275,11 @@ form{
     align-items: center;
 }
 
+.captcha-container-createItem {
+    max-width: 36em;
 
+
+}
 .captchta-canvas > * {
     grid-column: 1;
     grid-row: 1;
@@ -313,7 +357,7 @@ button {
     margin: 5px;
     font-size: 16px;
     cursor: pointer;
-    background-color: #007BFF;
+    background-color: #696891;
     color: white;
     border: none;
     border-radius: 3px;
@@ -401,6 +445,11 @@ button .close-button:hover{
 
 }
 
+.currentItems{
+    padding: 3em;
+    background: white;
+    border-radius: 2em;}
+
 .quotes{
     width: 100%;
     display: flex;
@@ -410,6 +459,10 @@ button .close-button:hover{
     margin-top: 1em;
     font-size: large;
     font-style: italic;
+    padding: 2em;
+    border-radius: 2em;
+    color: white;
+    border: 2px solid white;
 }
 
 .quoteTitle{

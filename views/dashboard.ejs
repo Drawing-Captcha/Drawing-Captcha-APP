@@ -237,9 +237,10 @@ a,
           margin-bottom: 0rem !important;
         }
 
-        .padding-horizontal {
-          padding-top: 0rem !important;
-          padding-bottom: 0rem !important;
+        .padding-horizontal .padding-medium {
+          padding-top: 1rem !important;
+          padding-bottom: 1rem !important;
+          background-color: #e8dbed;
         }
 
         .margin-vertical {
@@ -456,10 +457,6 @@ a,
               margin-bottom: 0rem !important;
             }
 
-            .padding-horizontal {
-              padding-top: 0rem !important;
-              padding-bottom: 0rem !important;
-            }
 
             .margin-vertical {
               margin-right: 0rem !important;
@@ -633,7 +630,6 @@ a,
                     </a>
                   </div>
                   <div class="sidebar1_menu-bottom">
-                    <div class="line-divider"></div>
                     <div class="sidebar1_link-list">
                       <a href="mailto:info@wpesic.dev" class="sidebar1_link w-inline-block">
                         <div class="sidebar1_link-wrapper">
@@ -664,7 +660,6 @@ a,
                         </div>
                       </a>
                     </div>
-                    <div class="line-divider"></div>
                     <div class="sidebar1_account">
                       <div class="sidebar1_avatar">
                         <div id="w-node-_1a30a1e4-8a69-abdf-86cf-348aa176e562-0240322d"
@@ -799,7 +794,7 @@ a,
                         </div>
                       </div>
                       <div class="stacked-list1_component editItemParent">
-                        <div class="section-header2_component">
+                        <div class="section-header2_component edit">
                           <div class="padding-bottom padding-small">
                             <div class="section-header2_content-wrapper">
                               <div class="max-width-large">
@@ -819,8 +814,14 @@ a,
                           <div class="editItemWrapper">
                             <div class="upper-section">
                               <h5>Change your Item name:</h5>
-                              <label for="captchaItemName">Item name:</label>
-                              <input type="text" id="captchaItemName" name="captchaItemName" onclick="this.focus()">
+                              <input type="text" id="captchaItemName" name="captchaItemName" maxlength="20" onclick="this.focus()">
+                              <h5>Change your ToDo Description:</h5>
+                              <input type="text" id="todoDescription" name="todoDescription" maxlength="110" placeholder="Please draw the object currently being displayed." onclick="this.focus()">
+                              <h5>Change your image size:</h5>
+                              <div class="imageResizerWrapper-edit">
+                                <input type="range" name="imageResizer" id="imageResizer" min="0" max="100" step="5" value="70">
+                                <label for="imageResizer" id="imageResizerValue">70%</label>
+                              </div>
                             </div>
                             <div class="middle-section">
                               <div class="editingSection ">
@@ -830,7 +831,7 @@ a,
                                     <div class="canvas"></div>
                                   </div>
                                   <div class="controls">
-                                    <button class="reset-button" onclick="resetElement(this.parentNode)">
+                                    <button class="reset-button editReset" onclick="resetElement(this.parentNode)">
                                       <svg fill=" #ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
                                         xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645"
                                         xml:space="preserve" stroke="#ffffff">
@@ -856,7 +857,7 @@ a,
                                     <div class="canvas"></div>
                                   </div>
                                   <div class="controls">
-                                    <button class="reset-button" onclick="resetElement(this.parentNode)">
+                                    <button class="reset-button editReset" onclick="resetElement(this.parentNode)">
                                       <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
                                         xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645"
                                         xml:space="preserve" stroke="#ffffff">
@@ -884,7 +885,7 @@ a,
                                     <div class="canvas"></div>
                                   </div>
                                   <div class="controls">
-                                    <button class="reset-button" onclick="resetElement(this.parentNode)">
+                                    <button class="reset-button editReset" onclick="resetElement(this.parentNode)">
                                       <svg fill="#ffffff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
                                         xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 489.645 489.645"
                                         xml:space="preserve" stroke="#ffffff">

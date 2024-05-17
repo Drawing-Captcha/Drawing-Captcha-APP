@@ -1,3 +1,23 @@
 .ItemWrapper{
     display: none;
 }
+
+.editReset{
+    width: 100%;
+}
+
+.imageResizerWrapper-edit{
+    display: flex;
+    width: 50%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.imageResizerWrapper-edit input{
+    width: max-content;
+}
+
+.imageResizerWrapper-edit label{
+    width: max-content;
+    font-size: x-large;
+}
