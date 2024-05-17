@@ -142,16 +142,6 @@ const isAuth = (req, res, next) => {
     }
 }
 
-const isHuman = (req, res, next) => {
-    if (req.session.isHuman) {
-        next()
-    }
-    else {
-        res.status(403).json({ error: "Invalid request" });
-    }
-
-}
-
 app.get("/", (req, res) => {
     res.render("landing");
 });
@@ -164,7 +154,7 @@ app.post('/reload', validateCSRFOrExternalKey, (req, res) => {
     if (req.body.session && req.body.session.uniqueFileName) {
         req.session.uniqueFileName = req.body.session.uniqueFileName;
     }
-    deleteFile(`./tmpimg/${req.session.uniqueFileName}`);
+    deleteFile(`./tmpimg/${req.session.uniqueFileName}`)
 
 });
 
@@ -665,10 +655,11 @@ app.post('/getImage', validateCSRFOrExternalKey, async (req, res) => {
 
 
 app.post('/checkCubes', validateCSRFOrExternalKey, async (req, res) => {
-    console.log(req.body)
     const selectedFields = req.body.selectedIds;
     const selectedId = req.body.clientData.ID;
-    console.log(req.body)
+    if (req.body.session && req.body.session.uniqueFileName) {
+        req.session.uniqueFileName = req.body.session.uniqueFileName;
+    }
 
     let client = captchaSession.get(selectedId);
 

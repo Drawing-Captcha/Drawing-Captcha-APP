@@ -25,21 +25,10 @@ class CaptchaComponent extends HTMLElement {
         if (this.shouldRenderCSS()) this.renderCSS()
         if (this.shouldRenderHTML()) {
             this.renderHTML()
+            this.initialize();
             let title = this.shadowRoot.querySelector('.title')
             this.getAssets().then(() => {
-                //Weiter machen mit den assets holen für den neuen titel
-
-
-
-
-
-
-                //
-                this.customStyle.textContent += /* CSS */`
-                :host {
-
-                }
-            `
+  
             })
             this.getColorKit().then(() => {
                 title.textContent = this.captchaTitle
@@ -55,7 +44,6 @@ class CaptchaComponent extends HTMLElement {
         }
         console.log("Drawing-Captcha Connected")
         this.shadowRoot.querySelector(".close-button").addEventListener("click", () => this.removeCaptcha());
-        this.initialize();
         const submitButton = this.shadowRoot.querySelector('.submit-button');
         this.captchaContainer = this.shadowRoot.querySelector(".captcha-container")
         this.captchaCanvas = this.shadowRoot.querySelector(".canvas")
@@ -355,10 +343,8 @@ class CaptchaComponent extends HTMLElement {
     }
 
     async initialize() {
-        this.siteReload();
+        await this.siteReload();
         this.buildCubes();
-        await this.getAssets()
-
     }
 
 
@@ -414,8 +400,8 @@ class CaptchaComponent extends HTMLElement {
                 const data = await response.json();
                 if (data.clientData) {
                     this.clientData = data.clientData;
-                    let assets = data
-                    const backgroundImageUrl = assets.finishedURL;
+                    this.assets = data
+                    const backgroundImageUrl = this.assets.finishedURL;
                     const background = this.captchaCanvas;
                     background.style.backgroundImage = `url(${backgroundImageUrl})`;
                 } else {
@@ -430,7 +416,6 @@ class CaptchaComponent extends HTMLElement {
             alert('An error occurred. Please try again later.');
         }
     }
-
 
 
     reset() {
