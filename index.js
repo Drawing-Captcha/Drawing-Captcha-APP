@@ -127,7 +127,7 @@ app.set("view engine", "ejs")
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
-    secret: "nmhSe2OEOadfasd5%%%cVNBYIe7E0h",
+    secret: crypto.randomUUID(),
     resave: false,
     saveUninitialized: false,
     store: store,
@@ -850,13 +850,13 @@ app.put("/allowedOrigins", isAuth, validateCSRFToken, async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server Running on port: ${port}`);
-    // store.collection.deleteMany({}, (err) => {
-    //     if (err) {
-    //         console.error('Error while trying to delete Sessions:', err);
-    //     } else {
-    //         console.log('All Sessions successfully.');
-    //     }
-    // });
+    store.collection.deleteMany({}, (err) => {
+        if (err) {
+            console.error('Error while trying to delete Sessions:', err);
+        } else {
+            console.log('All Sessions successfully.');
+        }
+    });
 });
 
 
