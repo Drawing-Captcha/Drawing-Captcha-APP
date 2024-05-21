@@ -151,7 +151,7 @@ function reset() {
 }
 
 function continueWidth(){
-    backgroundSize = rangeInput.value + "%";
+    backgroundSize = rangeInput.value;
     if(backgroundImage){
         toDo.innerHTML = "Please provide a short description of what you should draw in the Drawing Captcha below. ✏️";
         imageResizeWrapper.style.display = "none"
