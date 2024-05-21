@@ -154,8 +154,7 @@ hr{
     color: white;
     gap: 7em;
     padding: 7em;
-    max-width: 100%;
-
+    width: 78%;
 }
 
 .itemWrapper-createItem{
@@ -451,6 +450,7 @@ button .close-button:hover{
     border-radius: 2em;}
 
 .quotes{
+    background: var(--main-inner-color);
     width: 100%;
     display: flex;
     justify-content: center;
@@ -462,7 +462,8 @@ button .close-button:hover{
     padding: 2em;
     border-radius: 2em;
     color: white;
-    border: 2px solid white;
+    border: 11px solid white;
+    backdrop-filter: blur(95px);
 }
 
 .quoteTitle{
