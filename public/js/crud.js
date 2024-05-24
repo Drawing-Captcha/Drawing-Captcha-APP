@@ -1,4 +1,4 @@
-const serverPull = "/getElements";
+const serverPull = "/dashboard/getElements";
 const container = document.querySelector(".container")
 const contentContainer = document.querySelector(".content-container")
 const parentContainer = document.querySelector(".parent-container")

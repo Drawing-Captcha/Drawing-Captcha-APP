@@ -374,7 +374,7 @@ class CaptchaComponent extends HTMLElement {
     }
     async getAssets() {
         try {
-            const response = await fetch(`/getAssets`, {
+            const response = await fetch(`/captcha/getAssets`, {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json'
@@ -419,7 +419,7 @@ class CaptchaComponent extends HTMLElement {
     }
 
     async siteReload() {
-        fetch(`/reload`, {
+        fetch(`/captcha/reload`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -438,7 +438,7 @@ class CaptchaComponent extends HTMLElement {
 
     async getColorKit() {
         try {
-            const response = await fetch(`/captchaSettings`, {
+            const response = await fetch(`/captcha/captchaSettings`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -478,7 +478,7 @@ class CaptchaComponent extends HTMLElement {
         const selectedIds = selectedCubes.map(cube => cube.id);
         const countFields = this.shadowRoot.querySelector('.canvas').childElementCount;
 
-        fetch(`/checkCubes`, {
+        fetch(`/captcha/checkCubes`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
