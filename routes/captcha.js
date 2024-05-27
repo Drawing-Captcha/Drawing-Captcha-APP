@@ -8,7 +8,7 @@ const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const ColorKit = require("../models/ColorKit.js");
 const generateUniqueName = require("../services/generateUniqueName.js")
 const deleteFile = require("../services/deleteFiles.js");
-const {pool} = require('../controllers/initializeController.js');
+const {pool, initializePool} = require('../controllers/initializeController.js');
 const captchaSession = new Map();
 const defaultColorKit = {
     buttonColorValue: "#007BFF",
@@ -52,7 +52,8 @@ router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, async 
 });
 
 router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
-    let globalPool = await pool
+    
+    let globalPool = await initializePool()
     try {
         if (req.body.session) {
             req.session.cookie = req.body.session.cookie;

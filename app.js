@@ -10,15 +10,17 @@ const cookieParser = require('cookie-parser');
 const connectDB = require("./config/db.js")
 const deleteAndLog = require("./services/deleteAndLog.js")
 const deleteAllFilesInDir = require("./services/deleteAllFilesInDir.js");
-const {pool, deletedBin, allowedOrigins, defaultOrigin, initializeAllowedOrigins, initializeBin, initializePool} = require("./controllers/initializeController.js")
+const { pool, deletedBin, allowedOrigins, defaultOrigin, initializeAllowedOrigins, initializeBin, initializePool } = require("./controllers/initializeController.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 const port = process.env.PORT;
+let origins
 connectDB()
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 
-async function initialize(){
-    console.log("fetching content pool: ", await pool)
-    console.log("fetching deletedBin: ", await deletedBin)
+async function initialize() {
+    origins = await initializeAllowedOrigins()
+    await pool
+    await deletedBin
 }
 
 initialize().then(() => {
@@ -37,7 +39,7 @@ const csrfProtection = csrf({ cookie: true });
 
 app.use(cors({
     origin: function (origin, callback) {
-        if (!origin || defaultOrigin.includes(origin)) {
+        if (!origin || origins.includes(origin)) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));

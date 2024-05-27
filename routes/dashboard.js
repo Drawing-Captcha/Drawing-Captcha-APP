@@ -101,8 +101,8 @@ router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, 
             index = globalDeletedBin.findIndex(b => b.ID === x.ID);
             console.log("index of pool: ", index)
         });
-        deletedObject = console.log("spliced index: ", globalDeletedBin.splice(index, 1)[0]);
         if (req.body.isDelete) {
+            deletedObject =  globalDeletedBin.splice(index, 1)[0]
             fs.writeFile('./src/deletedBin.txt', JSON.stringify(globalDeletedBin, null, 2), 'utf-8', (err) => {
                 if (err) {
                     console.error('Error saving JSON file:', err);
@@ -111,6 +111,7 @@ router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, 
                 }
             });
         } else {
+            deletedObject =  globalDeletedBin.splice(index, 1)[0]
             globalPool.push(deletedObject)
 
             fs.writeFile('./src/pool.txt', JSON.stringify(globalPool, null, 2), 'utf-8', (err) => {

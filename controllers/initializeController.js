@@ -19,7 +19,6 @@ async function initializePool() {
             return pool;
         } else {
             pool = JSON.parse(contents);
-            console.log("returned from controller: ", pool)
             return pool;
         }
     } catch (err) {
@@ -35,6 +34,7 @@ async function initializeAllowedOrigins() {
             allowedOrigins.forEach(origin => {
                 defaultOrigin.push(origin.allowedOrigin);
             });
+            return defaultOrigin;
             console.log("Allowed origins: ", defaultOrigin);
         } else {
             console.log("Allowed origins are currently empty. Added localhost as default.");
@@ -71,11 +71,8 @@ module.exports = {
     get deletedBin() {
         return initializeBin();
     },
-    get allowedOrigins() {
-        return allowedOrigins;
-    },
     get defaultOrigin() {
-        return defaultOrigin;
+        return initializeAllowedOrigins();
     },
     initializeAllowedOrigins,
     initializeBin,
