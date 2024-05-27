@@ -4,7 +4,6 @@ const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const UserModel = require("../models/user.js");
 const bcrypt = require("bcryptjs")
 
-
 router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
     const { email, password } = req.body;
     let user = await UserModel.findOne({ email });
@@ -31,7 +30,7 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
 })
 
 router.post("/register", async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, key } = req.body;
 
     try {
         let user = await UserModel.findOne({ email });

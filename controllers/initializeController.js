@@ -9,21 +9,24 @@ let allowedOrigins = [];
 const port = process.env.PORT;
 let defaultOrigin = [`http://localhost:${port}`];
 
-// async function initializePool() {
-//     try {
-//         const poolFilePath = path.join(__dirname, '../src/pool.txt');
-//         const contents = await fsPromises.readFile(poolFilePath, 'utf-8');
-//         if (contents.trim() === "") {
-//             console.log("The file pool.txt is empty");
-//             pool = [];
-//         } else {
-//             pool = JSON.parse(contents);
-//         }
-//     } catch (err) {
-//         console.log("Error parsing JSON data:", err);
-//         pool = [];
-//     }
-// }
+async function initializePool() {
+    try {
+        const poolFilePath = path.join(__dirname, '../src/pool.txt');
+        const contents = await fsPromises.readFile(poolFilePath, 'utf-8');
+        if (contents.trim() === "") {
+            console.log("The file pool.txt is empty");
+            pool = [];
+            return pool;
+        } else {
+            pool = JSON.parse(contents);
+            console.log("returned from controller: ", pool)
+            return pool;
+        }
+    } catch (err) {
+        console.log("Error parsing JSON data:", err);
+        pool = [];
+    }
+}
 
 async function initializeAllowedOrigins() {
     try {
@@ -48,8 +51,10 @@ async function initializeBin() {
         if (contents.trim() === "") {
             console.log("The file 'deletedBin.txt' is empty.");
             deletedBin = [];
+            return deletedBin
         } else {
             deletedBin = JSON.parse(contents);
+            return deletedBin
         }
     } catch (err) {
         console.log("Error parsing JSON data:", err);
@@ -61,11 +66,10 @@ async function initializeBin() {
 
 module.exports = {
     get pool() {
-        return pool;
-        }
-    ,
+        return initializePool();
+    },
     get deletedBin() {
-        return deletedBin;
+        return initializeBin();
     },
     get allowedOrigins() {
         return allowedOrigins;
@@ -74,5 +78,6 @@ module.exports = {
         return defaultOrigin;
     },
     initializeAllowedOrigins,
-    initializeBin
+    initializeBin,
+    initializePool
 };

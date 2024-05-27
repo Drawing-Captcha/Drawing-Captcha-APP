@@ -7,10 +7,8 @@ const router = express.Router();
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const ColorKit = require("../models/ColorKit.js");
 const generateUniqueName = require("../services/generateUniqueName.js")
-const deleteFile = require("../services/deleteFiles.js")
-
-let pool
-initializePool()
+const deleteFile = require("../services/deleteFiles.js");
+const {pool} = require('../controllers/initializeController.js');
 const captchaSession = new Map();
 const defaultColorKit = {
     buttonColorValue: "#007BFF",
@@ -54,9 +52,7 @@ router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, async 
 });
 
 router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
-
-    await initializePool().then(console.log("pool :", pool))
-    
+    let globalPool = await pool
     try {
         if (req.body.session) {
             req.session.cookie = req.body.session.cookie;
@@ -69,13 +65,13 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
         const captchaIdentifier = uuid.v4();
         console.log(captchaIdentifier)
 
-        if (!pool || pool.length === 0) {
+        if (!globalPool || globalPool.length === 0) {
             console.error("Pool is empty or not initialized.");
             return res.status(500).json({ error: 'Pool is empty or not initialized.' });
         }
 
-        const randomIndex = Math.floor(Math.random() * pool.length);
-        const selectedContent = pool[randomIndex];
+        const randomIndex = Math.floor(Math.random() * globalPool.length);
+        const selectedContent = globalPool[randomIndex];
 
         captchaSession.set(captchaIdentifier, {
             ID: selectedContent.ID,
@@ -178,19 +174,3 @@ router.post('/checkCubes', csrfMiddleware.validateCSRFOrExternalKey, async (req,
 
 
 module.exports = router
-
-async function initializePool() {
-    try {
-        const poolFilePath = path.join(__dirname, '../src/pool.txt');
-        const contents = await fsPromises.readFile(poolFilePath, 'utf-8');
-        if (contents.trim() === "") {
-            console.log("The file pool.txt is empty");
-            pool = [];
-        } else {
-            pool = JSON.parse(contents);
-        }
-    } catch (err) {
-        console.log("Error parsing JSON data:", err);
-        pool = [];
-    }
-}

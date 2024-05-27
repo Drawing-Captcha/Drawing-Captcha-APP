@@ -18,7 +18,7 @@ async function initialize(){
 
 async function getKeys(){
     try {
-        const response = await fetch("/apiKey", {
+        const response = await fetch("/dashboard/apiKey", {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -141,7 +141,7 @@ function deleteApiKey(e) {
 }
 
 function pushToServer(key, isDelete, element) {
-    fetch("/apiKey", {
+    fetch("/dashboard/apiKey", {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -179,7 +179,7 @@ function pushToServer(key, isDelete, element) {
 
 function deleteAllKeys() {
     if (confirm("Are you sure you want to delete all of your keys?") === true) {
-        fetch("/apiKey/deleteAll", {
+        fetch("/dashboard/apiKey/deleteAll", {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json'
@@ -246,7 +246,7 @@ function closeForm(){
 function submitApi(){
    let apiName = formName.value;
     
-    fetch("/apiKey", {
+    fetch("/dashboard/apiKey", {
         method: "POST",
         headers: {
             'Content-Type': 'application/json'

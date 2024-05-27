@@ -7,7 +7,7 @@ const shellLayout = document.querySelector(".section_shell2-layout")
 let originName;
 async function getOrigins() {
     try {
-        const response = await fetch("/allowedOrigins", {
+        const response = await fetch("/dashboard/allowedOrigins", {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -144,7 +144,7 @@ function deleteOrigin(elementData){
 }
 function submitOrigin() {
 
-    fetch("/allowedOrigins", {
+    fetch("/dashboard/allowedOrigins", {
         method: "POST",
         headers: {
             'Content-Type': 'application/json'
@@ -173,7 +173,7 @@ function submitOrigin() {
 
 function putOrigin(origin, isDelete) {
 
-    fetch("/allowedOrigins", {
+    fetch("/dashboard/allowedOrigins", {
         method: "PUT",
         headers: {
             'Content-Type': 'application/json'

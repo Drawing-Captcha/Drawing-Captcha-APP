@@ -9,7 +9,7 @@ async function initialize() {
 
 async function getDeletedBin() {
     try {
-        const response = await fetch("/deletedArchive", {
+        const response = await fetch("/dashboard/deletedArchiveAssets", {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -18,7 +18,8 @@ async function getDeletedBin() {
         });
         if (response.ok) {
             const data = await response.json();
-            const deletedBin = data.deletedBin;
+            const deletedBin = data.globalDeletedBin;
+            console.log(deletedBin)
 
             const wrapper = document.querySelector(".stacked-list1_list-wrapper");
 
@@ -105,8 +106,6 @@ async function getDeletedBin() {
 
                 wrapper.appendChild(syncWrapper)
                 syncWrapper.appendChild(syncMessage)
-                syncWrapper.appendChild(syncButton)
-
             }
 
 
@@ -135,7 +134,7 @@ function getBack(e) {
 }
 
 function pushToServer() {
-    fetch("/deletedArchive", {
+    fetch("/dashboard/deletedArchive", {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
