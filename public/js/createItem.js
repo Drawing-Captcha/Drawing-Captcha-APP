@@ -222,7 +222,7 @@ function continueMax() {
 
 async function nameExists() {
     try {
-        const response = await fetch("/newValidation/nameExists", {
+        const response = await fetch("/dashboard/newValidation/nameExists", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -249,7 +249,7 @@ function pushToServer() {
         backgroundSize
     };
     console.log(requestData)
-    fetch("/newValidation", {
+    fetch("/dashboard/newValidation", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

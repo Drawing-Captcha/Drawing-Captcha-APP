@@ -69,7 +69,7 @@ function resetColorKit(){
 }
 
 async function getColorKit() {
-    fetch("/captchaSettings", {
+    fetch("/captcha/captchaSettings", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

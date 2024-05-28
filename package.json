@@ -5,12 +5,12 @@
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "csurf": "^1.11.0",
+    "dotenv": "^16.4.5",
     "ejs": "^3.1.9",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
     "mongoose": "^8.3.1",
     "path": "^0.12.7",
-    "triangulr": "^1.0.3",
     "uuid": "^9.0.1"
   }
 }

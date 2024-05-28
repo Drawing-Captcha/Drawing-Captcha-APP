@@ -7,7 +7,7 @@
  *   Webflow.push(readyFunction);
  */
 function logout(){
-  fetch("/logout", {
+  fetch("/dashboard/logout", {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json'

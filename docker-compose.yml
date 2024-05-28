@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  dc_node:
+    container_name: dc_node
+    build: ./
+    ports:
+      - "9091:9091"
+    networks:
+      - dc_network
+    depends_on:
+      - dc_mongo
+    restart: always
+  dc_mongo:
+    container_name: dc_mongo
+    image: mongo:latest
+    volumes:
+      - drawingCaptchaData:/data/db
+    networks:
+      - dc_network
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+networks:
+  dc_network:
+volumes:
+  drawingCaptchaData:

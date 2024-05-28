@@ -1,4 +1,4 @@
-const serverPull = "/getElements";
+const serverPull = "/dashboard/getElements";
 const container = document.querySelector(".container")
 const contentContainer = document.querySelector(".content-container")
 const parentContainer = document.querySelector(".parent-container")
@@ -17,7 +17,6 @@ const currentItems = document.querySelector(".currentItems")
 const rangeInput = document.querySelector('input[type="range"]');
 const imageResizeValue = document.querySelector("#imageResizerValue")
 const toDoDescription = document.querySelector("#todoDescription")
-
 
 let tmpPool = [];
 let pool;
@@ -61,7 +60,7 @@ async function getPool() {
 
         if (response.ok) {
             const data = await response.json();
-            const pool = data.pool;
+            const pool = data.globalPool;
 
             if (pool.length != 0) {
 
@@ -240,7 +239,7 @@ function deleteComponent(e) {
 }
 
 function pushToServer() {
-    fetch("/crud", {
+    fetch("/dashboard/crud", {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -364,4 +363,3 @@ function removeCurrentItems(){
 function displayCurrentItems(){
     currentItems.style.display = "block"
 }
-
