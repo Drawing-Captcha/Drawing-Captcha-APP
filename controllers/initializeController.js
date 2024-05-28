@@ -37,6 +37,7 @@ async function initializeAllowedOrigins() {
             return defaultOrigin;
             console.log("Allowed origins: ", defaultOrigin);
         } else {
+            return defaultOrigin;
             console.log("Allowed origins are currently empty. Added localhost as default.");
         }
     } catch (err) {

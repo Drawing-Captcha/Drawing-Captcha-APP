@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
-const UserModel = require("../models/user.js");
+const UserModel = require("../models/User.js");
 const bcrypt = require("bcryptjs")
 
 router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {

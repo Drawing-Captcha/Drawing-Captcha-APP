@@ -10,16 +10,22 @@ services:
     depends_on:
       - dc_mongo
     restart: always
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - PORT=${PORT}
+      - Register_Key=${Register_Key}
   dc_mongo:
     container_name: dc_mongo
     image: mongo:latest
+    expose:
+      - "27017"
     volumes:
       - drawingCaptchaData:/data/db
     networks:
       - dc_network
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
       MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
 networks:
