@@ -318,10 +318,10 @@ button,
   background-color: #dddddd;
 }
 .w-form-fail {
-  display: none;
+  display: block;
   margin-top: 10px;
   padding: 10px;
-  background-color: #ffdede;
+  background-color: #ea6161;
 }
 label {
   display: block;

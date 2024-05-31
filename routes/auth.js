@@ -3,6 +3,9 @@ const router = express.Router();
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const UserModel = require("../models/User.js");
 const bcrypt = require("bcryptjs")
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+
 
 router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
     const { email, password } = req.body;
@@ -29,31 +32,43 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
     res.redirect("/dashboard")
 })
 
-router.post("/register", async (req, res) => {
-    const { username, email, password, key } = req.body;
+router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
+    const { username, email, password, registerKey } = req.body;
+
+    const registerKeyENV = process.env.REGISTER_KEY;
+    req.session.RegisterMessage = "";
 
     try {
-        let user = await UserModel.findOne({ email });
+        if (registerKey === registerKeyENV) {
+            const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
 
-        if (user) {
-            return res.redirect('register');
+            if (existingUser) {
+                req.session.RegisterMessage = "User with this email or username already exists";
+                return res.redirect('/register');
+            }
+
+            const hashedPassword = await bcrypt.hash(password, 12);
+
+            const newUser = new UserModel({
+                username,
+                email,
+                password: hashedPassword
+            });
+
+            await newUser.save();
+
+            return res.redirect('/login'); 
         }
 
-        const hashedPassword = await bcrypt.hash(password, 12);
+        req.session.RegisterMessage = "Register Key is wrong, please enter the register key given by your organization";
+        return res.redirect('/register');
 
-        user = new UserModel({
-            username,
-            email,
-            password: hashedPassword
-        });
-
-        await user.save();
-
-        res.redirect("/login");
     } catch (error) {
         console.error("Error occurred during registration:", error);
-        res.status(500).send("Internal Server Error");
+        req.session.RegisterMessage = "An error occurred during registration. Please try again.";
+        res.status(500).redirect('register');
     }
 });
+
 
 module.exports = router
