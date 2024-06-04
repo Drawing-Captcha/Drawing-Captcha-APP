@@ -53,7 +53,8 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
             const newUser = new UserModel({
                 username,
                 email,
-                password: hashedPassword
+                password: hashedPassword,
+                role: "readWrite"
             });
 
             await newUser.save();

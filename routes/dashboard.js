@@ -258,6 +258,14 @@ router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken,
     res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email });
 })
 
+router.get("/registeredUsers", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+    res.render("users", { username: req.session.user.username, email: req.session.user.email });
+})
+
+router.get("/registerKey", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+    res.render("registerKey", { username: req.session.user.username, email: req.session.user.email });
+})
+
 router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
         console.log(req.body)
@@ -478,6 +486,7 @@ router.put("/allowedOrigins", authMiddleware, csrfMiddleware.validateCSRFToken, 
         return res.status(400).json({ error: "Invalid request: 'isDelete' is not true" });
     }
 });
+
 
 
 module.exports = router
