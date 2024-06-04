@@ -33,6 +33,7 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
 })
 
 router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
+    console.log("Registering User...")
     const { username, email, password, registerKey } = req.body;
 
     const registerKeyENV = process.env.REGISTER_KEY;
@@ -56,17 +57,19 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
             });
 
             await newUser.save();
+            console.log("registering user successfull...")
 
             return res.redirect('/login'); 
         }
 
+        console.log("registering user unsuccessfull...")
         req.session.RegisterMessage = "Register Key is wrong, please enter the register key given by your organization";
         return res.redirect('/register');
 
     } catch (error) {
         console.error("Error occurred during registration:", error);
         req.session.RegisterMessage = "An error occurred during registration. Please try again.";
-        res.status(500).redirect('register');
+        res.status(500).redirect('/register');
     }
 });
 

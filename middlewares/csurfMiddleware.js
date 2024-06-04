@@ -2,13 +2,14 @@ const ApiKeyModel = require("../models/ApiKey.js")
 const crypto = require("crypto");
 
 const generateCSRFToken = (req, res, next) => {
-    if (req.path === '/login') {
+    if (req.path === '/login' || req.path === '/register') {
         if (!req.session) {
             req.session = {};
         }
         const csrfToken = crypto.randomBytes(16).toString('hex');
         res.cookie('mycsrfToken', csrfToken);
         req.session.csrfToken = csrfToken;
+        console.log("given token: ", csrfToken);
 
     }
     next();
@@ -19,6 +20,7 @@ const validateCSRFToken = (req, res, next) => {
     if (req.session.csrfToken === csrfToken && req.session.csrfToken != null && csrfToken != null) {
         next();
     } else {
+        console.log("Session Token not valid: ", req.session.csrfToken);
         res.redirect("/");
     }
 }
