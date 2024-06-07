@@ -250,12 +250,20 @@ router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, async (
     res.json({ successfully, message });
 })
 
-router.get("/", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+router.get("/", csrfMiddleware.validateCSRFToken, authMiddleware, (req, res) => {
     res.render("dashboard", { username: req.session.user.username, email: req.session.user.email });
 })
 
 router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
     res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email });
+})
+
+router.get("/registeredUsers", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+    res.render("users", { username: req.session.user.username, email: req.session.user.email });
+})
+
+router.get("/registerKey", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+    res.render("registerKey", { username: req.session.user.username, email: req.session.user.email });
 })
 
 router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
@@ -478,6 +486,7 @@ router.put("/allowedOrigins", authMiddleware, csrfMiddleware.validateCSRFToken, 
         return res.status(400).json({ error: "Invalid request: 'isDelete' is not true" });
     }
 });
+
 
 
 module.exports = router

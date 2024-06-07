@@ -6,7 +6,6 @@ const bcrypt = require("bcryptjs")
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-
 router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
     const { email, password } = req.body;
     let user = await UserModel.findOne({ email });
@@ -29,7 +28,13 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
 
     req.session.isAuth = true
 
-    res.redirect("/dashboard")
+    req.session.save((err) => {
+        if (err) {
+            console.error("Error saving session:", err);
+            return res.status(500).json({ message: 'An error occurred while saving the session' });
+        }
+        res.redirect('/dashboard');
+    });    
 })
 
 router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
@@ -53,7 +58,8 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
             const newUser = new UserModel({
                 username,
                 email,
-                password: hashedPassword
+                password: hashedPassword,
+                role: "readWrite"
             });
 
             await newUser.save();
