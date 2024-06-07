@@ -6,7 +6,6 @@ const bcrypt = require("bcryptjs")
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-
 router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
     const { email, password } = req.body;
     let user = await UserModel.findOne({ email });
@@ -28,8 +27,9 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
     req.session.message = "";
 
     req.session.isAuth = true
-
-    res.redirect("/dashboard")
+    if (req.session.isAuth){
+        res.redirect("/dashboard")
+    }
 })
 
 router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {

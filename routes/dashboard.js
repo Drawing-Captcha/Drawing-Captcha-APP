@@ -250,7 +250,7 @@ router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, async (
     res.json({ successfully, message });
 })
 
-router.get("/", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+router.get("/", csrfMiddleware.validateCSRFToken, authMiddleware, (req, res) => {
     res.render("dashboard", { username: req.session.user.username, email: req.session.user.email });
 })
 

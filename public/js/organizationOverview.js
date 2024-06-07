@@ -149,7 +149,7 @@ function changeDetails(e) {
 }
 
 function submitForm(event) {
-    event.preventDefault();
+    // event.preventDefault();
 
     if (passwordInput.value) {
         if (passwordInput.value.length < 5 || passwordInput.value !== retypePasswordInput.value) {
@@ -190,16 +190,20 @@ function submitForm(event) {
         if (response.ok) {
             return response.json();
         } else {
-            throw new Error('Error server while trying to request the server');
+            return response.json().then(errData => {
+                throw new Error(errData.message || 'Error server while trying to request the server');
+            });
         }
     })
     .then(data => {
         alert('User updated successfully');
+        location.reload();
     })
     .catch(error => {
         console.error('Fehler:', error);
-        alert('An error occurred. Please try again later.');
+        alert(`An error occurred: ${error.message}`);
     });
+    
 
     dialog.close();
 }

@@ -11,7 +11,8 @@
   width: 100%;
 }
 
-#profileImage{
+#profileImage {
+  height: 23em;
   width: 23em;
   border-radius: 100%;
   border: 2px solid black;
@@ -2715,7 +2716,8 @@ figcaption {
 }
 
 .stacked-list1_avatar-image {
-  object-fit: contain;
+  border: 1px solid black;
+  object-fit: cover;
   border-radius: 100%;
   width: 3rem;
   height: 3rem;
