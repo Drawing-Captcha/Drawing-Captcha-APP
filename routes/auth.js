@@ -27,9 +27,14 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
     req.session.message = "";
 
     req.session.isAuth = true
-    if (req.session.isAuth){
-        res.redirect("/dashboard")
-    }
+
+    req.session.save((err) => {
+        if (err) {
+            console.error("Error saving session:", err);
+            return res.status(500).json({ message: 'An error occurred while saving the session' });
+        }
+        res.redirect('/dashboard');
+    });    
 })
 
 router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
