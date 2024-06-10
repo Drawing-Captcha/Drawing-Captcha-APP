@@ -679,9 +679,11 @@ a,
                           <div class="sidebar1_link-wrapper">
                             <div class="icon-embed-xsmall w-embed">
                               <!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-                              <svg fill="#000000" height="800px" width="800px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-                              viewBox="0 0 481.141 481.141" xml:space="preserve">
-                           <path d="M458.186,301.52l-0.023-0.008c-25.895-24.33-56.553-43.041-90.023-54.948l-92.613-32.955
+                              <svg fill="#000000" height="800px" width="800px" version="1.1" id="Capa_1"
+                                xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                viewBox="0 0 481.141 481.141" xml:space="preserve">
+                                <path
+                                  d="M458.186,301.52l-0.023-0.008c-25.895-24.33-56.553-43.041-90.023-54.948l-92.613-32.955
                              c-6.789-28.006-27.905-51.721-57.569-60.314c-11.167-3.245-22.45-3.992-33.294-2.652c-0.016-5.857-0.423-11.552-1.032-17.139
                              h120.742c12.723,0,23.036-10.312,23.036-23.036V23.028C327.41,10.311,317.097,0,304.374,0H158.73
                              c-26.688,0-49.546,15.768-60.227,38.411c-44.168,2.767-78.24,51.112-78.24,112.519c0,31.182,8.809,59.004,23.228,79.225
@@ -710,8 +712,8 @@ a,
                              c-0.154,0-0.315-0.008-0.47-0.022c-1.572-0.139-2.998-0.972-3.899-2.267c-6.443-9.295-7.931-20.893-4.678-31.336
                              c11.238,5.776,34.374,7.602,43.088,1.78L91.042,290.955z M112.883,71.573c7.637,2.682,14.565,8.438,20.569,16.076
                              C123.734,87.047,115.711,80.505,112.883,71.573z M126.74,42.98c2.543-0.955,5.272-1.548,8.146-1.548
-                             c12.8,0,23.183,10.381,23.183,23.183c0,0.832-0.163,1.618-0.248,2.428C149.028,56.144,138.508,47.805,126.74,42.98z"/>
-                           </svg>
+                             c12.8,0,23.183,10.381,23.183,23.183c0,0.832-0.163,1.618-0.248,2.428C149.028,56.144,138.508,47.805,126.74,42.98z" />
+                              </svg>
                             </div>
                             <div>Register Key</div>
                           </div>
@@ -765,9 +767,14 @@ a,
                     <div class="sidebar1_account">
                       <div class="sidebar1_avatar">
                         <div id="w-node-_1a30a1e4-8a69-abdf-86cf-348aa176e562-0240322d"
-                          class="sidebar1_avatar-image-wrapper"><img
-                            src="images/6191a88a1c0e39463c2bf022_placeholder-image.svg" loading="lazy" alt=""
-                            class="sidebar1_avatar-image"></div>
+                          class="sidebar1_avatar-image-wrapper">
+                          <% if (ppURL) { %>
+                            <img src="<%= ppURL %>" loading="lazy" alt="" class="sidebar1_avatar-image">
+                            <% } else{ %>
+                              <img src="/images/6191a88a1c0e39463c2bf022_placeholder-image.svg" loading="lazy" alt=""
+                                class="sidebar1_avatar-image">
+                              <% } %>
+                        </div>
                         <div id="w-node-_1a30a1e4-8a69-abdf-86cf-348aa176e564-0240322d"
                           class="sidebar1_avatar-text-wrapper">
                           <% if (username) { %>
@@ -915,12 +922,15 @@ a,
                           <div class="editItemWrapper">
                             <div class="upper-section">
                               <h5>Change your Item name:</h5>
-                              <input type="text" id="captchaItemName" name="captchaItemName" maxlength="20" onclick="this.focus()">
+                              <input type="text" id="captchaItemName" name="captchaItemName" maxlength="20"
+                                onclick="this.focus()">
                               <h5>Change your ToDo Description:</h5>
-                              <input type="text" id="todoDescription" name="todoDescription" maxlength="110" placeholder="Please draw the object currently being displayed." onclick="this.focus()">
+                              <input type="text" id="todoDescription" name="todoDescription" maxlength="110"
+                                placeholder="Please draw the object currently being displayed." onclick="this.focus()">
                               <h5>Change your image size:</h5>
                               <div class="imageResizerWrapper-edit">
-                                <input type="range" name="imageResizer" id="imageResizer" min="0" max="100" step="5" value="70">
+                                <input type="range" name="imageResizer" id="imageResizer" min="0" max="100" step="5"
+                                  value="70">
                                 <label for="imageResizer" id="imageResizerValue">70%</label>
                               </div>
                             </div>

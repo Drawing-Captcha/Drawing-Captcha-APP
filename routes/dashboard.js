@@ -12,7 +12,8 @@ const authMiddleware = require("../middlewares/authMiddleware");
 const { pool, deletedBin, initializeAllowedOrigins, initializePool, initializeBin } = require("../controllers/initializeController");
 const ApiKeyModel = require("../models/ApiKey.js")
 const doesApiKeyExist = require("../services/apiKeyExist.js")
- 
+const isAdmin = require("../middlewares/adminMiddleware.js")
+
 router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     let globalPool = await initializePool()
     console.log("global: ", globalPool)
@@ -85,7 +86,7 @@ router.put("/crud", authMiddleware, csrfMiddleware.validateCSRFToken, async (req
 })
 
 router.get('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email })
+    res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL })
 })
 
 router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
@@ -147,7 +148,7 @@ router.get('/deletedArchiveAssets', authMiddleware, csrfMiddleware.validateCSRFT
 
 router.get("/apiKeySection", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
 
-    res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email });
+    res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL});
 
 })
 
@@ -251,19 +252,19 @@ router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, async (
 })
 
 router.get("/", csrfMiddleware.validateCSRFToken, authMiddleware, (req, res) => {
-    res.render("dashboard", { username: req.session.user.username, email: req.session.user.email });
+    res.render("dashboard", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
 })
 
 router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email });
+    res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
 })
 
 router.get("/registeredUsers", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("users", { username: req.session.user.username, email: req.session.user.email });
+    res.render("users", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
 })
 
-router.get("/registerKey", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("registerKey", { username: req.session.user.username, email: req.session.user.email });
+router.get("/registerKey", isAdmin, authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+    res.render("registerKey", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
 })
 
 router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
@@ -321,7 +322,7 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
 });
 
 router.get("/createItem", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("createItem", { username: req.session.user.username, email: req.session.user.email });
+    res.render("createItem", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL});
 })
 
 router.post("/logout", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
@@ -460,7 +461,6 @@ router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken,
     }
 });
 
-
 router.put("/allowedOrigins", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     if (req.body.isDelete) {
         let origin = req.body.allowedOrigin;
@@ -486,7 +486,5 @@ router.put("/allowedOrigins", authMiddleware, csrfMiddleware.validateCSRFToken, 
         return res.status(400).json({ error: "Invalid request: 'isDelete' is not true" });
     }
 });
-
-
 
 module.exports = router

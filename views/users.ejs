@@ -770,9 +770,14 @@ a,
                     <div class="sidebar1_account">
                       <div class="sidebar1_avatar">
                         <div id="w-node-_1a30a1e4-8a69-abdf-86cf-348aa176e562-0240322d"
-                          class="sidebar1_avatar-image-wrapper"><img
-                            src="/images/6191a88a1c0e39463c2bf022_placeholder-image.svg" loading="lazy" alt=""
-                            class="sidebar1_avatar-image"></div>
+                          class="sidebar1_avatar-image-wrapper">
+                          <% if (ppURL) { %>
+                            <img src="<%= ppURL %>" loading="lazy" alt="" class="sidebar1_avatar-image">
+                            <% } else{ %>
+                                <img src="/images/6191a88a1c0e39463c2bf022_placeholder-image.svg" loading="lazy" alt=""
+                                  class="sidebar1_avatar-image">
+                                <% } %>
+                        </div>
                         <div id="w-node-_1a30a1e4-8a69-abdf-86cf-348aa176e564-0240322d"
                           class="sidebar1_avatar-text-wrapper">
                           <% if (username) { %>
@@ -923,7 +928,8 @@ a,
 
         <div class="subWrapper">
           <label for="password">Passwort:</label>
-          <input type="password" id="password" name="password" placeholder="If you want to change your current password, enter here your new password">
+          <input type="password" id="password" name="password"
+            placeholder="If you want to change your current password, enter here your new password">
         </div>
         <div class="subWrapper retype-password" style="display: none;">
           <label for="retype">Retype your new password:</label>
