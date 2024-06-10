@@ -5,6 +5,7 @@ const UserModel = require("../models/User.js");
 const bcrypt = require("bcryptjs")
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const registerKeyModel = require("../models/RegisterKey.js")
 
 router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
     const { email, password } = req.body;
@@ -40,12 +41,16 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
 router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
     console.log("Registering User...")
     const { username, email, password, registerKey } = req.body;
-
     const registerKeyENV = process.env.REGISTER_KEY;
+    const registerKeyDB = await registerKeyModel.findOne({});
+    const returnedKey = registerKeyDB.RegisterKey ? registerKeyDB.RegisterKey : registerKeyENV;
+
+    console.log("register Key: ", returnedKey)
+
     req.session.RegisterMessage = "";
 
     try {
-        if (registerKey === registerKeyENV) {
+        if (registerKey === returnedKey) {
             const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
 
             if (existingUser) {
