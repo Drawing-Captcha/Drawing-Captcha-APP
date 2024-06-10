@@ -1,11 +1,25 @@
 const isAuthorizedUpdateUser = (req, res, next) => {
-    console.log("Session User: ", req.session.user._id);
-    console.log("Submitted User: ", req.body.submittedData.id);
-    if (req.session.user.role === "admin" || req.session.user._id === req.body.submittedData.id) {
-        console.log("req Session successfull")
+    if (!req.session.user) {
+        console.log("Session User is not defined");
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!req.body.submittedData || !req.body.submittedData.id) {
+        console.log("Submitted User ID is not defined");
+        return res.status(400).json({ message: "Bad Request" });
+    }
+
+    const sessionUserId = req.session.user._id.toString();
+    const submittedUserId = req.body.submittedData.id.toString();
+
+    console.log("Session User: ", sessionUserId);
+    console.log("Submitted User: ", submittedUserId);
+
+    if (req.session.user.role === "admin" || sessionUserId === submittedUserId) {
+        console.log("req Session successful");
         next();
     } else {
-        console.log("req session unsuccessfull")
+        console.log("req session unsuccessful");
         res.status(401).json({ message: "Unauthorized" });
     }
 };

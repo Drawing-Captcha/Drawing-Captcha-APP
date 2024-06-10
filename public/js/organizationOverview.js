@@ -149,7 +149,7 @@ function changeDetails(e) {
 }
 
 function submitForm(event) {
-    // event.preventDefault();
+    event.preventDefault();
 
     if (passwordInput.value) {
         if (passwordInput.value.length < 5 || passwordInput.value !== retypePasswordInput.value) {

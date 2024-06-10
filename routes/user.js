@@ -34,7 +34,7 @@ router.put('/updateUser', isAuthorized, authMiddleware, csrfMiddleware.validateC
         let updateData = { username, email, ppURL };
 
         if (shouldChangePassword) {
-            if (!password || password.length < 8) {
+            if (!password || password.length < 5) {
                 return res.status(400).json({ message: 'Password must be at least 8 characters long' });
             }
             const hashedPassword = await bcrypt.hash(password, 12);
