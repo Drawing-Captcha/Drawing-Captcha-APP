@@ -88,7 +88,7 @@ async function getAllUsers() {
                     const deleteButton = document.createElement("button");
                     deleteButton.classList.add("iconButton", "is-icon-only");
                     deleteButton.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V19C19 19.5304 18.7893 20.0391 18.4142 20.4142C18.0391 20.7893 17.5304 21 17 21H7C6.46957 21 5.96086 20.7893 5.58579 20.4142C5.21071 20.0391 5 19.5304 5 19V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-                    deleteButton.addEventListener("click", () => deleteComponent(elementData));
+                    deleteButton.addEventListener("click", () => deleteUser(elementData));
 
                     const returnButton = document.createElement("button");
                     returnButton.classList.add("iconButton", "is-icon-only");
@@ -104,7 +104,7 @@ async function getAllUsers() {
                     </svg>`;
                     returnButton.addEventListener("click", () => changeDetails(elementData));
                     if (ownUser.role === "admin" || ownUser._id === elementData._id) {
-                        if (elementData.role !== "admin") {
+                        if (!elementData.initialUser) {
                             droppDownToggle.appendChild(deleteButton);
                         }
                         droppDownToggle.appendChild(returnButton);
@@ -220,5 +220,36 @@ passwordInput.addEventListener("input", () => {
         retypePasswordInput.value = "";
     }
 });
+
+
+function deleteUser(user) {
+    if (!confirm("Are you sure you want to delete the User: " + user.username + "?")) {
+        return;
+    }
+    fetch("/user/deleteUser", {
+        method: "DELETE",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user })
+    })
+    .then(response => {
+        return response.json().then(data => {
+            if(data.message){
+                alert(data.message);
+            }
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            } 
+            location.reload();
+        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(`An error occurred: ${error.message}`);
+    });
+}
+
+
 
 document.getElementById('changeDetailsForm').addEventListener('submit', submitForm);

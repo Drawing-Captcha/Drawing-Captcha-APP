@@ -39,17 +39,18 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
 })
 
 router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
-    console.log("Registering User...")
-    const { username, email, password, registerKey } = req.body;
-    const registerKeyENV = process.env.REGISTER_KEY;
-    const registerKeyDB = await registerKeyModel.findOne({});
-    const returnedKey = registerKeyDB.RegisterKey ? registerKeyDB.RegisterKey : registerKeyENV;
-
-    console.log("register Key: ", returnedKey)
-
-    req.session.RegisterMessage = "";
-
     try {
+        console.log("Registering User...")
+        const { username, email, password, registerKey } = req.body;
+        const registerKeyENV = process.env.REGISTER_KEY;
+        const registerKeyDB = await registerKeyModel.findOne({});
+        console.log(registerKeyDB)
+        const returnedKey = registerKeyDB != null && registerKeyDB.RegisterKey != null ? registerKeyDB.RegisterKey : registerKeyENV;
+    
+        console.log("register Key: ", returnedKey)
+    
+        req.session.RegisterMessage = "";
+    
         if (registerKey === returnedKey) {
             const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
 
