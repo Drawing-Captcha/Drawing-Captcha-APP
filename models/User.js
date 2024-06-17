@@ -22,6 +22,10 @@ const userSchema = new Schema ({
     ppURL:{
         type: String,
         required: false
+    },
+    initialUser:{
+        type: Boolean,
+        required: false
     }
     
 })
