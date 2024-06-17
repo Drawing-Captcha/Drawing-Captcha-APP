@@ -68,7 +68,7 @@ router.delete('/deleteUser', authMiddleware, isAuthorizedDeleting, csrfMiddlewar
         const result = await User.deleteOne({ _id: user._id });
 
         if (result.deletedCount === 1) {
-            if(req.session.role != "admin"){
+            if (req.session.user.role != "admin") {
                 req.session.destroy((err) => {
                     if (err) {
                         console.error("Session destruction error:", err);
@@ -76,17 +76,17 @@ router.delete('/deleteUser', authMiddleware, isAuthorizedDeleting, csrfMiddlewar
                     }
                     return res.status(200).json({ message: 'User deleted successfully. Redirecting to login...', redirect: '/login' });
                 });
+            } else {
+                return res.status(200).json({ message: 'User deleted successfully.' });
             }
-            return res.status(200).json({ message: 'User deleted successfully.'});
         } else {
-            return res.status(500).json({ message: 'Failed to delete the user', error: result.error });
+            return res.status(500).json({ message: 'Failed to delete the user' });
         }
     } catch (error) {
         console.error("An error occurred while deleting the user:", error);
         return res.status(500).json({ message: 'An error occurred while deleting the user', error: error.message });
     }
 });
-
 
 
 
