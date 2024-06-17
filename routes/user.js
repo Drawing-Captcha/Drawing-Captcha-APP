@@ -27,13 +27,13 @@ router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async 
 
 router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        const { id, username, email, ppURL, shouldChangePassword, password } = req.body.submittedData;
+        const { id, username, email, ppURL, shouldChangePassword, password, role } = req.body.submittedData;
         
         if (!id || !username || !email) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
-        let updateData = { username, email, ppURL };
+        let updateData = { username, email, ppURL, role };
 
         if (shouldChangePassword) {
             if (!password || password.length < 5) {

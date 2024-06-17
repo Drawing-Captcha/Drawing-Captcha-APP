@@ -924,7 +924,14 @@ a,
           <label for="email">E-Mail:</label>
           <input type="email" id="email" name="email">
         </div>
-
+        <div class="subWrapper roleChoiceWrapper">
+          <label for="role">Role:</label>
+          <select name="role" id="role">
+            <option value="admin">Administrator</option>
+            <option value="readWrite">Read & Write</option>
+            <option value="read">Read Only</option>
+          </select>
+        </div>
         <div class="subWrapper">
           <label for="password">Passwort:</label>
           <input type="password" id="password" name="password"
@@ -935,7 +942,7 @@ a,
           <input type="password" id="retype" name="retype" placeholder="Retype password">
         </div>
         <menu>
-          <button id="closeButton" onclick="location.reload()">Abbrechen</button>
+          <button id="closeButton" type="reset" onclick="location.reload()">Cancel</button>
           <button type="submit">Submit</button>
         </menu>
       </form>

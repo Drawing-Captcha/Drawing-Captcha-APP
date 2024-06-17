@@ -9,6 +9,9 @@ let emailInput = dialog.querySelector("#email");
 let passwordInput = dialog.querySelector("#password");
 let retypePasswordInput = document.querySelector(".retype-password input");
 let elementID;
+let ownUser;
+const roleSelect = document.getElementById('role');
+const changeForm = document.querySelector("#changeDetailsForm")
 
 imageUpload.addEventListener('change', function () {
     let reader = new FileReader();
@@ -34,7 +37,7 @@ async function getAllUsers() {
         if (response.ok) {
             const data = await response.json();
             const allUsers = data.allUsers;
-            const ownUser = data.ownUser;
+            ownUser = data.ownUser;
 
             const wrapper = document.querySelector(".stacked-list1_list-wrapper");
 
@@ -138,13 +141,29 @@ async function getAllUsers() {
 
 function changeDetails(e) {
     dialog.showModal();
+    
+    if (ownUser.role === "admin") {
+        if(!e.initialUser){
+            roleSelect.parentElement.style.display = "block";
+            roleSelect.value = e.role;
+        }
+        else{
+            roleSelect.parentElement.style.display = "none";
+        }
+    } else {
+        roleSelect.parentElement.style.display = "none";
+    }
+
     retypePasswordInput.parentElement.style.display = "none";
     retypePasswordInput.value = "";
+
     profileImage.src = e.ppURL ? e.ppURL : "/images/6191a88a1c0e39463c2bf022_placeholder-image.svg";
     usernameInput.value = e.username;
     emailInput.value = e.email;
+
     passwordInput.value = "";
     retypePasswordInput.value = "";
+    
     elementID = e._id;
 }
 
@@ -176,7 +195,8 @@ function submitForm(event) {
         email: emailInput.value,
         ppURL: profileImage.src,
         shouldChangePassword,
-        password: password
+        password: password,
+        role: roleSelect.value
     };
 
     fetch("/user/updateUser", {
@@ -249,6 +269,7 @@ function deleteUser(user) {
         alert(`An error occurred: ${error.message}`);
     });
 }
+
 
 
 
