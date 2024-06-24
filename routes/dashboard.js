@@ -14,6 +14,7 @@ const ApiKeyModel = require("../models/ApiKey.js")
 const doesApiKeyExist = require("../services/apiKeyExist.js")
 const isAdmin = require("../middlewares/adminMiddleware.js")
 const registerKeyModel = require("../models/RegisterKey.js")
+const generateNewRegisterKey = require("../services/generateRegisterKey.js")
 
 router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     let globalPool = await initializePool()
@@ -283,25 +284,7 @@ router.get("/registerKey/assets", authMiddleware, isAdmin, csrfMiddleware.valida
 
 router.put("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        let message;
-        const existingRegisterKey = await registerKeyModel.findOne();
-
-        if (!existingRegisterKey) {
-            const newRegisterKey = new registerKeyModel({
-                RegisterKey: crypto.randomUUID()
-            });
-
-            await newRegisterKey.save();
-            message = "New register key successfully generated";
-            console.log(message);
-            return res.status(201).json({ success: true, message, key: newRegisterKey.RegisterKey });
-        } else {
-            existingRegisterKey.RegisterKey = crypto.randomUUID();
-            await existingRegisterKey.save();
-            message = "Register key successfully updated";
-            console.log(message);
-            return res.status(200).json({ success: true, message, key: existingRegisterKey.RegisterKey });
-        }
+        generateNewRegisterKey(req, res);
     } catch (error) {
         console.error("Error handling register key:", error);
         return res.status(500).json({ success: false, message: "Internal server error", error: error.message });
