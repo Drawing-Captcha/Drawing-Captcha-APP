@@ -20,8 +20,59 @@ function addCompany(){
 
 }
 
-function submitCompany(event){
+
+async function proofRegex(originName) {
+    console.log(originName)
+    originName = nameInput.value.trim();
+    console.log(originName)
+
+    if (originName.endsWith("/")) {
+        originName = originName.slice(0, -1)
+        console.log(originName)
+    }
+    const expression = /^(https?:\/\/)?((([a-z\d]([a-z\d-]*[a-z\d])*)\.)+[a-z]{2,}|((\d{1,3}\.){3}\d{1,3}))(:\d+)?(\/[-a-z\d%_.~+]*)*(\?[;&a-z\d%_.~+=-]*)?(\#[-a-z\d_]*)?$/i;
+    const regex = new RegExp(expression);
+
+    if (regex.test(originName)) {
+        submitOrigin(originName);
+    } else {
+        alert("Regex error: please define your origin like this schema: https://yourdomain.com");
+    }
+}
+
+function submitOrigin(originName){
+    fetch("/dashboard/allowedOrigins", {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ originName })
+    })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Error server while trying to request the server');
+            }
+        })
+        .then(data => {
+            if (data.message) {
+                alert(data.message)
+                location.reload();
+            }
+
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again later.');
+        });
+}
+
+
+
+async function submitCompany(event){
     event.preventDefault();
+    await proofRegex(nameInput.value)
 
     let submittedData = {
         name: nameInput.value,
