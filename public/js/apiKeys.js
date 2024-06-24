@@ -29,6 +29,7 @@ async function getKeys(){
         if (response.ok) {
             const data = await response.json();
             Keys = data.apiKeys;
+            let userRole = data.userRole
 
             if (Keys.length != 0) {
 
@@ -94,7 +95,9 @@ async function getKeys(){
                     deleteButton.addEventListener("click", () => deleteApiKey(elementData));
 
                     droppDownToggle.appendChild(copyButton);
-                    droppDownToggle.appendChild(deleteButton);
+                    if(userRole != "read"){
+                        droppDownToggle.appendChild(deleteButton);
+                    }
                     dropdownComponent.appendChild(droppDownToggle);
                     contentRight.appendChild(dropdownComponent);
                     item.appendChild(avatar);

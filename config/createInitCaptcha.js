@@ -75,6 +75,4 @@ async function createInitCaptcha() {
     }
 }
 
-
-
 module.exports = createInitCaptcha;

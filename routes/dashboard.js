@@ -16,19 +16,22 @@ const doesApiKeyExist = require("../services/apiKeyExist.js")
 const isAdmin = require("../middlewares/adminMiddleware.js")
 const registerKeyModel = require("../models/RegisterKey.js")
 const generateNewRegisterKey = require("../services/generateRegisterKey.js")
+const notReadOnly = require("../middlewares/notReadOnly.js")
 const CaptchaModel = require("../models/Captcha.js")
 const DeletedCaptchaModel = require("../models/DeletedCaptchaModel.js")
 
 router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     let globalPool = await initializePool()
+    let userRole = req.session.user.role;
     console.log("global: ", globalPool)
     if (globalPool) {
-        res.json({ globalPool });
+        res.json({ globalPool, userRole });
     }
     else console.error("pool not defined");
 });
 
-router.put("/crud", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+
+router.put("/crud", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     let globalPool = await initializePool();
     let globalDeletedBin = await initializeBin();
 
@@ -102,7 +105,11 @@ router.get('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, 
     res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL })
 })
 
-router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.get('/notAuthorized', authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+    res.render("notAuthorized", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role })
+})
+
+router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     let globalPool = await initializePool();
     let globalDeletedBin = await initializeBin();
 
@@ -152,19 +159,20 @@ router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, 
 
 router.get('/deletedArchiveAssets', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     let globalDeletedBin = await initializeBin()
+    let userRole = req.session.user.role
     if (globalDeletedBin) {
-        res.json({ globalDeletedBin });
+        res.json({ globalDeletedBin, userRole });
     }
     else console.error("deletedBin not defined")
 });
 
 router.get("/apiKeySection", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
 
-    res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL});
+    res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role});
 
 })
 
-router.put("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.put("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     if (req.body.isDelete) {
         let key = req.body.key;
         let isKeyDeleted = false;
@@ -192,14 +200,15 @@ router.put("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, async (r
 router.get("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
         let apiKeys = await ApiKeyModel.find();
-        res.json({ apiKeys });
+        let userRole = req.session.user.role
+        res.json({ apiKeys, userRole });
     } catch (error) {
         console.error("Error fetching API keys:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
-router.post("/apiKey/deleteAll", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.post("/apiKey/deleteAll", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     let deleteAll;
     console.log("deleting all api keys....")
     try {
@@ -225,7 +234,7 @@ router.post("/apiKey/deleteAll", authMiddleware, csrfMiddleware.validateCSRFToke
 
 })
 
-router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     let successfully;
     let message;
     try {
@@ -267,7 +276,7 @@ router.get("/", csrfMiddleware.validateCSRFToken, authMiddleware, (req, res) => 
     res.render("dashboard", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
 })
 
-router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken,  (req, res) => {
     res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
 })
 
@@ -292,7 +301,7 @@ router.get("/registerKey/assets", authMiddleware, isAdmin, csrfMiddleware.valida
     }
 });
 
-router.put("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.put("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     try {
         generateNewRegisterKey(req, res);
     } catch (error) {
@@ -302,7 +311,7 @@ router.put("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFT
 });
 
 
-router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     try {
         console.log(req.body)
         const {
@@ -356,7 +365,7 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
     }
 });
 
-router.get("/createItem", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+router.get("/createItem", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, (req, res) => {
     res.render("createItem", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL});
 })
 
@@ -367,7 +376,7 @@ router.post("/logout", authMiddleware, csrfMiddleware.validateCSRFToken, (req, r
     })
 })
 
-router.post('/newValidation', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.post('/newValidation', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     let globalPool = await initializePool();
     const ID = crypto.randomUUID();
     const validateTrueCubes = req.body.validateTrueCubes;
@@ -418,7 +427,7 @@ router.post('/newValidation', authMiddleware, csrfMiddleware.validateCSRFToken, 
     }
 });
 
-router.post('/newValidation/nameExists', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.post('/newValidation/nameExists', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     let globalPool = await initializePool()
     let nameExists = false;
     globalPool.forEach(item => {
@@ -434,6 +443,7 @@ router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, 
     try {
         let message;
         let allowedOrigins = await AllowedOriginModel.find({});
+        let userRole = req.session.user.role
         if (allowedOrigins.length > 0) {
             message = "allowed origins found"
             console.log(message)
@@ -443,7 +453,7 @@ router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, 
             console.log(message);
         }
 
-        res.json({ allowedOrigins, message })
+        res.json({ allowedOrigins, message, userRole })
     }
     catch (err) {
         console.log("Error while trying to get AllowedOrigins", err);
@@ -451,7 +461,7 @@ router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, 
     }
 
 })
-router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     try {
         let message;
         let originName = req.body.originName;
@@ -478,7 +488,7 @@ router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken,
     }
 });
 
-router.put("/allowedOrigins", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.put("/allowedOrigins", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     if (req.body.isDelete) {
         let origin = req.body.allowedOrigin;
         let isOriginDeleted = false;

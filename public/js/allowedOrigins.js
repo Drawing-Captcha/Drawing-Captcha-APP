@@ -18,6 +18,7 @@ async function getOrigins() {
         if (response.ok) {
             const data = await response.json();
             Origins = data.allowedOrigins;
+            let userRole = data.userRole;
 
             if (Origins.length != 0) {
 
@@ -61,7 +62,9 @@ async function getOrigins() {
                     deleteButton.innerHTML = '<svg width="24" color="#ffff" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V19C19 19.5304 18.7893 20.0391 18.4142 20.4142C18.0391 20.7893 17.5304 21 17 21H7C6.46957 21 5.96086 20.7893 5.58579 20.4142C5.21071 20.0391 5 19.5304 5 19V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
                     deleteButton.addEventListener("click", () => deleteOrigin(elementData));
 
-                    droppDownToggle.appendChild(deleteButton);
+                    if (userRole != "read") {
+                        droppDownToggle.appendChild(deleteButton);
+                    }
                     dropdownComponent.appendChild(droppDownToggle);
                     contentRight.appendChild(dropdownComponent);
                     item.appendChild(avatar);
@@ -108,13 +111,13 @@ function addOrigin() {
     addFrom();
 }
 
-function addFrom(){
+function addFrom() {
     itemPageWrapper.style.display = "flex";
     ItemWrapper.style.display = "flex";
     setTimeout(() => {
         itemPageWrapper.style.opacity = '1';
     }, 50);
-    
+
 }
 
 function proofRegex() {
@@ -122,7 +125,7 @@ function proofRegex() {
     originName = inputName.value.trim();
     console.log(originName)
 
-    if(originName.endsWith("/")){
+    if (originName.endsWith("/")) {
         originName = originName.slice(0, -1)
         console.log(originName)
     }
@@ -137,7 +140,7 @@ function proofRegex() {
 }
 
 
-function deleteOrigin(elementData){
+function deleteOrigin(elementData) {
     let isDeleted = true;
     let origin = elementData.allowedOrigin;
     putOrigin(origin, isDeleted)
