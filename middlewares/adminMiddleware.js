@@ -7,7 +7,7 @@ const isAdmin = (req, res, next) => {
         next();
     }
     else{
-        res.status(401).json({ message: "Unauthorized access please contact your administrator" });
+        return res.redirect("/dashboard/notAuthorized");
     }
 }
 

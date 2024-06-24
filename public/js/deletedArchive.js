@@ -19,6 +19,7 @@ async function getDeletedBin() {
         if (response.ok) {
             const data = await response.json();
             const deletedBin = data.globalDeletedBin;
+            const userRole = data.userRole;
             console.log(deletedBin)
 
             const wrapper = document.querySelector(".stacked-list1_list-wrapper");
@@ -84,8 +85,10 @@ async function getDeletedBin() {
                     </svg>`;
                     returnButton.addEventListener("click", () => getBack(elementData));
 
-                    droppDownToggle.appendChild(deleteButton);
-                    droppDownToggle.appendChild(returnButton);
+                    if (userRole != "read") {
+                        droppDownToggle.appendChild(deleteButton);
+                        droppDownToggle.appendChild(returnButton);
+                    }
                     dropdownComponent.appendChild(droppDownToggle);
                     contentRight.appendChild(dropdownComponent);
                     item.appendChild(avatar);

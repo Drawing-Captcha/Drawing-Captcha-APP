@@ -61,6 +61,8 @@ async function getPool() {
         if (response.ok) {
             const data = await response.json();
             const pool = data.globalPool;
+            const userRole = data.userRole;
+            console.log(userRole)
 
             if (pool.length != 0) {
 
@@ -123,8 +125,10 @@ async function getPool() {
                     </svg>`;
                     editButton.addEventListener("click", () => getComponent(elementData));
 
-                    droppDownToggle.appendChild(deleteButton);
-                    droppDownToggle.appendChild(editButton);
+                    if(!elementData.initialCaptcha && userRole != "read"){
+                        droppDownToggle.appendChild(deleteButton);
+                        droppDownToggle.appendChild(editButton);
+                    }
                     dropdownComponent.appendChild(droppDownToggle);
                     contentRight.appendChild(dropdownComponent);
                     item.appendChild(avatar);
