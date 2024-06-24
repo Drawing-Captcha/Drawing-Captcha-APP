@@ -283,6 +283,9 @@ router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken,
 router.get("/registeredUsers", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
     res.render("users", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
 })
+router.get("/companies", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+    res.render("company", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
+})
 
 router.get("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, (req, res) => {
     res.render("registerKey", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
@@ -437,6 +440,10 @@ router.post('/newValidation/nameExists', authMiddleware, csrfMiddleware.validate
         }
     });
     res.json({ nameExists });
+});
+
+router.post('/addCompany', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+    console.log(req.body)
 });
 
 router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
