@@ -2,6 +2,8 @@ const path = require("path");
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const AllowedOriginModel = require("../models/AllowedOrigins.js");
 const { promises: fsPromises } = require('fs');
+const CaptchaModel = require("../models/Captcha.js")
+const DeletedCaptchaModel = require("../models/DeletedCaptchaModel.js")
 
 let pool = [];
 let deletedBin = [];
@@ -11,19 +13,16 @@ let defaultOrigin = [`http://localhost:${port}`];
 
 async function initializePool() {
     try {
-        const poolFilePath = path.join(__dirname, '../src/pool.txt');
-        const contents = await fsPromises.readFile(poolFilePath, 'utf-8');
-        if (contents.trim() === "") {
-            console.log("The file pool.txt is empty");
-            pool = [];
-            return pool;
+        const pool = await CaptchaModel.find({});
+        if (pool.length === 0) {
+            console.log("The pool collection in MongoDB is empty");
+            return [];
         } else {
-            pool = JSON.parse(contents);
             return pool;
         }
     } catch (err) {
-        console.log("Error parsing JSON data:", err);
-        pool = [];
+        console.log("Error retrieving data from MongoDB:", err);
+        return [];
     }
 }
 
@@ -47,21 +46,19 @@ async function initializeAllowedOrigins() {
 
 async function initializeBin() {
     try {
-        const binFilePath = path.join(__dirname, '../src/deletedBin.txt');
-        const contents = await fsPromises.readFile(binFilePath, 'utf-8');
-        if (contents.trim() === "") {
-            console.log("The file 'deletedBin.txt' is empty.");
-            deletedBin = [];
-            return deletedBin
+        const bin = await DeletedCaptchaModel.find({});
+        if (bin.length === 0) {
+            console.log("The deleted bin collection in MongoDB is empty");
+            return [];
         } else {
-            deletedBin = JSON.parse(contents);
-            return deletedBin
+            return bin;
         }
     } catch (err) {
-        console.log("Error parsing JSON data:", err);
-        deletedBin = [];
+        console.log("Error retrieving data from MongoDB:", err);
+        return [];
     }
 }
+
 
 
 
