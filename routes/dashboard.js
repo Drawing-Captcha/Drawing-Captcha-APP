@@ -1,5 +1,6 @@
 const path = require("path");
 const { promises: fsPromises } = require('fs');
+const mongoose = require('mongoose'); 
 const fs = require("fs");
 const uuid = require('uuid');
 const express = require('express');
@@ -15,6 +16,8 @@ const doesApiKeyExist = require("../services/apiKeyExist.js")
 const isAdmin = require("../middlewares/adminMiddleware.js")
 const registerKeyModel = require("../models/RegisterKey.js")
 const generateNewRegisterKey = require("../services/generateRegisterKey.js")
+const CaptchaModel = require("../models/Captcha.js")
+const DeletedCaptchaModel = require("../models/DeletedCaptchaModel.js")
 
 router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     let globalPool = await initializePool()
@@ -26,119 +29,126 @@ router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, asy
 });
 
 router.put("/crud", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
-    let globalPool = await initializePool()
-    let globalDeletedBin = await initializeBin()
+    let globalPool = await initializePool();
+    let globalDeletedBin = await initializeBin();
 
     let deletedObject;
     let tmpPool = req.body.tmpPool;
-    let index
+    let index;
     console.log("tmpPool", tmpPool);
+
     if (Array.isArray(tmpPool)) {
-        tmpPool.map(x => {
+        tmpPool.forEach(x => {
             index = globalPool.findIndex(b => b.ID === x.ID);
         });
 
         if (req.body.isDelete) {
             deletedObject = globalPool.splice(index, 1)[0];
-            console.log("deleted object: ", deletedObject)
-            console.log("current pool: ", globalPool)
-            globalDeletedBin.push(deletedObject)
+            console.log("deleted object: ", deletedObject);
+            console.log("current pool: ", globalPool);
 
-            fs.writeFile('./src/deletedBin.txt', JSON.stringify(globalDeletedBin, null, 2), 'utf-8', (err) => {
-                if (err) {
-                    console.error('Error saving JSON file:', err);
-                } else {
-                    console.log('Data added to deletedBin.txt.');
-                }
-            });
+            globalDeletedBin.push(deletedObject);
 
-            fs.writeFile('./src/pool.txt', JSON.stringify(globalPool, null, 2), 'utf-8', (err) => {
-                if (err) {
-                    console.error('Error saving JSON file:', err);
+            try {
+                const found = await CaptchaModel.findOne({ ID: deletedObject.ID });
+                
+                if (found) {
+                    await CaptchaModel.deleteOne({ ID: deletedObject.ID });
+
+                    const deletedCaptcha = new DeletedCaptchaModel({
+                        ...deletedObject.toObject(),
+                        _id: new mongoose.Types.ObjectId(), 
+                    });
+
+                    await deletedCaptcha.save();
+                    console.log('Data added to deleted bin in MongoDB.');
                 } else {
-                    console.log('Data added to pool.txt.');
+                    console.error('Document not found in Captcha collection:', deletedObject.ID);
                 }
-            });
+            } catch (err) {
+                console.error('Error saving to deleted bin in MongoDB:', err);
+            }
         } else {
-            globalPool[index].Name = tmpPool[0].Name
-            globalPool[index].ValidateF = tmpPool[0].ValidateF
-            globalPool[index].validateMinCubes = tmpPool[0].validateMinCubes
-            globalPool[index].validateMaxCubes = tmpPool[0].validateMaxCubes
-            globalPool[index].MaxTolerance = (tmpPool[0].validateMaxCubes.length * 1) / tmpPool[0].ValidateF.length;
-            globalPool[index].MinTolerance = (tmpPool[0].validateMinCubes.length * 1) / tmpPool[0].ValidateF.length;
-            globalPool[index].todoTitle = tmpPool[0].todoTitle
-            globalPool[index].backgroundSize = tmpPool[0].backgroundSize
+            let updatedCaptcha = {
+                Name: tmpPool[0].Name,
+                ValidateF: tmpPool[0].ValidateF,
+                validateMinCubes: tmpPool[0].validateMinCubes,
+                validateMaxCubes: tmpPool[0].validateMaxCubes,
+                MaxTolerance: (tmpPool[0].validateMaxCubes.length * 1) / tmpPool[0].ValidateF.length,
+                MinTolerance: (tmpPool[0].validateMinCubes.length * 1) / tmpPool[0].ValidateF.length,
+                todoTitle: tmpPool[0].todoTitle,
+                backgroundSize: tmpPool[0].backgroundSize
+            };
 
-            fs.writeFile('./src/pool.txt', JSON.stringify(globalPool, null, 2), 'utf-8', (err) => {
-                if (err) {
-                    console.error('Error saving JSON file:', err);
-                } else {
-                    console.log('Data added to pool.txt.');
-                }
-            });
-
+            try {
+                await CaptchaModel.updateOne({ ID: tmpPool[0].ID }, updatedCaptcha, { runValidators: true });
+                console.log('Data updated in MongoDB.');
+            } catch (err) {
+                console.error('Error updating data in MongoDB:', err);
+            }
         }
 
         isGood = true;
     } else {
-        console.error("Problem with the array")
+        console.error("Problem with the array");
+        isGood = false;
     }
-    res.json({ isGood })
+    res.json({ isGood });
+});
 
-})
+
 
 router.get('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
     res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL })
 })
 
 router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
-    let globalPool = await initializePool()
-    let globalDeletedBin = await initializeBin()
+    let globalPool = await initializePool();
+    let globalDeletedBin = await initializeBin();
 
     let deletedObject;
     let tmpPool = req.body.tmpPool;
-    let index
-    console.log("given pool: ", tmpPool)
-    if (Array.isArray(tmpPool)) {
-        tmpPool.map(x => {
-            index = globalDeletedBin.findIndex(b => b.ID === x.ID);
-            console.log("index of pool: ", index)
-        });
-        if (req.body.isDelete) {
-            deletedObject =  globalDeletedBin.splice(index, 1)[0]
-            fs.writeFile('./src/deletedBin.txt', JSON.stringify(globalDeletedBin, null, 2), 'utf-8', (err) => {
-                if (err) {
-                    console.error('Error saving JSON file:', err);
-                } else {
-                    console.log('Data added to deletedBin.txt.');
-                }
-            });
-        } else {
-            deletedObject =  globalDeletedBin.splice(index, 1)[0]
-            globalPool.push(deletedObject)
+    let index;
+    console.log("given pool: ", tmpPool);
 
-            fs.writeFile('./src/pool.txt', JSON.stringify(globalPool, null, 2), 'utf-8', (err) => {
-                if (err) {
-                    console.error('Error saving JSON file:', err);
-                } else {
-                    console.log('Data added to pool.txt.');
-                }
-            });
-            fs.writeFile('./src/deletedBin.txt', JSON.stringify(globalDeletedBin, null, 2), 'utf-8', (err) => {
-                if (err) {
-                    console.error('Error saving JSON file:', err);
-                } else {
-                    console.log('Data added to deletedBin.txt.');
-                }
-            });
+    if (Array.isArray(tmpPool)) {
+        tmpPool.forEach(x => {
+            index = globalDeletedBin.findIndex(b => b.ID === x.ID);
+            console.log("index of pool: ", index);
+        });
+
+        if (req.body.isDelete) {
+            deletedObject = globalDeletedBin.splice(index, 1)[0];
+            try {
+                await DeletedCaptchaModel.deleteOne({ ID: deletedObject.ID });
+                console.log('Deleted object removed from MongoDB deleted bin.');
+            } catch (err) {
+                console.error('Error deleting from MongoDB deleted bin:', err);
+            }
+        } else {
+            deletedObject = globalDeletedBin.splice(index, 1)[0];
+            globalPool.push(deletedObject);
+
+            try {
+                await DeletedCaptchaModel.deleteOne({ ID: deletedObject.ID });
+                const newCaptcha = new CaptchaModel({
+                    ...deletedObject.toObject(),
+                    _id: new mongoose.Types.ObjectId(), 
+                });
+                await newCaptcha.save();
+                console.log('Deleted object moved back to pool in MongoDB.');
+            } catch (err) {
+                console.error('Error moving object back to pool in MongoDB:', err);
+            }
         }
 
         isGood = true;
     } else {
-        console.error("Problem with the array")
+        console.error("Problem with the array");
+        isGood = false;
     }
-    res.json({ isGood })
-})
+    res.json({ isGood });
+});
 
 router.get('/deletedArchiveAssets', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     let globalDeletedBin = await initializeBin()
@@ -358,8 +368,7 @@ router.post("/logout", authMiddleware, csrfMiddleware.validateCSRFToken, (req, r
 })
 
 router.post('/newValidation', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
-    initializePool()
-    let globalPool = await initializePool()
+    let globalPool = await initializePool();
     const ID = crypto.randomUUID();
     const validateTrueCubes = req.body.validateTrueCubes;
     const validateMinCubes = req.body.validateMinCubes;
@@ -377,49 +386,32 @@ router.post('/newValidation', authMiddleware, csrfMiddleware.validateCSRFToken, 
         const MaxTolerance = (validateMaxCubes.length * 1) / validateTrueCubes.length;
         const MinTolerance = (validateMinCubes.length * 1) / validateTrueCubes.length;
 
-        fs.readFile('./src/pool.txt', 'utf-8', (err, data) => {
-            if (err && err.code !== 'ENOENT') {
-                console.error('Error reading pool.txt:', err);
-                isValid = false;
-                res.json({ isValid });
-                return;
-            }
+        const captchaData = {
+            ID: ID,
+            Name: componentName,
+            URL: backgroundImage,
+            MaxTolerance: MaxTolerance,
+            MinTolerance: MinTolerance,
+            ValidateF: validateTrueCubes,
+            validateMinCubes: validateMinCubes,
+            validateMaxCubes: validateMaxCubes,
+            todoTitle: todoTitle,
+            backgroundSize: backgroundSize
+        };
 
-            let tmpPool = [
-                {
-                    "ID": ID,
-                    "Name": componentName,
-                    "URL": backgroundImage,
-                    "MaxTolerance": MaxTolerance,
-                    "MinTolerance": MinTolerance,
-                    "ValidateF": validateTrueCubes,
-                    "validateMinCubes": validateMinCubes,
-                    "validateMaxCubes": validateMaxCubes,
-                    "todoTitle": todoTitle,
-                    "backgroundSize": backgroundSize
-                }
-            ];
+        console.log(captchaData);
 
-            console.log(tmpPool)
+        try {
+            const newCaptcha = new CaptchaModel(captchaData);
+            await newCaptcha.save();
+            console.log('Data added to MongoDB');
+        } catch (err) {
+            console.error('Error saving to MongoDB:', err);
+            isValid = false;
+        }
 
-            if (data) {
-                const pool = JSON.parse(data);
-                tmpPool = tmpPool.concat(globalPool);
-            }
-
-            const jsonContent = JSON.stringify(tmpPool, null, 2);
-            fs.writeFile('./src/pool.txt', jsonContent, 'utf-8', (err) => {
-                if (err) {
-                    console.error('Error saving JSON file:', err);
-                    isValid = false;
-                } else {
-                    console.log('Data added to pool.txt.');
-                }
-                initializePool()
-
-                res.json({ isValid });
-            });
-        });
+        await initializePool();
+        res.json({ isValid });
     } else {
         console.log("Error retrieving data from client");
         res.json({ isValid });
