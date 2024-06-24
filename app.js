@@ -11,11 +11,14 @@ const connectDB = require("./config/db.js")
 const deleteAndLog = require("./services/deleteAndLog.js")
 const deleteAllFilesInDir = require("./services/deleteAllFilesInDir.js");
 const { pool, deletedBin, allowedOrigins, defaultOrigin, initializeAllowedOrigins, initializeBin, initializePool } = require("./controllers/initializeController.js")
+const createInitCaptcha = require("./config/createInitCaptcha.js")
 const generateNewRegisterKey = require("./services/generateRegisterKey.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 const port = process.env.PORT;
 let origins
 connectDB()
+createInitCaptcha()
+
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
 
