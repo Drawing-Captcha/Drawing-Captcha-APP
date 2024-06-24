@@ -35,16 +35,16 @@ function submitCompany(event){
         },
         body: JSON.stringify(submittedData)
     })
-    .then(response => {
-        return response.json().then(data => {
-            if(data.message){
-                alert(data.message);
-            }
-            if (data.redirect) {
-                window.location.href = data.redirect;
-            } 
+    .then(response => response.json())
+    .then(data => {
+        if(data.message){
+            alert(data.message);
+        }
+        if (data.redirect) {
+            window.location.href = data.redirect;
+        } else {
             location.reload();
-        });
+        }
     })
     .catch(error => {
         console.error('Error:', error);
