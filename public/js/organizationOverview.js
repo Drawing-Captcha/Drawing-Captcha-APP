@@ -12,7 +12,17 @@ let elementID;
 let ownUser;
 const roleSelect = document.getElementById('role');
 const changeForm = document.querySelector("#changeDetailsForm")
+const selectBtn = document.querySelector(".select-btn")
+let items;
+selectBtn.addEventListener("click", () => {
+    selectBtn.classList.toggle("open");
+});
 
+function closeSelectBtn() {
+    if (selectBtn.classList.contains("open")) {
+        selectBtn.classList.remove("open");
+    }
+}
 imageUpload.addEventListener('change', function () {
     let reader = new FileReader();
     reader.onload = function (e) {
@@ -22,10 +32,12 @@ imageUpload.addEventListener('change', function () {
 });
 
 async function initialize() {
-    await getAllUsers();
+    await getAllUser();
+    await getCompanies();
+
 }
 
-async function getAllUsers() {
+async function getAllUser() {
     try {
         const response = await fetch("/user/allUsers", {
             method: 'GET',
@@ -36,13 +48,14 @@ async function getAllUsers() {
         });
         if (response.ok) {
             const data = await response.json();
-            const allUsers = data.allUsers;
+            const allUser = data.allUsers;
             ownUser = data.ownUser;
+            console.log(ownUser)
 
             const wrapper = document.querySelector(".stacked-list1_list-wrapper");
 
-            if (allUsers.length !== 0) {
-                allUsers.forEach(elementData => {
+            if (allUser.length !== 0) {
+                allUser.forEach(elementData => {
                     const item = document.createElement("div");
                     item.classList.add("stacked-list1_item");
 
@@ -139,15 +152,103 @@ async function getAllUsers() {
     }
 }
 
-function changeDetails(e) {
+async function getCompanies() {
+    try {
+        const response = await fetch("/company", {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (response.ok) {
+            const data = await response.json();
+            const allCompanies = data.allCompanies;
+
+            if (allCompanies.length !== 0) {
+                var list = document.querySelector('.list-items');
+                allCompanies.forEach(function (company) {
+                    var li = document.createElement('li');
+                    li.classList.add('item');
+                    li.setAttribute("obj-id", company.companyId)
+
+                    var checkboxSpan = document.createElement('span');
+                    checkboxSpan.classList.add('checkbox');
+                    var checkboxIcon = document.createElement('i');
+                    checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
+                    checkboxSpan.appendChild(checkboxIcon);
+                    li.appendChild(checkboxSpan);
+
+                    var textSpan = document.createElement('span');
+                    textSpan.classList.add('item-text');
+                    textSpan.textContent = company.name;
+                    li.appendChild(textSpan);
+
+                    list.appendChild(li);
+                });
+                items = document.querySelectorAll(".item");
+
+                items.forEach(item => {
+                    item.addEventListener("click", () => {
+                        item.classList.toggle("checked");
+
+                        let checked = document.querySelectorAll(".checked"),
+                            btnText = document.querySelector(".btn-text");
+
+                        if (checked && checked.length > 0) {
+                            btnText.innerText = `${checked.length} Selected`;
+                        } else {
+                            btnText.innerText = "Select Company";
+                        }
+                    });
+                })
+            }
+        } else {
+            throw new Error('Error from server while trying to request the server');
+        }
+    } catch (error) {
+        console.log('Error in getCompanies:', error);
+    }
+}
+
+
+function resetCheckboxes() {
+    let items = document.querySelectorAll(".item");
+    items.forEach(item => {
+        item.classList.remove("checked");
+    })
+}
+
+
+async function changeDetails(e) {
     dialog.showModal();
-    
+    closeSelectBtn();
+    resetCheckboxes();
+    let items = document.querySelectorAll(".item")
+    let btnText = document.querySelector(".btn-text")
+    let counter = 0;
+    items.forEach(item => {
+        if (e.companies.includes(item.getAttribute("obj-id"))) {
+            counter++;
+            console.log(counter)
+            item.classList.add("checked")
+        }
+    })
+
+    if (counter > 0) {
+        btnText.innerHTML = counter + " Selected"
+    }
+    else{
+        btnText.innerHTML = "Select Company"
+    }
+
     if (ownUser.role === "admin") {
-        if(!e.initialUser){
+
+        if (!e.initialUser) {
             roleSelect.parentElement.style.display = "block";
             roleSelect.value = e.role;
         }
-        else{
+        else {
             roleSelect.parentElement.style.display = "none";
         }
     } else {
@@ -163,7 +264,7 @@ function changeDetails(e) {
 
     passwordInput.value = "";
     retypePasswordInput.value = "";
-    
+
     elementID = e._id;
 }
 
@@ -189,6 +290,15 @@ function submitForm(event) {
         password = passwordInput.value;
     }
 
+    const selectorItems = dialog.querySelectorAll(".item")
+    let selectorItemsArray = []
+    selectorItems.forEach(item => {
+        if (item.classList.contains("checked")) {
+            selectorItemsArray.push(item.getAttribute("obj-id"))
+        }
+    })
+
+
     const submittedData = {
         id: elementID,
         username: usernameInput.value,
@@ -196,7 +306,8 @@ function submitForm(event) {
         ppURL: profileImage.src,
         shouldChangePassword,
         password: password,
-        role: roleSelect.value
+        role: roleSelect.value,
+        companies: selectorItemsArray
     };
 
     fetch("/user/updateUser", {
@@ -206,24 +317,24 @@ function submitForm(event) {
         },
         body: JSON.stringify({ submittedData })
     })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        } else {
-            return response.json().then(errData => {
-                throw new Error(errData.message || 'Error server while trying to request the server');
-            });
-        }
-    })
-    .then(data => {
-        alert('User updated successfully');
-        location.reload();
-    })
-    .catch(error => {
-        console.error('Fehler:', error);
-        alert(`An error occurred: ${error.message}`);
-    });
-    
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return response.json().then(errData => {
+                    throw new Error(errData.message || 'Error server while trying to request the server');
+                });
+            }
+        })
+        .then(data => {
+            alert('User updated successfully');
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Fehler:', error);
+            alert(`An error occurred: ${error.message}`);
+        });
+
 
     dialog.close();
 }
@@ -253,21 +364,21 @@ function deleteUser(user) {
         },
         body: JSON.stringify({ user })
     })
-    .then(response => {
-        return response.json().then(data => {
-            if(data.message){
-                alert(data.message);
-            }
-            if (data.redirect) {
-                window.location.href = data.redirect;
-            } 
-            location.reload();
+        .then(response => {
+            return response.json().then(data => {
+                if (data.message) {
+                    alert(data.message);
+                }
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+                location.reload();
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(`An error occurred: ${error.message}`);
         });
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert(`An error occurred: ${error.message}`);
-    });
 }
 
 

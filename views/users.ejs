@@ -12,6 +12,8 @@
   <link href="/css/webAppUI.css" rel="stylesheet" type="text/css">
   <link rel="stylesheet" href="/css/viewOnBiggerScreen.css">
   <link rel="stylesheet" href="/css/createItem.css">
+  <link rel="stylesheet" href="/css/multiselector.css">
+
   <style>
     @media (max-width:991px) and (min-width:768px) {
       html.w-mod-js:not(.w-mod-ix) [data-w-id="1a30a1e4-8a69-abdf-86cf-348aa176e57b"] {
@@ -950,6 +952,18 @@ a,
           <label for="retype">Retype your new password:</label>
           <input type="password" id="retype" name="retype" placeholder="Retype password">
         </div>
+        <div class="subWrapper">
+          <label for="companies">Company Access:</label>
+          <div class="select-btn">
+            <span class="btn-text">Select Company</span>
+            <span class="arrow-dwn">
+                <i class="fa-solid fa-chevron-down"></i>
+            </span>
+        </div>
+        <ul class="list-items">
+
+        </ul>
+        </div>
         <menu>
           <button id="closeButton" type="reset" onclick="location.reload()">Cancel</button>
           <button type="submit">Submit</button>
@@ -963,6 +977,7 @@ a,
     crossorigin="anonymous"></script>
   <script src="/js/webAppUI.js" type="text/javascript"></script>
   <script src="/js/organizationOverview.js"></script>
+  <script src="/js/multiselector.js"></script>
 
 </body>
 

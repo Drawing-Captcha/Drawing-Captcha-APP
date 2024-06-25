@@ -16,6 +16,7 @@
   width: 23em;
   border-radius: 100%;
   border: 2px solid black;
+  object-fit: contain;
 }
 
 .close-button {
@@ -45,6 +46,7 @@ dialog{
   max-height: -webkit-fill-available;
   background: transparent;
   border: none;
+  height: fit-content;
 
 }
 
