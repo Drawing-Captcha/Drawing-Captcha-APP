@@ -164,13 +164,13 @@ function changeDetails(e){
 
 }
 
-function submitChanges(){
+async function submitChanges(event){
+    event.preventDefault();
     let changes = {
         companyId: currentElementId,
         name: nameInputEdit.value,
         ppURL: ppURL
     }
-    console.log('Sending changes:', changes);
     fetch("/company", {
         method: "PUT",
         headers: {
@@ -187,13 +187,12 @@ function submitChanges(){
         .then(data => {
             if (data.message) {
                 alert(data.message);
-            } else {
-                location.reload();
             }
+            location.reload();
         })
         .catch(error => {
             console.error('Error:', error);
-            alert(`An error occurred: ${error.message}`);
+            alert(`An error ssoccurred: ${error.message}`);
         });
     
 }
