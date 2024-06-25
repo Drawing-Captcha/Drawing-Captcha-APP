@@ -33,13 +33,13 @@ async function getAllCompanies() {
         });
         if (response.ok) {
             const data = await response.json();
-            const allUsers = data.allCompanies;
+            const allCompanies = data.allCompanies;
             let userRole = data.userRole;
 
             const wrapper = document.querySelector(".stacked-list1_list-wrapper");
 
-            if (allUsers.length !== 0) {
-                allUsers.forEach(elementData => {
+            if (allCompanies.length !== 0) {
+                allCompanies.forEach(elementData => {
                     const item = document.createElement("div");
                     item.classList.add("stacked-list1_item");
 
@@ -170,6 +170,7 @@ function submitChanges(){
         name: nameInputEdit.value,
         ppURL: ppURL
     }
+    console.log('Sending changes:', changes);
     fetch("/company", {
         method: "PUT",
         headers: {
@@ -177,13 +178,15 @@ function submitChanges(){
         },
         body: JSON.stringify(changes)
     })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.message) {
                 alert(data.message);
-            }
-            if (data.redirect) {
-                window.location.href = data.redirect;
             } else {
                 location.reload();
             }
