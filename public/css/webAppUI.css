@@ -46,6 +46,7 @@ dialog{
   max-height: -webkit-fill-available;
   background: transparent;
   border: none;
+  height: fit-content;
 
 }
 

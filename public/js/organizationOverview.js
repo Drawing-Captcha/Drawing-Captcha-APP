@@ -12,7 +12,17 @@ let elementID;
 let ownUser;
 const roleSelect = document.getElementById('role');
 const changeForm = document.querySelector("#changeDetailsForm")
+const selectBtn = document.querySelector(".select-btn")
+let items;
+selectBtn.addEventListener("click", () => {
+    selectBtn.classList.toggle("open");
+});
 
+function closeSelectBtn() {
+    if (selectBtn.classList.contains("open")) {
+        selectBtn.classList.remove("open");
+    }
+}
 imageUpload.addEventListener('change', function () {
     let reader = new FileReader();
     reader.onload = function (e) {
@@ -23,6 +33,8 @@ imageUpload.addEventListener('change', function () {
 
 async function initialize() {
     await getAllUser();
+    await getCompanies();
+
 }
 
 async function getAllUser() {
@@ -38,6 +50,7 @@ async function getAllUser() {
             const data = await response.json();
             const allUser = data.allUsers;
             ownUser = data.ownUser;
+            console.log(ownUser)
 
             const wrapper = document.querySelector(".stacked-list1_list-wrapper");
 
@@ -141,7 +154,6 @@ async function getAllUser() {
 
 async function getCompanies() {
     try {
-        console.log('Sending request to /company');
         const response = await fetch("/company", {
             method: 'GET',
             credentials: 'include',
@@ -150,22 +162,47 @@ async function getCompanies() {
             },
         });
         if (response.ok) {
-            console.log('Response received');
             const data = await response.json();
             const allCompanies = data.allCompanies;
-            let userRole = data.userRole;
-
-            console.log('Got companies:', allCompanies);
 
             if (allCompanies.length !== 0) {
-                var select = document.getElementById('companies');
+                var list = document.querySelector('.list-items');
                 allCompanies.forEach(function (company) {
-                    var option = document.createElement('option');
-                    option.value = company.companyId;
-                    option.textContent = company.name;
-                    select.appendChild(option);
+                    var li = document.createElement('li');
+                    li.classList.add('item');
+                    li.setAttribute("obj-id", company.companyId)
+
+                    var checkboxSpan = document.createElement('span');
+                    checkboxSpan.classList.add('checkbox');
+                    var checkboxIcon = document.createElement('i');
+                    checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
+                    checkboxSpan.appendChild(checkboxIcon);
+                    li.appendChild(checkboxSpan);
+
+                    var textSpan = document.createElement('span');
+                    textSpan.classList.add('item-text');
+                    textSpan.textContent = company.name;
+                    li.appendChild(textSpan);
+
+                    list.appendChild(li);
                 });
-            } 
+                items = document.querySelectorAll(".item");
+
+                items.forEach(item => {
+                    item.addEventListener("click", () => {
+                        item.classList.toggle("checked");
+
+                        let checked = document.querySelectorAll(".checked"),
+                            btnText = document.querySelector(".btn-text");
+
+                        if (checked && checked.length > 0) {
+                            btnText.innerText = `${checked.length} Selected`;
+                        } else {
+                            btnText.innerText = "Select Company";
+                        }
+                    });
+                })
+            }
         } else {
             throw new Error('Error from server while trying to request the server');
         }
@@ -174,11 +211,39 @@ async function getCompanies() {
     }
 }
 
+
+function resetCheckboxes() {
+    let items = document.querySelectorAll(".item");
+    items.forEach(item => {
+        item.classList.remove("checked");
+    })
+}
+
+
 async function changeDetails(e) {
     dialog.showModal();
+    closeSelectBtn();
+    resetCheckboxes();
+    let items = document.querySelectorAll(".item")
+    let btnText = document.querySelector(".btn-text")
+    let counter = 0;
+    items.forEach(item => {
+        if (e.companies.includes(item.getAttribute("obj-id"))) {
+            counter++;
+            console.log(counter)
+            item.classList.add("checked")
+        }
+    })
+
+    if (counter > 0) {
+        btnText.innerHTML = counter + " Selected"
+    }
+    else{
+        btnText.innerHTML = "Select Company"
+    }
 
     if (ownUser.role === "admin") {
-        await getCompanies();
+
         if (!e.initialUser) {
             roleSelect.parentElement.style.display = "block";
             roleSelect.value = e.role;
@@ -225,6 +290,15 @@ function submitForm(event) {
         password = passwordInput.value;
     }
 
+    const selectorItems = dialog.querySelectorAll(".item")
+    let selectorItemsArray = []
+    selectorItems.forEach(item => {
+        if (item.classList.contains("checked")) {
+            selectorItemsArray.push(item.getAttribute("obj-id"))
+        }
+    })
+
+
     const submittedData = {
         id: elementID,
         username: usernameInput.value,
@@ -232,7 +306,8 @@ function submitForm(event) {
         ppURL: profileImage.src,
         shouldChangePassword,
         password: password,
-        role: roleSelect.value
+        role: roleSelect.value,
+        companies: selectorItemsArray
     };
 
     fetch("/user/updateUser", {

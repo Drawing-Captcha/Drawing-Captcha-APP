@@ -26,6 +26,10 @@ const userSchema = new Schema ({
     initialUser:{
         type: Boolean,
         required: false
+    },
+    companies:{
+        type: Array,
+        required: false
     }
     
 })

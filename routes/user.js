@@ -14,11 +14,15 @@ router.get('/ownUser', authMiddleware, csrfMiddleware.validateCSRFToken, async (
 
 router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        const allUsers = await User.find();
+        const allUsers = await User.find().select('username email role companies ppURL -_id initialUser');
         if (allUsers) {
             console.log("Successfully found all Users: ", allUsers);
         }
-        res.json({allUsers, ownUser: req.session.user})
+        let ownUser =  {
+            role: req.session.user.role,
+            _id: req.session.user._id
+        }
+        res.json({allUsers, ownUser: ownUser})
     }
     catch (error) {
         console.error("Error occurred during admin initialization:", error);
@@ -27,13 +31,13 @@ router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async 
 
 router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        const { id, username, email, ppURL, shouldChangePassword, password, role } = req.body.submittedData;
+        const { id, username, email, ppURL, shouldChangePassword, password, role, companies } = req.body.submittedData;
         
         if (!id || !username || !email) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
-        let updateData = { username, email, ppURL, role };
+        let updateData = { username, email, ppURL, role, companies };
 
         if (shouldChangePassword) {
             if (!password || password.length < 5) {
