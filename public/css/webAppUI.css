@@ -82,6 +82,20 @@ dialog{
   display: flex;
 }
 
+#editCompanyForm{
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+  gap: 2em;
+  width: 60%;
+  background: white;
+  padding: 3em;
+  border-radius: 2em;
+}
+
+#editCompanyForm menu {
+  display: flex;
+}
 
 #changeDetailsForm menu {
   display: flex;

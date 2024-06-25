@@ -443,28 +443,28 @@ router.post('/newValidation/nameExists', authMiddleware, csrfMiddleware.validate
     res.json({ nameExists });
 });
 
-router.post('/addCompany', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
-    try {
-        let companyExists = await CompanyModel.findOne({name: req.body.name});
-        if(companyExists){
-            return res.status(400).json({message: "A company with this name already exists."});
-        }
+// router.post('/addCompany', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+//     try {
+//         let companyExists = await CompanyModel.findOne({name: req.body.name});
+//         if(companyExists){
+//             return res.status(400).json({message: "A company with this name already exists."});
+//         }
 
-        const company = new CompanyModel({
-            companyId: crypto.randomUUID(),
-            name: req.body.name,
-            ppURL: req.body.ppURL
-        });
+//         const company = new CompanyModel({
+//             companyId: crypto.randomUUID(),
+//             name: req.body.name,
+//             ppURL: req.body.ppURL
+//         });
 
-        await company.save();
+//         await company.save();
 
-        return res.status(201).json({message: "Company successfully created.", company});
+//         return res.status(201).json({message: "Company successfully created.", company});
 
-    } catch(error) {
-        console.error(error);
-        return res.status(500).json({message: "An error occurred while creating the company."});
-    }
-});
+//     } catch(error) {
+//         console.error(error);
+//         return res.status(500).json({message: "An error occurred while creating the company."});
+//     }
+// });
 
 router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
