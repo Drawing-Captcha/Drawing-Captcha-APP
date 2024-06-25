@@ -1,13 +1,13 @@
-.subWrapper{
+.subWrapper {
   width: 100%;
 }
 
-.profilePictureSection{
+.profilePictureSection {
   display: flex;
   gap: 3em;
 }
 
-.subWrapper > * {
+.subWrapper>* {
   width: 100%;
 }
 
@@ -31,7 +31,7 @@
   border-radius: 100%;
 }
 
-dialog{
+dialog {
   width: 100%;
   max-width: -webkit-fill-available;
   height: 100%;
@@ -39,6 +39,7 @@ dialog{
   background: transparent;
   border: none;
 }
+
 #changeDetailsDialog {
   width: 100%;
   max-width: -webkit-fill-available;
@@ -46,8 +47,14 @@ dialog{
   max-height: -webkit-fill-available;
   background: transparent;
   border: none;
-  height: fit-content;
+  height: 100%;
 
+}
+
+@media screen and (max-height: 1000px) {
+  #changeDetailsDialog {
+    height: fit-content;
+  }
 }
 
 .formWrapper {
@@ -69,7 +76,7 @@ dialog{
   border-radius: 2em;
 }
 
-#addCompanyForm{
+#addCompanyForm {
   display: flex;
   justify-content: space-around;
   flex-direction: column;
@@ -84,7 +91,7 @@ dialog{
   display: flex;
 }
 
-#editCompanyForm{
+#editCompanyForm {
   display: flex;
   justify-content: space-around;
   flex-direction: column;
