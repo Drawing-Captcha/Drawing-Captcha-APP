@@ -19,6 +19,7 @@ const generateNewRegisterKey = require("../services/generateRegisterKey.js")
 const notReadOnly = require("../middlewares/notReadOnly.js")
 const CaptchaModel = require("../models/Captcha.js")
 const DeletedCaptchaModel = require("../models/DeletedCaptchaModel.js")
+const CompanyModel = require("../models/Company.js")
 
 router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     let globalPool = await initializePool()
@@ -283,6 +284,9 @@ router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken,
 router.get("/registeredUsers", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
     res.render("users", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
 })
+router.get("/companies", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+    res.render("company", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
+})
 
 router.get("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, (req, res) => {
     res.render("registerKey", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
@@ -438,6 +442,29 @@ router.post('/newValidation/nameExists', authMiddleware, csrfMiddleware.validate
     });
     res.json({ nameExists });
 });
+
+// router.post('/addCompany', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+//     try {
+//         let companyExists = await CompanyModel.findOne({name: req.body.name});
+//         if(companyExists){
+//             return res.status(400).json({message: "A company with this name already exists."});
+//         }
+
+//         const company = new CompanyModel({
+//             companyId: crypto.randomUUID(),
+//             name: req.body.name,
+//             ppURL: req.body.ppURL
+//         });
+
+//         await company.save();
+
+//         return res.status(201).json({message: "Company successfully created.", company});
+
+//     } catch(error) {
+//         console.error(error);
+//         return res.status(500).json({message: "An error occurred while creating the company."});
+//     }
+// });
 
 router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {

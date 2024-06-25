@@ -30,6 +30,14 @@
   border-radius: 100%;
 }
 
+dialog{
+  width: 100%;
+  max-width: -webkit-fill-available;
+  height: 100%;
+  max-height: -webkit-fill-available;
+  background: transparent;
+  border: none;
+}
 #changeDetailsDialog {
   width: 100%;
   max-width: -webkit-fill-available;
@@ -57,6 +65,36 @@
   background: white;
   padding: 3em;
   border-radius: 2em;
+}
+
+#addCompanyForm{
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+  gap: 2em;
+  width: 60%;
+  background: white;
+  padding: 3em;
+  border-radius: 2em;
+}
+
+#addCompanyForm menu {
+  display: flex;
+}
+
+#editCompanyForm{
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+  gap: 2em;
+  width: 60%;
+  background: white;
+  padding: 3em;
+  border-radius: 2em;
+}
+
+#editCompanyForm menu {
+  display: flex;
 }
 
 #changeDetailsForm menu {
