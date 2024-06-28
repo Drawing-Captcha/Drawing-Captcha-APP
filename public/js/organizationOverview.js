@@ -50,7 +50,6 @@ async function getAllUser() {
             const data = await response.json();
             const allUser = data.allUsers;
             ownUser = data.ownUser;
-            console.log(ownUser)
 
             const wrapper = document.querySelector(".stacked-list1_list-wrapper");
 

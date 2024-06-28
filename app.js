@@ -10,7 +10,7 @@ const cookieParser = require('cookie-parser');
 const connectDB = require("./config/db.js")
 const deleteAndLog = require("./services/deleteAndLog.js")
 const deleteAllFilesInDir = require("./services/deleteAllFilesInDir.js");
-const { pool, deletedBin, allowedOrigins, defaultOrigin, initializeAllowedOrigins, initializeBin, initializePool } = require("./controllers/initializeController.js")
+const { pool, deletedBin, allowedOrigins, defaultOrigin, initializeAllowedOrigins, initializeBin, initializePool, initializeRegisterKey} = require("./controllers/initializeController.js")
 const createInitCaptcha = require("./config/createInitCaptcha.js")
 const generateNewRegisterKey = require("./services/generateRegisterKey.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
@@ -83,7 +83,7 @@ app.use('/dashboard', dashboardRoutes)
 app.use('/user', userRoutes)
 app.use('/company', companyRoutes)
 
-app.listen(port, () => {
+app.listen(port, async () => {
     console.log(`Server Running on port: ${port}`);
     store.collection.deleteMany({}, (err) => {
         if (err) {
@@ -92,4 +92,6 @@ app.listen(port, () => {
             console.log('All Sessions successfully.');
         }
     });
+    let message = await initializeRegisterKey();
+    console.log(message)
 });
