@@ -19,7 +19,6 @@ const todoTextArea = todoTitleWrapper.querySelector("textarea")
 const captchaTitle = captchaContainer.querySelector("h1")
 const submitButton = document.querySelector(".submit-button");
 
-
 let isDragging = false;
 let sessionComponentName;
 let backgroundImage;
@@ -281,3 +280,61 @@ function pushToServer() {
     });
 }
 
+async function getCompanies() {
+    try {
+        const response = await fetch("/company", {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (response.ok) {
+            const data = await response.json();
+            const allCompanies = data.allCompanies;
+
+            if (allCompanies.length !== 0) {
+                var list = document.querySelector('.list-items');
+                allCompanies.forEach(function (company) {
+                    var li = document.createElement('li');
+                    li.classList.add('item');
+                    li.setAttribute("obj-id", company.companyId)
+
+                    var checkboxSpan = document.createElement('span');
+                    checkboxSpan.classList.add('checkbox');
+                    var checkboxIcon = document.createElement('i');
+                    checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
+                    checkboxSpan.appendChild(checkboxIcon);
+                    li.appendChild(checkboxSpan);
+
+                    var textSpan = document.createElement('span');
+                    textSpan.classList.add('item-text');
+                    textSpan.textContent = company.name;
+                    li.appendChild(textSpan);
+
+                    list.appendChild(li);
+                });
+                items = document.querySelectorAll(".item");
+
+                items.forEach(item => {
+                    item.addEventListener("click", () => {
+                        item.classList.toggle("checked");
+
+                        let checked = document.querySelectorAll(".checked"),
+                            btnText = document.querySelector(".btn-text");
+
+                        if (checked && checked.length > 0) {
+                            btnText.innerText = `${checked.length} Selected`;
+                        } else {
+                            btnText.innerText = "Select Company";
+                        }
+                    });
+                })
+            }
+        } else {
+            throw new Error('Error from server while trying to request the server');
+        }
+    } catch (error) {
+        console.log('Error in getCompanies:', error);
+    }
+}
