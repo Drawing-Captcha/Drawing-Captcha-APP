@@ -13,6 +13,7 @@ let ownUser;
 const roleSelect = document.getElementById('role');
 const changeForm = document.querySelector("#changeDetailsForm")
 const selectBtn = document.querySelector(".select-btn")
+const companyAccessField = document.querySelector(".companyAccess")
 let items;
 selectBtn.addEventListener("click", () => {
     selectBtn.classList.toggle("open");
@@ -50,7 +51,6 @@ async function getAllUser() {
             const data = await response.json();
             const allUser = data.allUsers;
             ownUser = data.ownUser;
-            console.log(ownUser)
 
             const wrapper = document.querySelector(".stacked-list1_list-wrapper");
 
@@ -242,6 +242,13 @@ async function changeDetails(e) {
         btnText.innerHTML = "Select Company"
     }
 
+    if(ownUser.role === "admin" && e.role != "admin"){
+        companyAccessField.style.display = "block"
+    }
+    else{
+        companyAccessField.style.display = "none"
+
+    }
     if (ownUser.role === "admin") {
 
         if (!e.initialUser) {

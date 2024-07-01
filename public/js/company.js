@@ -250,13 +250,39 @@ async function submitCompany(event) {
     event.preventDefault();
     if (orginInput.value) {
         console.log(orginInput.value)
-        const regexResult = proofRegex(orginInput.value)
-        if (regexResult) {
-            let submittedData = {
-                name: nameInputAdd.value,
-                ppURL
+        if(orginInput.value){
+            const regexResult = proofRegex(orginInput.value)
+            if (regexResult) {
+                let submittedData = {
+                    name: nameInputAdd.value,
+                    ppURL
+                }
+    
+                fetch("/company", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(submittedData)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message) {
+                            alert(data.message);
+                        }
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        } else {
+                            location.reload();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert(`An error occurred: ${error.message}`);
+                    });
             }
-
+        }
+        else{
             fetch("/company", {
                 method: "POST",
                 headers: {
@@ -280,6 +306,7 @@ async function submitCompany(event) {
                     alert(`An error occurred: ${error.message}`);
                 });
         }
+        
     }
     else {
         let submittedData = {

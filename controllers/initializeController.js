@@ -4,6 +4,8 @@ const AllowedOriginModel = require("../models/AllowedOrigins.js");
 const { promises: fsPromises } = require('fs');
 const CaptchaModel = require("../models/Captcha.js")
 const DeletedCaptchaModel = require("../models/DeletedCaptchaModel.js")
+const registerKeyModel = require("../models/RegisterKey.js")
+const crypto = require("crypto");
 
 let pool = [];
 let deletedBin = [];
@@ -59,8 +61,26 @@ async function initializeBin() {
     }
 }
 
+async function initializeRegisterKey() {
+    let message;
+    const existingRegisterKey = await registerKeyModel.findOne();
 
+    if (!existingRegisterKey) {
+        const newRegisterKey = new registerKeyModel({
+            RegisterKey: crypto.randomUUID()
+        });
 
+        await newRegisterKey.save();
+        message = "New register key successfully generated";
+        return message;
+    } else {
+        existingRegisterKey.RegisterKey = crypto.randomUUID();
+        await existingRegisterKey.save();
+        message = "Register key successfully updated";
+        return message;
+
+    }
+}
 
 module.exports = {
     get pool() {
@@ -74,5 +94,6 @@ module.exports = {
     },
     initializeAllowedOrigins,
     initializeBin,
-    initializePool
+    initializePool,
+    initializeRegisterKey
 };

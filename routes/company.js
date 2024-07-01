@@ -10,10 +10,25 @@ const crypto = require("crypto");
 router.get('/', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
         const allCompanies = await CompanyModel.find();
-        if (allCompanies) {
-            console.log("Successfully found all Companies: ", allCompanies);
+        let returnedCompanies = []
+        if(req.session.user.role === "admin"){
+            returnedCompanies = allCompanies;
         }
-        res.json({allCompanies, userRole: req.session.user.role})
+        else{
+            let sessionCompanies = req.session.user.companies
+
+            allCompanies.forEach(company => {
+                if(sessionCompanies.includes(company.companyId)){
+                    console.log(company)
+                    returnedCompanies.push(company)
+                }
+            })            
+            
+        }
+        if (allCompanies) {
+            console.log("Successfully found all Companies: ", returnedCompanies);
+        }
+        res.json({allCompanies: returnedCompanies, userRole: req.session.user.role})
     }
     catch (error) {
         console.error("Error occurred during admin initialization:", error);

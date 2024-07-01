@@ -14,7 +14,7 @@ router.get('/ownUser', authMiddleware, csrfMiddleware.validateCSRFToken, async (
 
 router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        const allUsers = await User.find().select('username email role companies ppURL -_id initialUser');
+        const allUsers = await User.find().select('username email role companies ppURL _id initialUser');
         if (allUsers) {
             console.log("Successfully found all Users: ", allUsers);
         }
