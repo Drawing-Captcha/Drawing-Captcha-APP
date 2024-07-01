@@ -18,6 +18,8 @@ const todoTitleWrapper = document.querySelector(".todoTitleWrapper")
 const todoTextArea = todoTitleWrapper.querySelector("textarea")
 const captchaTitle = captchaContainer.querySelector("h1")
 const submitButton = document.querySelector(".submit-button");
+const selectBtn = document.querySelector(".select-btn")
+
 
 let isDragging = false;
 let sessionComponentName;
@@ -29,7 +31,18 @@ let URL;
 let result;
 let backgroundSize;
 let todoTitle
+let selectedCompanies = [];
 document.addEventListener('mousemove', updateSliderValue);
+
+selectBtn.addEventListener("click", () => {
+    selectBtn.classList.toggle("open");
+});
+
+function closeSelectBtn() {
+    if (selectBtn.classList.contains("open")) {
+        selectBtn.classList.remove("open");
+    }
+}
 
 rangeInput.addEventListener('mousedown', () => {
     isDragging = true;
@@ -155,12 +168,34 @@ function continueWidth(){
         toDo.innerHTML = "Please provide a short description of what you should draw in the Drawing Captcha below. ✏️";
         imageResizeWrapper.style.display = "none"
         todoTitleWrapper.style.display = "flex"
-        submitButton.setAttribute("onclick", "continueBeforeValid()")
+        submitButton.setAttribute("onclick", "continueCompany()")
 
     }
 }
 
+async function continueCompany(){
+    await getCompanies()
+    toDo.innerHTML = "Please now select the companies where the captcha should be displayed. 🌐";
+    imageResizeWrapper.style.display = "none"
+    todoTitleWrapper.style.display = "none"
+    const companyAccessButton = document.querySelector(".companyAccess")
+    companyAccessButton.style.display = "block"
+    submitButton.setAttribute("onclick", "continueBeforeValid()")
+
+}
+
 function continueBeforeValid(){
+    let companiesList = document.querySelectorAll(".item")
+    companiesList.forEach(company => {
+        if(company.classList.contains("checked")){
+            selectedCompanies.push(company.getAttribute("obj-id"))
+        }
+    })
+
+    if(selectedCompanies.length < 1 ){
+        alert("You haven't chosen any specific company, so this captcha will not be categorized under any company.")
+    }
+
     todoTitle = todoTextArea.value
     innerBox.style.display = "none"
     todoTitleWrapper.style.display = "none"
@@ -245,9 +280,10 @@ function pushToServer() {
         sessionComponentName,
         backgroundImage,
         todoTitle,
-        backgroundSize
+        backgroundSize,
+        selectedCompanies
     };
-    console.log(requestData)
+    // console.log(selectedCompanies)
     fetch("/dashboard/newValidation", {
         method: 'POST',
         headers: {
@@ -314,7 +350,7 @@ async function getCompanies() {
 
                     list.appendChild(li);
                 });
-                items = document.querySelectorAll(".item");
+                let items = document.querySelectorAll(".item");
 
                 items.forEach(item => {
                     item.addEventListener("click", () => {

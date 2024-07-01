@@ -21,3 +21,7 @@
     width: max-content;
     font-size: x-large;
 }
+
+.companyAccess{
+    display: none;
+}

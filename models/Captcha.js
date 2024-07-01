@@ -46,6 +46,10 @@ const captchaSchema = new Schema ({
     initialCaptcha:{
         type: Boolean,
         required: false
+    },
+    companies:{
+        type: Array,
+        required: false
     }
     
 })
