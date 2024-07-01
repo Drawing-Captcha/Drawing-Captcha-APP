@@ -390,6 +390,7 @@ router.post('/newValidation', authMiddleware, csrfMiddleware.validateCSRFToken, 
     const backgroundImage = req.body.backgroundImage;
     const todoTitle = req.body.todoTitle;
     const backgroundSize = req.body.backgroundSize;
+    const selectedCompanies = req.body.selectedCompanies
 
     let isValid = false;
 
@@ -409,7 +410,9 @@ router.post('/newValidation', authMiddleware, csrfMiddleware.validateCSRFToken, 
             validateMinCubes: validateMinCubes,
             validateMaxCubes: validateMaxCubes,
             todoTitle: todoTitle,
-            backgroundSize: backgroundSize
+            backgroundSize: backgroundSize,
+            companies: selectedCompanies
+
         };
 
         console.log(captchaData);
