@@ -10,9 +10,9 @@ const crypto = require("crypto");
 router.get('/', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
         const allCompanies = await CompanyModel.find();
-
-        console.log(req.session.user)
-
+        /*
+        if(req.session.user.role)
+        */
         if (allCompanies) {
             console.log("Successfully found all Companies: ", allCompanies);
         }
