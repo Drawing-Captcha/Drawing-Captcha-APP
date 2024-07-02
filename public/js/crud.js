@@ -172,6 +172,7 @@ async function getPool() {
 async function getComponent(e) {
     await getCompanies(e);
     removeCurrentItems();
+
     toDo.innerHTML = `Edit item: ${e.Name}`;
     editItemParent.style.display = "block";
 
@@ -380,6 +381,14 @@ function closeForm() {
 
 function removeCurrentItems() {
     currentItems.style.display = "none"
+    document.querySelector(".half").style.display = "none"
+    let allWrapper = document.querySelectorAll(".stacked-list1_component");
+    allWrapper.forEach(wrapper => {
+        if(!wrapper.classList.contains("editItemParent")){
+            wrapper.style.display = "none"
+        }
+    })
+    window.scrollTo(0, 0)
 }
 
 function displayCurrentItems() {

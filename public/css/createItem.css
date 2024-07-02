@@ -145,13 +145,13 @@ hr{
     box-shadow: 20px 20px 40px -6px rgba(0,0,0,0.2);
     margin-bottom: 2vh;
     border-radius: 30px;
-    background: linear-gradient(45deg, #FC466B, #3F5EFB);
+    background: white;
     height: fit-content;
     display: none;
     justify-content: center;
     align-items: center;
     flex-direction: column; 
-    color: white;
+    color: black;
     gap: 7em;
     padding: 7em;
     width: 78%;
