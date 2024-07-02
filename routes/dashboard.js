@@ -1,6 +1,6 @@
 const path = require("path");
 const { promises: fsPromises } = require('fs');
-const mongoose = require('mongoose'); 
+const mongoose = require('mongoose');
 const fs = require("fs");
 const uuid = require('uuid');
 const express = require('express');
@@ -22,13 +22,58 @@ const DeletedCaptchaModel = require("../models/DeletedCaptchaModel.js")
 const CompanyModel = require("../models/Company.js")
 
 router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
-    let globalPool = await initializePool()
-    let userRole = req.session.user.role;
-    console.log("global: ", globalPool)
-    if (globalPool) {
-        res.json({ globalPool, userRole });
+    try {
+        let globalPool = await initializePool()
+        let userRole = req.session.user.role;
+        let returnedPool
+
+        if (globalPool) {
+            if (userRole === "admin") {
+                returnedPool = globalPool
+            }
+            else {
+                returnedPool = []
+                globalPool.forEach(item => {
+                    if (item.companies === null || item.companies.length === 0 || item.companies.some(company => req.session.user.companies.includes(company))) {
+                        returnedPool.push(item)
+                    }
+                })
+            }
+        } else {
+            console.error("pool not defined");
+        }
+
+        res.json({ globalPool: returnedPool, userRole });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: 'Server error' });
     }
-    else console.error("pool not defined");
+});
+
+router.get('/getElements/notCategorized', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+    try {
+        let globalPool = await initializePool()
+        let userRole = req.session.user.role;
+        let returnedPool
+
+        if (globalPool) {
+            returnedPool = []
+            globalPool.forEach(item => {
+                if (item.companies === null || item.companies.length === 0) {
+                    returnedPool.push(item)
+                }
+            })
+        }
+        else {
+            console.error("pool not defined");
+        }
+
+
+        res.json({ globalPool: returnedPool, userRole });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: 'Server error' });
+    }
 });
 
 
@@ -55,13 +100,13 @@ router.put("/crud", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnl
 
             try {
                 const found = await CaptchaModel.findOne({ ID: deletedObject.ID });
-                
+
                 if (found) {
                     await CaptchaModel.deleteOne({ ID: deletedObject.ID });
 
                     const deletedCaptcha = new DeletedCaptchaModel({
                         ...deletedObject.toObject(),
-                        _id: new mongoose.Types.ObjectId(), 
+                        _id: new mongoose.Types.ObjectId(),
                     });
 
                     await deletedCaptcha.save();
@@ -143,7 +188,7 @@ router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, 
                 await DeletedCaptchaModel.deleteOne({ ID: deletedObject.ID });
                 const newCaptcha = new CaptchaModel({
                     ...deletedObject.toObject(),
-                    _id: new mongoose.Types.ObjectId(), 
+                    _id: new mongoose.Types.ObjectId(),
                 });
                 await newCaptcha.save();
                 console.log('Deleted object moved back to pool in MongoDB.');
@@ -171,7 +216,7 @@ router.get('/deletedArchiveAssets', authMiddleware, csrfMiddleware.validateCSRFT
 
 router.get("/apiKeySection", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
 
-    res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role});
+    res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role });
 
 })
 
@@ -279,7 +324,7 @@ router.get("/", csrfMiddleware.validateCSRFToken, authMiddleware, (req, res) => 
     res.render("dashboard", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
 })
 
-router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken,  (req, res) => {
+router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
     res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
 })
 
@@ -372,7 +417,7 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
 });
 
 router.get("/createItem", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, (req, res) => {
-    res.render("createItem", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL});
+    res.render("createItem", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
 })
 
 router.post("/logout", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {

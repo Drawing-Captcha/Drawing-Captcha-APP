@@ -42,6 +42,10 @@ const deletedCaptchaModel = new Schema ({
     backgroundSize:{
         type: String,
         required: true
+    },
+    companies:{
+        type: Array,
+        required: false
     }
     
 })
