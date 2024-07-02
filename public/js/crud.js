@@ -569,11 +569,10 @@ async function getPoolForEachCompany(companyWrapper) {
             const userRole = data.userRole;
 
             let itemsWrapper = companyWrapper.querySelector(".stacked-list1_list-wrapper")
-            if (pool.length != 0 ) {
-                let counter = 0;
+        
+            if (pool.length != 0 && pool.some(elementData => elementData.companies.includes(companyWrapper.getAttribute("companyId")))) {
                 pool.forEach(elementData => {
                     if (elementData.companies.includes(companyWrapper.getAttribute("companyId"))) {
-                        counter++;
 
                         const item = document.createElement("div");
                         item.classList.add("stacked-list1_item");
@@ -664,6 +663,7 @@ async function getPoolForEachCompany(companyWrapper) {
                 syncWrapper.appendChild(syncButton)
 
             }
+
 
 
         } else {
