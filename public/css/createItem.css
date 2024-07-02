@@ -475,5 +475,24 @@ button .close-button:hover{
     font-weight: 600;
 }
 
+.company-header {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1em;
+}
+
+.logo-section {
+    /* margin-left: 10px; */
+}
+
+.company-logo {
+    width: 6em;
+    border-radius: 100%;
+    border: 1px solid black;
+    object-fit: cover;
+}
+
 
 
