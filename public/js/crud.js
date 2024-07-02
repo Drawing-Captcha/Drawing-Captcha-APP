@@ -17,6 +17,9 @@ const currentItems = document.querySelector(".currentItems")
 const rangeInput = document.querySelector('input[type="range"]');
 const imageResizeValue = document.querySelector("#imageResizerValue")
 const toDoDescription = document.querySelector("#todoDescription")
+const selectBtn = document.querySelector(".select-btn")
+const companyItemsWrapper = document.querySelector(".list-items")
+
 
 let tmpPool = [];
 let pool;
@@ -27,19 +30,20 @@ let validateMaxCubes;
 let itemName;
 let backgroundSize;
 let todoTitle;
+let companies = [];
 
 document.addEventListener("DOMContentLoaded", initialize);
 
 rangeInput.addEventListener('change', updateBackgroundSize);
 
-function updateBackgroundSize(){
+function updateBackgroundSize() {
     backgroundSize = rangeInput.value + "%";
     imageResizeValue.innerHTML = backgroundSize
 
     canvas.forEach(canvas => {
-        var existingStyles = canvas.getAttribute('style')  
+        var existingStyles = canvas.getAttribute('style')
         var updatedStyles = `${existingStyles} background-size: ${backgroundSize};`
-        canvas.setAttribute('style', updatedStyles)  
+        canvas.setAttribute('style', updatedStyles)
     })
 
 }
@@ -125,7 +129,7 @@ async function getPool() {
                     </svg>`;
                     editButton.addEventListener("click", () => getComponent(elementData));
 
-                    if(!elementData.initialCaptcha && userRole != "read"){
+                    if (!elementData.initialCaptcha && userRole != "read") {
                         droppDownToggle.appendChild(deleteButton);
                         droppDownToggle.appendChild(editButton);
                     }
@@ -163,7 +167,8 @@ async function getPool() {
     }
 }
 
-function getComponent(e) {
+async function getComponent(e) {
+    await getCompanies(e);
     removeCurrentItems();
     toDo.innerHTML = `Edit item: ${e.Name}`;
     editItemParent.style.display = "block";
@@ -197,11 +202,11 @@ function getComponent(e) {
         containerCanvas.style.backgroundImage = `url(${e.URL})`;
 
 
-        switch(container.getAttribute("id")){
+        switch (container.getAttribute("id")) {
             case "True":
                 containerCubes = containerCanvas.querySelectorAll(".cube");
                 containerCubes.forEach(cube => {
-                    if(e.ValidateF.includes(cube.getAttribute("id"))){
+                    if (e.ValidateF.includes(cube.getAttribute("id"))) {
                         cube.classList.add("selected");
                     }
                 })
@@ -209,7 +214,7 @@ function getComponent(e) {
             case "Min":
                 containerCubes = containerCanvas.querySelectorAll(".cube");
                 containerCubes.forEach(cube => {
-                    if(e.validateMinCubes.includes(cube.getAttribute("id"))){
+                    if (e.validateMinCubes.includes(cube.getAttribute("id"))) {
                         cube.classList.add("selected");
                     }
                 })
@@ -217,7 +222,7 @@ function getComponent(e) {
             case "Max":
                 containerCubes = containerCanvas.querySelectorAll(".cube");
                 containerCubes.forEach(cube => {
-                    if(e.validateMaxCubes.includes(cube.getAttribute("id"))){
+                    if (e.validateMaxCubes.includes(cube.getAttribute("id"))) {
                         cube.classList.add("selected");
                     }
                 })
@@ -236,10 +241,15 @@ function getComponent(e) {
 }
 
 function deleteComponent(e) {
-    pool = e
-    tmpPool.push(pool)
-    isDelete = true
-    pushToServer()
+    if (confirm("Are you sure you want to delete this Item")) {
+        pool = e
+        tmpPool.push(pool)
+        isDelete = true
+        pushToServer()
+    }
+    else {
+        return
+    }
 }
 
 function pushToServer() {
@@ -310,29 +320,36 @@ function reset(container) {
     });
 }
 
-function finishUpdate(){
+function finishUpdate() {
+    const companyItems = companyItemsWrapper.querySelectorAll(".item")
 
+    companyItems.forEach(item => {
+        if(item.classList.contains("checked")){
+            companies.push(item.getAttribute("obj-id"))
+        }
+    })
+    
     itemName = document.querySelector("#captchaItemName").value
     todoTitle = toDoDescription.value
     backgroundSize = rangeInput.value
     captchaContainer.forEach(container => {
         let containerCanvas = container.querySelector(".canvas");
 
-        switch(container.getAttribute("id")){
+        switch (container.getAttribute("id")) {
             case "True":
                 validateTrueCubes = Array.from(containerCanvas.querySelectorAll(".cube"))
-                .filter(cube => cube.classList.contains("selected"))
-                .map(cube => cube.getAttribute("id"));
+                    .filter(cube => cube.classList.contains("selected"))
+                    .map(cube => cube.getAttribute("id"));
                 break;
             case "Min":
                 validateMinCubes = Array.from(containerCanvas.querySelectorAll(".cube"))
-                .filter(cube => cube.classList.contains("selected"))
-                .map(cube => cube.getAttribute("id"));
+                    .filter(cube => cube.classList.contains("selected"))
+                    .map(cube => cube.getAttribute("id"));
                 break;
             case "Max":
                 validateMaxCubes = Array.from(containerCanvas.querySelectorAll(".cube"))
-                .filter(cube => cube.classList.contains("selected"))
-                .map(cube => cube.getAttribute("id"));
+                    .filter(cube => cube.classList.contains("selected"))
+                    .map(cube => cube.getAttribute("id"));
                 break;
             default:
                 console.log("no cubes to fill out");
@@ -345,14 +362,13 @@ function finishUpdate(){
     tmpPool[0].validateMaxCubes = validateMaxCubes;
     tmpPool[0].todoTitle = todoTitle;
     tmpPool[0].backgroundSize = backgroundSize;
-
-    console.log(tmpPool)
+    tmpPool[0].companies = companies;
 
     pushToServer()
 }
 
-function closeForm(){
-    captchaContainer.forEach(container =>{
+function closeForm() {
+    captchaContainer.forEach(container => {
         reset(container)
     })
     editItemParent.style.display = "none";
@@ -360,10 +376,89 @@ function closeForm(){
 
 }
 
-function removeCurrentItems(){
+function removeCurrentItems() {
     currentItems.style.display = "none"
 }
 
-function displayCurrentItems(){
+function displayCurrentItems() {
     currentItems.style.display = "block"
+}
+
+async function getCompanies(e) {
+    try {
+        const response = await fetch("/company", {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (response.ok) {
+            const data = await response.json();
+            const allCompanies = data.allCompanies;
+
+            if (allCompanies.length !== 0) {
+                var list = document.querySelector('.list-items');
+                allCompanies.forEach(function (company) {
+                    var li = document.createElement('li');
+                    li.classList.add('item');
+                    li.setAttribute("obj-id", company.companyId)
+
+                    var checkboxSpan = document.createElement('span');
+                    checkboxSpan.classList.add('checkbox');
+                    var checkboxIcon = document.createElement('i');
+                    checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
+                    checkboxSpan.appendChild(checkboxIcon);
+                    li.appendChild(checkboxSpan);
+
+                    var textSpan = document.createElement('span');
+                    textSpan.classList.add('item-text');
+                    textSpan.textContent = company.name;
+                    li.appendChild(textSpan);
+
+                    list.appendChild(li);
+                });
+                let items = document.querySelectorAll(".item");
+                let assignedCompanies = e.companies
+
+                items.forEach(item => {
+                    if (assignedCompanies.includes(item.getAttribute("obj-id"))) {
+                        item.classList.add("checked");
+                    }
+                    item.addEventListener("click", () => {
+                        item.classList.toggle("checked");
+                        setButtonText()
+
+                    });
+                })
+                setButtonText()
+
+            }
+        } else {
+            throw new Error('Error from server while trying to request the server');
+        }
+    } catch (error) {
+        console.log('Error in getCompanies:', error);
+    }
+}
+
+function setButtonText() {
+    let checked = document.querySelectorAll(".checked");
+    let btnText = document.querySelector(".btn-text");
+
+    if (checked && checked.length > 0) {
+        btnText.innerText = `${checked.length} Selected`;
+    } else {
+        btnText.innerText = "Select Company";
+    }
+}
+
+selectBtn.addEventListener("click", () => {
+    selectBtn.classList.toggle("open");
+});
+
+function closeSelectBtn() {
+    if (selectBtn.classList.contains("open")) {
+        selectBtn.classList.remove("open");
+    }
 }

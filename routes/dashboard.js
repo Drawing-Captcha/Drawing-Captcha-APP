@@ -73,6 +73,7 @@ router.put("/crud", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnl
                 console.error('Error saving to deleted bin in MongoDB:', err);
             }
         } else {
+            console.log("companies sent: ", tmpPool[0].companies)
             let updatedCaptcha = {
                 Name: tmpPool[0].Name,
                 ValidateF: tmpPool[0].ValidateF,
@@ -81,7 +82,8 @@ router.put("/crud", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnl
                 MaxTolerance: (tmpPool[0].validateMaxCubes.length * 1) / tmpPool[0].ValidateF.length,
                 MinTolerance: (tmpPool[0].validateMinCubes.length * 1) / tmpPool[0].ValidateF.length,
                 todoTitle: tmpPool[0].todoTitle,
-                backgroundSize: tmpPool[0].backgroundSize
+                backgroundSize: tmpPool[0].backgroundSize,
+                companies: tmpPool[0].companies
             };
 
             try {
