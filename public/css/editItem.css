@@ -22,6 +22,6 @@
     font-size: x-large;
 }
 
-.companyAccess{
-    display: none;
+.companyAccessCrud{
+    width: 50%;
 }

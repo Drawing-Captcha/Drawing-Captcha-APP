@@ -1,3 +1,6 @@
+.padding-custom{
+  padding: 1rem !important;
+}
 .subWrapper {
   width: 100%;
 }
@@ -2778,6 +2781,7 @@ figcaption {
   grid-auto-columns: 1fr;
   align-items: end;
   display: grid;
+  align-items: center;
 }
 
 .text-weight-semibold {

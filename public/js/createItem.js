@@ -238,7 +238,6 @@ function continueMin() {
         }
     })
 
-
 }
 
 function continueMax() {
@@ -283,7 +282,6 @@ function pushToServer() {
         backgroundSize,
         selectedCompanies
     };
-    // console.log(selectedCompanies)
     fetch("/dashboard/newValidation", {
         method: 'POST',
         headers: {
