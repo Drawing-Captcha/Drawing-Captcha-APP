@@ -1,42 +1,42 @@
-
 * {
     padding: 0;
     margin: 0;
 }
 
-#imageResizer{
+#imageResizer {
     padding: 0%;
     width: 88%;
 }
 
-.imageResizerWrapper{
+.imageResizerWrapper {
     display: none;
     width: 100%;
     justify-content: space-between;
 }
 
-.todoTitleWrapper{
+.todoTitleWrapper {
     display: none;
     width: 100%;
     flex-direction: column;
     gap: 1em;
 }
-textarea{
+
+textarea {
     width: 100%;
     padding: 0.5em;
     border-radius: 5px;
     margin-bottom: 1em;
 }
 
-hr{
+hr {
     border-top: dotted;
 }
 
-.editItemParent{
+.editItemParent {
     display: none;
 }
 
-.editItemWrapper{
+.editItemWrapper {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
@@ -44,10 +44,11 @@ hr{
     margin-top: 1em;
 }
 
-.upper-section #captchaItemName{
+.upper-section #captchaItemName {
     width: 25%;
 }
-.upper-section{
+
+.upper-section {
     display: flex;
     flex-direction: column;
     height: fit-content;
@@ -55,17 +56,18 @@ hr{
     width: 100%;
 
 }
-.upper-section input{
+
+.upper-section input {
     padding: 1em;
     height: 2.5em;
 }
 
-.middle-section{
+.middle-section {
     display: flex;
     justify-content: space-between;
 }
 
-.lower-section{
+.lower-section {
     display: flex;
     justify-content: center;
     flex-direction: column;
@@ -73,23 +75,25 @@ hr{
     gap: 4em;
 }
 
-.itemPageWrapper{
+.itemPageWrapper {
     display: none;
     justify-content: center;
     align-items: center;
     position: absolute;
-    width:-webkit-fill-available;
+    width: -webkit-fill-available;
     height: -webkit-fill-available;
     z-index: 1000;
 
 }
-.editingSection{
+
+.editingSection {
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
     gap: 3em;
 }
+
 .itemPageWrapper .editingSectionWrapper {
     display: flex;
     justify-content: flex-start;
@@ -100,15 +104,15 @@ hr{
     overflow-x: scroll;
     height: fit-content;
     align-items: center;
-    background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
-    box-shadow: 20px 20px 40px -6px rgba(0,0,0,0.2);
+    box-shadow: 20px 20px 40px -6px rgba(0, 0, 0, 0.2);
     padding: 4em;
     border-radius: 30px;
     overflow-y: hidden;
 }
 
-.dashboardItemPageWrapper{
+.dashboardItemPageWrapper {
     overflow-y: scroll;
     overflow-x: hidden;
     box-sizing: border-box;
@@ -119,7 +123,7 @@ hr{
     flex-direction: column;
 }
 
-.innerToDoBoxWrapper{
+.innerToDoBoxWrapper {
     padding: 4em;
     background: linear-gradient(45deg, #FC466B, #3F5EFB) !important;
     color: white;
@@ -127,7 +131,8 @@ hr{
     gap: 3em;
     align-items: center;
 }
-.itemPageWrapper svg{
+
+.itemPageWrapper svg {
     position: absolute;
     z-index: 1;
     top: 1em;
@@ -141,8 +146,8 @@ hr{
     right: unset;
 }
 
-.itemWrapper{
-    box-shadow: 20px 20px 40px -6px rgba(0,0,0,0.2);
+.itemWrapper {
+    box-shadow: 20px 20px 40px -6px rgba(0, 0, 0, 0.2);
     margin-bottom: 2vh;
     border-radius: 30px;
     background: white;
@@ -150,14 +155,14 @@ hr{
     display: none;
     justify-content: center;
     align-items: center;
-    flex-direction: column; 
+    flex-direction: column;
     color: black;
     gap: 7em;
     padding: 7em;
     width: 78%;
 }
 
-.itemWrapper-createItem{
+.itemWrapper-createItem {
     margin-bottom: 2vh;
     border-radius: 30px;
     height: fit-content;
@@ -172,38 +177,40 @@ hr{
     text-align: center;
 }
 
-.subtitles{
+.subtitles {
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.controls-itemCreateWrapper{
+.controls-itemCreateWrapper {
     display: flex !important;
     justify-content: center !important;
 }
-.itemWrapperCreateItem{
+
+.itemWrapperCreateItem {
     max-width: 100%;
 }
 
-input{
+input {
     border-radius: 8px;
     background-color: white;
     color: black;
     padding: 1%;
 }
 
-button{
+button {
     color: black;
     border-radius: 8px;
     background-color: white;
 }
 
-.captchta-canvas{
+.captchta-canvas {
     display: none;
 }
-form{
+
+form {
     display: flex;
     justify-content: space-around;
     flex-direction: column;
@@ -211,33 +218,35 @@ form{
     width: 100%;
 
 }
-#myFileinput{
+
+#myFileinput {
     display: none;
 }
-.changeImgBtn{
+
+.changeImgBtn {
     display: none;
 }
-.discard{
+
+.discard {
     display: none;
 }
-.upload-area input{
+
+.upload-area input {
     background: none;
 }
 
-.innerToDoBox{
+.innerToDoBox {
     display: flex;
     justify-content: center;
     flex-direction: column;
-    background: rgba(255,255,255,0.3);
     padding: 2em;
-    width: 58%;
+    width: 100%;
+    text-align: start;
     height: fit-content;
     border-radius: 20px;
-    border-left: 1px solid rgba(255,255,255,0.3);
-    border-top: 1px solid rgba(255,255,255,0.3);
-    backdrop-filter: blur(10px);
-    box-shadow: 20px 20px 40px -6px rgba(0,0,0,0.2);
-    text-align: center;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    text-align: start;
     position: relative;
     font-size: x-large;
 
@@ -248,15 +257,16 @@ form{
 
 
 
-.captcha-wrapper{
+.captcha-wrapper {
     height: 100%;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
 
-    
+
 }
+
 .captcha-container {
     color: white;
     font-family: Arial, Helvetica, sans-serif;
@@ -279,7 +289,8 @@ form{
 
 
 }
-.captchta-canvas > * {
+
+.captchta-canvas>* {
     grid-column: 1;
     grid-row: 1;
 
@@ -300,10 +311,12 @@ form{
 .cube {
     cursor: crosshair;
 }
+
 .cube:hover {
     background-color: red;
     opacity: 0.5;
 }
+
 .cube.selected {
     background-color: yellow;
 }
@@ -312,6 +325,7 @@ form{
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -325,12 +339,12 @@ form{
 
 .canvas {
     display: grid;
-    grid-template-columns: repeat(31, 1em); 
-    grid-template-rows: repeat(31, 1em); 
+    grid-template-columns: repeat(31, 1em);
+    grid-template-rows: repeat(31, 1em);
     margin-bottom: 20px;
     border: 3px solid black;
     border-radius: 5px;
-    max-width: 100%; 
+    max-width: 100%;
     width: fit-content;
     background-position: center;
     background-size: 70%;
@@ -338,8 +352,8 @@ form{
 
 }
 
-.canvas > * {
-    border: 1px  black;
+.canvas>* {
+    border: 1px black;
     box-sizing: border-box;
 }
 
@@ -350,6 +364,7 @@ form{
     justify-content: center;
     width: 100%;
 }
+
 button {
     height: 2.5em;
     padding: 10px 20px;
@@ -365,13 +380,15 @@ button {
     justify-content: center;
 }
 
-button .buttonDefault{
+button .buttonDefault {
     background-color: none !important;
 }
-.submit-button{
+
+.submit-button {
     width: 80%;
 }
-.reset-button{
+
+.reset-button {
     width: 20%;
 }
 
@@ -397,30 +414,33 @@ svg {
     border-radius: 100%;
 }
 
-button .close-button:hover{
+button .close-button:hover {
     background-color: transparent;
 }
 
-@media screen and (max-width: 676px){
-  
+@media screen and (max-width: 676px) {
+
     .canvas {
         grid-template-columns: repeat(31, 0.7em) !important;
         grid-template-rows: repeat(31, 0.7em) !important;
     }
-    .title{
+
+    .title {
         font-size: large;
     }
+
     .submit-button {
         height: 2em;
     }
+
     .reset-button {
         height: 2em;
     }
 
 }
 
-@media screen and (max-width: 400px){
-    .captcha-container{
+@media screen and (max-width: 400px) {
+    .captcha-container {
         max-width: 39em;
         padding: 4%;
     }
@@ -432,7 +452,7 @@ button .close-button:hover{
 
 }
 
-.apiWrapper{
+.apiWrapper {
     display: flex;
     justify-content: space-between;
 }
@@ -444,12 +464,13 @@ button .close-button:hover{
 
 }
 
-.currentItems{
+.currentItems {
     padding: 3em;
     background: white;
-    border-radius: 2em;}
+    border-radius: 2em;
+}
 
-.quotes{
+.quotes {
     background: var(--main-inner-color);
     width: 100%;
     display: flex;
@@ -466,11 +487,11 @@ button .close-button:hover{
     backdrop-filter: blur(95px);
 }
 
-.quoteTitle{
+.quoteTitle {
     margin-bottom: 1em;
 }
 
-.randomQuoteAuthor{
+.randomQuoteAuthor {
     font-size: initial;
     font-weight: 600;
 }
@@ -493,6 +514,3 @@ button .close-button:hover{
     border: 1px solid black;
     object-fit: cover;
 }
-
-
-

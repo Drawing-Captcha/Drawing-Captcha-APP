@@ -176,9 +176,7 @@ function pushToServer(key, isDelete, element) {
             alert('An error occurred. Please try again later.');
         });
 
-
 }
-
 
 function deleteAllKeys() {
     if (confirm("Are you sure you want to delete all of your keys?") === true) {
