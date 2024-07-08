@@ -53,8 +53,9 @@ router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, async 
 
 router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
     
-    let globalPool = await initializePool()
     try {
+        let globalPool = await initializePool()
+
         if (req.body.session) {
             req.session.cookie = req.body.session.cookie;
             req.session.authMethod = req.body.session.authMethod;

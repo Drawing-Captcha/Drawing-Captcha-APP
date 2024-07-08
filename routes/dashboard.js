@@ -249,7 +249,22 @@ router.get("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, async (r
     try {
         let apiKeys = await ApiKeyModel.find();
         let userRole = req.session.user.role
-        res.json({ apiKeys, userRole });
+
+        let returnedKeys
+
+        if(userRole === "admin"){
+            returnedKeys = apiKeys    
+        }
+        else{
+            returnedKeys = []
+            apiKeys.forEach(Key => {
+                if(Key.companies === null || Key.companies.length === 0 || Key.companies.some(company => req.session.user.companies.includes(company))){
+                    returnedKeys.push(Key)
+                }
+            })
+        }
+
+        res.json({ apiKeys: returnedKeys, userRole });
     } catch (error) {
         console.error("Error fetching API keys:", error);
         res.status(500).json({ error: "Internal Server Error" });
@@ -495,44 +510,35 @@ router.post('/newValidation/nameExists', authMiddleware, csrfMiddleware.validate
     res.json({ nameExists });
 });
 
-// router.post('/addCompany', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
-//     try {
-//         let companyExists = await CompanyModel.findOne({name: req.body.name});
-//         if(companyExists){
-//             return res.status(400).json({message: "A company with this name already exists."});
-//         }
-
-//         const company = new CompanyModel({
-//             companyId: crypto.randomUUID(),
-//             name: req.body.name,
-//             ppURL: req.body.ppURL
-//         });
-
-//         await company.save();
-
-//         return res.status(201).json({message: "Company successfully created.", company});
-
-//     } catch(error) {
-//         console.error(error);
-//         return res.status(500).json({message: "An error occurred while creating the company."});
-//     }
-// });
 
 router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
+
         let message;
         let allowedOrigins = await AllowedOriginModel.find({});
         let userRole = req.session.user.role
-        if (allowedOrigins.length > 0) {
-            message = "allowed origins found"
-            console.log(message)
+        let returnedOrigins
+        if (allowedOrigins.length > 0 ) {
+            if(userRole === "admin"){
+                message = "allowed origins found"
+                console.log(message)
+                returnedOrigins = allowedOrigins
+            }
+            else{
+                returnedOrigins = []
+                allowedOrigins.forEach(Origin => {
+                    if(Origin.companies === null || Origin.companies.length === 0 || Origin.companies.some(company => req.session.user.companies.includes(company))){
+                        returnedOrigins.push(Origin)
+                    }
+                })
+            }
         }
         else {
             message = "no allowed origins found"
             console.log(message);
         }
 
-        res.json({ allowedOrigins, message, userRole })
+        res.json({ allowedOrigins: returnedOrigins, message, userRole })
     }
     catch (err) {
         console.log("Error while trying to get AllowedOrigins", err);
@@ -544,11 +550,13 @@ router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken,
     try {
         let message;
         let originName = req.body.originName;
+        let selectedCompanies = req.body.selectedCompanies
         let doesOriginExist = await AllowedOriginModel.findOne({ allowedOrigin: originName });
         console.log(doesOriginExist)
         if (originName && !doesOriginExist) {
             let origin = new AllowedOriginModel({
-                allowedOrigin: originName
+                allowedOrigin: originName,
+                companies: selectedCompanies
             });
 
             await origin.save();

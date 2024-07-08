@@ -223,6 +223,7 @@ function deleteAllKeys() {
 }
 
 async function addApiKey(){
+    companyAccessLabel.innerHTML = "Please select the company from which the Captchas should be used, you can choose multiple. (If no company is selected the 'not categorized' will be used as default)"
     await getCompanies()
     companyAccessSection.forEach(item => {
         item.style.display = "block"

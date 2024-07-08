@@ -4,6 +4,7 @@ const submitButton = createForm.querySelector("button")
 const inputName = createForm.querySelector("input")
 const sectionHeader = document.querySelector(".section_page-header3")
 const shellLayout = document.querySelector(".section_shell2-layout")
+const companyAccessLabel = document.querySelector("label#companyAccess")
 
 let originName;
 async function getOrigins() {
@@ -101,17 +102,16 @@ async function getOrigins() {
 }
 
 
-function addOrigin() {
-    companyAccessSection.forEach(item => {
-        item.style.display = "none"
-    })
+async function addOrigin() {
+    await getCompanies();
+    companyAccessLabel.innerHTML = "Please choose your related company. Without a selection, it won't be categorized."
     toDo.innerHTML = "Add new Origin 🔒";
     toDoLabel.innerHTML = "Important: if the domain has a seperate port please define it so you can access it properly."
     submitButton.innerHTML = "Add Origin"
     shellLayout.style.display = "none"
     sectionHeader.style.display = "none"
-    inputName.setAttribute("placeholder", "OriginName")
-    createForm.setAttribute("onsubmit", "proofRegex()")
+    inputName.setAttribute("placeholder", "OriginURL")
+    createForm.setAttribute("onsubmit", "proofRegex(event)")
     addFrom();
 }
 
@@ -124,7 +124,7 @@ function addFrom() {
 
 }
 
-function proofRegex() {
+function proofRegex(event) {
     console.log(originName)
     originName = inputName.value.trim();
     console.log(originName)
@@ -137,7 +137,7 @@ function proofRegex() {
     const regex = new RegExp(expression);
 
     if (regex.test(originName)) {
-        submitOrigin();
+        submitOrigin(event);
     } else {
         alert("Regex error: please define your origin like this schema: https://yourdomain.com");
     }
@@ -149,14 +149,22 @@ function deleteOrigin(elementData) {
     let origin = elementData.allowedOrigin;
     putOrigin(origin, isDeleted)
 }
-function submitOrigin() {
+function submitOrigin(event) {
+    event.preventDefault()
+    let companiesList = document.querySelectorAll(".item")
+    let selectedCompanies = []
+    companiesList.forEach(company => {
+        if(company.classList.contains("checked")){
+            selectedCompanies.push(company.getAttribute("obj-id"))
+        }
+    })
 
     fetch("/dashboard/allowedOrigins", {
         method: "POST",
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ originName })
+        body: JSON.stringify({ originName, selectedCompanies })
     })
         .then(response => {
             if (response.ok) {

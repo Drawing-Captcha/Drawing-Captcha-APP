@@ -5,6 +5,11 @@ const allowedOriginschema = new Schema ({
     allowedOrigin:{
         type: String,
         required: true
+    },
+    companies:{
+        type: Array,
+        required: false
+
     }
 })
 
