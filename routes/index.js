@@ -4,7 +4,7 @@ const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const isAuthRedirect = require("../middlewares/isAlreadyAuthRedirectMiddleware")
 
 router.get("/", (req, res) => {
-    res.render("landing");
+    res.redirect("/login");
 });
 
 router.get('/login',isAuthRedirect ,csrfMiddleware.generateCSRFToken, (req, res) => {
