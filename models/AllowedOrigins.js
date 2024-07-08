@@ -9,7 +9,10 @@ const allowedOriginschema = new Schema ({
     companies:{
         type: Array,
         required: false
-
+    },
+    initOrigin:{
+        type: Boolean,
+        required: false
     }
 })
 

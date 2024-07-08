@@ -513,39 +513,41 @@ router.post('/newValidation/nameExists', authMiddleware, csrfMiddleware.validate
 
 router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-
         let message;
         let allowedOrigins = await AllowedOriginModel.find({});
-        let userRole = req.session.user.role
-        let returnedOrigins
-        if (allowedOrigins.length > 0 ) {
+        let userRole = req.session.user.role;
+        let returnedOrigins;
+
+        allowedOrigins = allowedOrigins.filter(origin => !origin.initOrigin);
+
+        if (allowedOrigins.length > 0) {
             if(userRole === "admin"){
-                message = "allowed origins found"
-                console.log(message)
-                returnedOrigins = allowedOrigins
+                message = "allowed origins found";
+                console.log(message);
+                returnedOrigins = allowedOrigins;
             }
             else{
-                returnedOrigins = []
+                returnedOrigins = [];
                 allowedOrigins.forEach(Origin => {
                     if(Origin.companies === null || Origin.companies.length === 0 || Origin.companies.some(company => req.session.user.companies.includes(company))){
-                        returnedOrigins.push(Origin)
+                        returnedOrigins.push(Origin);
                     }
-                })
+                });
             }
         }
         else {
-            message = "no allowed origins found"
+            message = "no allowed origins found";
             console.log(message);
         }
 
-        res.json({ allowedOrigins: returnedOrigins, message, userRole })
+        res.json({ allowedOrigins: returnedOrigins, message, userRole });
     }
     catch (err) {
         console.log("Error while trying to get AllowedOrigins", err);
         return res.status(500).json({ error: "An error occurred while trying to get the AllowedOrigins" });
     }
-
 })
+
 router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     try {
         let message;
