@@ -4,6 +4,7 @@ const submitButton = createForm.querySelector("button")
 const inputName = createForm.querySelector("input")
 const sectionHeader = document.querySelector(".section_page-header3")
 const shellLayout = document.querySelector(".section_shell2-layout")
+
 let originName;
 async function getOrigins() {
     try {
@@ -101,6 +102,9 @@ async function getOrigins() {
 
 
 function addOrigin() {
+    companyAccessSection.forEach(item => {
+        item.style.display = "none"
+    })
     toDo.innerHTML = "Add new Origin 🔒";
     toDoLabel.innerHTML = "Important: if the domain has a seperate port please define it so you can access it properly."
     submitButton.innerHTML = "Add Origin"

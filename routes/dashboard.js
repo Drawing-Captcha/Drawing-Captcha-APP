@@ -287,6 +287,7 @@ router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notRead
     let message;
     try {
         let name = req.body.apiKeyName;
+        let selectedCompanies = req.body.selectedCompanies;
         let doesNameExist = await ApiKeyModel.findOne({ name: name });
         if (!doesNameExist) {
             let apiKey = crypto.randomUUID();
@@ -295,7 +296,8 @@ router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notRead
             }
             api = new ApiKeyModel({
                 apiKey,
-                name
+                name,
+                companies: selectedCompanies
             })
 
             await api.save();
