@@ -20,7 +20,7 @@ services:
     expose:
       - "27017"
     volumes:
-      - drawingCaptchaData:/data/db
+      - drawing-captcha:/data/db
     networks:
       - dc_network
     restart: always
@@ -31,4 +31,4 @@ services:
 networks:
   dc_network:
 volumes:
-  drawingCaptchaData:
+  drawing-captcha:
