@@ -8,7 +8,7 @@ const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const ColorKit = require("../models/ColorKit.js");
 const generateUniqueName = require("../services/generateUniqueName.js")
 const deleteFile = require("../services/deleteFiles.js");
-const {pool, initializePool} = require('../controllers/initializeController.js');
+const { pool, initializePool } = require('../controllers/initializeController.js');
 const captchaSession = new Map();
 const defaultColorKit = {
     buttonColorValue: "#007BFF",
@@ -17,6 +17,7 @@ const defaultColorKit = {
     canvasOnHoverColorValue: "#ff0000",
     defaultTitle: "Please draw the object currently being displayed."
 }
+const ApiKeyModel = require("../models/ApiKey.js")
 
 router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, (req, res) => {
     if (req.body.session && req.body.session.uniqueFileName) {
@@ -52,10 +53,10 @@ router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, async 
 });
 
 router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
-    
-    try {
-        let globalPool = await initializePool()
 
+    let globalPool = await initializePool()
+    try {
+        let apiKeys = await ApiKeyModel.find();
         if (req.body.session) {
             req.session.cookie = req.body.session.cookie;
             req.session.authMethod = req.body.session.authMethod;
@@ -72,8 +73,51 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
             return res.status(500).json({ error: 'Pool is empty or not initialized.' });
         }
 
-        const randomIndex = Math.floor(Math.random() * globalPool.length);
-        const selectedContent = globalPool[randomIndex];
+        let tmpContent = []
+        let selectedApiKey
+        apiKeys.forEach(key => {
+            if (req.body.apiKey === key.apiKey) {
+                selectedApiKey = key
+            }
+        })
+        console.log("requested key: ", req.body.apiKey)
+        console.log("returned key: ", selectedApiKey)
+
+        if(req.body.apiKey){
+            if (selectedApiKey && selectedApiKey.companies != null && selectedApiKey.companies != "") {
+                console.log("returned categorized to client")
+                globalPool.forEach(item => {
+                    if (item.companies.some(company => selectedApiKey.companies.includes(company))) {
+                        tmpContent.push(item)
+                    }
+                })
+                console.log("TMP Content: ", tmpContent)
+                if(tmpContent.length === 0 || tmpContent === null ){
+                    setNotCategorized()
+                }
+            }
+            else {
+                setNotCategorized()
+            }
+        }
+        else {
+            setNotCategorized()
+        }
+
+        function setNotCategorized(){
+            console.log("returned not categorized to client")
+            globalPool.forEach(item => {
+                if(item.companies === null || item.companies.length === 0){
+                    tmpContent.push(item)
+                }
+            })
+        }
+
+        console.log(tmpContent)
+        const randomIndex = Math.floor(Math.random() * tmpContent.length);
+        const selectedContent = tmpContent[randomIndex];
+
+        console.log("selectedContent: ", selectedContent)
 
         captchaSession.set(captchaIdentifier, {
             ID: selectedContent.ID,
@@ -125,7 +169,7 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
 
         const finishedURL = `/tmpimg/${uniqueFileName}`;
 
-        res.json({ finishedURL, clientData, session: req.session, itemAssets});
+        res.json({ finishedURL, clientData, session: req.session, itemAssets });
 
 
     } catch (err) {

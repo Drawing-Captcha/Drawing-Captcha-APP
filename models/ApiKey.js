@@ -12,7 +12,7 @@ const apikeyschema = new Schema ({
     },
     companies:{
         type: Array,
-        required: true
+        required: false
     }
 })
 
