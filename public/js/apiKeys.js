@@ -4,7 +4,18 @@ const createForm = itemPageWrapper.querySelector("form");
 const formName = createForm.querySelector("input");
 const ItemWrapper = document.querySelector(".itemWrapper");
 const toDo = ItemWrapper.querySelector("h3");
+const selectBtn = document.querySelector(".select-btn")
+const companyAccessSection = document.querySelectorAll("#companyAccess")
 
+selectBtn.addEventListener("click", () => {
+    selectBtn.classList.toggle("open");
+});
+
+function closeSelectBtn() {
+    if (selectBtn.classList.contains("open")) {
+        selectBtn.classList.remove("open");
+    }
+}
 
 let Keys;
 let apiName
@@ -211,14 +222,19 @@ function deleteAllKeys() {
     }
 }
 
-function addApiKey(){
+async function addApiKey(){
+    companyAccessLabel.innerHTML = "Please select the company from which the Captchas should be used, you can choose multiple. (If no company is selected the 'not categorized' will be used as default)"
+    await getCompanies()
+    companyAccessSection.forEach(item => {
+        item.style.display = "block"
+    })
     toDo.innerHTML = "Add API Key 🔑"
     toDoLabel.innerHTML = "Key Name"
     submitButton.innerHTML = "Add Key"
     shellLayout.style.display = "none"
     sectionHeader.style.display = "none"
     inputName.setAttribute("placeholder", "KeyName")
-    createForm.setAttribute("onsubmit", "submitApi(); return false;")
+    createForm.setAttribute("onsubmit", "submitApi(event); return false;")
     addFrom()
 
     
@@ -243,8 +259,16 @@ function closeForm(){
     formName.value = "";
 
 }
+function submitApi(event){
+    event.preventDefault()
+    let companiesList = document.querySelectorAll(".item")
+    let selectedCompanies = []
+    companiesList.forEach(company => {
+        if(company.classList.contains("checked")){
+            selectedCompanies.push(company.getAttribute("obj-id"))
+        }
+    })
 
-function submitApi(){
    let apiName = formName.value;
     
     fetch("/dashboard/apiKey", {
@@ -252,7 +276,7 @@ function submitApi(){
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({apiKeyName: apiName})
+        body: JSON.stringify({apiKeyName: apiName, selectedCompanies})
     })
     .then(response => {
         if (response.ok) {
@@ -274,4 +298,63 @@ function submitApi(){
         console.error('Error:', error);
         alert('An error occurred. Please try again later.');
     });
+}
+
+async function getCompanies() {
+    try {
+        const response = await fetch("/company", {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (response.ok) {
+            const data = await response.json();
+            const allCompanies = data.allCompanies;
+
+            if (allCompanies.length !== 0) {
+                var list = document.querySelector('.list-items');
+                allCompanies.forEach(function (company) {
+                    var li = document.createElement('li');
+                    li.classList.add('item');
+                    li.setAttribute("obj-id", company.companyId)
+
+                    var checkboxSpan = document.createElement('span');
+                    checkboxSpan.classList.add('checkbox');
+                    var checkboxIcon = document.createElement('i');
+                    checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
+                    checkboxSpan.appendChild(checkboxIcon);
+                    li.appendChild(checkboxSpan);
+
+                    var textSpan = document.createElement('span');
+                    textSpan.classList.add('item-text');
+                    textSpan.textContent = company.name;
+                    li.appendChild(textSpan);
+
+                    list.appendChild(li);
+                });
+                let items = document.querySelectorAll(".item");
+
+                items.forEach(item => {
+                    item.addEventListener("click", () => {
+                        item.classList.toggle("checked");
+
+                        let checked = document.querySelectorAll(".checked"),
+                            btnText = document.querySelector(".btn-text");
+
+                        if (checked && checked.length > 0) {
+                            btnText.innerText = `${checked.length} Selected`;
+                        } else {
+                            btnText.innerText = "Select Company";
+                        }
+                    });
+                })
+            }
+        } else {
+            throw new Error('Error from server while trying to request the server');
+        }
+    } catch (error) {
+        console.log('Error in getCompanies:', error);
+    }
 }

@@ -9,6 +9,10 @@ const apikeyschema = new Schema ({
     name:{
         type: String,
         required: true
+    },
+    companies:{
+        type: Array,
+        required: true
     }
 })
 
