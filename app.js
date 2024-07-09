@@ -19,7 +19,6 @@ const port = process.env.PORT;
 let origins
 connectDB()
 createInitCaptcha()
-configInitDomain()
 
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
@@ -47,12 +46,16 @@ const csrfProtection = csrf({ cookie: true });
 
 app.use(cors({
     origin: function (origin, callback) {
-        if (!origin || origins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
+        if (!origin) {
+            return callback(null, true);
         }
-    }
+        if (origins.includes(origin)) {
+            return callback(null, true);
+        } else {
+            return callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
 }));
 
 const mongoURI = process.env.MONGO_URI
