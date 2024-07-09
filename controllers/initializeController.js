@@ -11,7 +11,7 @@ let pool = [];
 let deletedBin = [];
 let allowedOrigins = [];
 const port = process.env.PORT;
-let defaultOrigin = [`http://localhost:${port}`];
+let defaultOrigin = [`http://localhost:${port}`, process.env.SERVER_DOMAIN];
 
 async function initializePool() {
     try {
