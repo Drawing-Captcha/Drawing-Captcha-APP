@@ -14,9 +14,11 @@ const { pool, deletedBin, allowedOrigins, defaultOrigin, initializeAllowedOrigin
 const createInitCaptcha = require("./config/createInitCaptcha.js")
 const generateNewRegisterKey = require("./services/generateRegisterKey.js")
 const configInitDomain = require("./config/configInitDomain.js")
+const createDirectory = require("./services/createDirectory.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 const port = process.env.PORT;
 let origins
+createDirectory()
 connectDB()
 createInitCaptcha()
 
