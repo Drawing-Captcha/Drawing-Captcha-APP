@@ -150,7 +150,7 @@ router.put("/crud", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnl
 
 
 router.get('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL })
+    res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role })
 })
 
 router.get('/notAuthorized', authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
@@ -338,22 +338,22 @@ router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notRead
 })
 
 router.get("/", csrfMiddleware.validateCSRFToken, authMiddleware, (req, res) => {
-    res.render("dashboard", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
+    res.render("dashboard", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
 })
 
 router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
+    res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
 })
 
 router.get("/registeredUsers", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("users", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
+    res.render("users", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
 })
 router.get("/companies", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("company", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
+    res.render("company", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
 })
 
 router.get("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("registerKey", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
+    res.render("registerKey", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
 })
 router.get("/registerKey/assets", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
@@ -434,7 +434,7 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
 });
 
 router.get("/createItem", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, (req, res) => {
-    res.render("createItem", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL });
+    res.render("createItem", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
 })
 
 router.post("/logout", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
