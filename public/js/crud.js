@@ -20,6 +20,10 @@ const toDoDescription = document.querySelector("#todoDescription")
 const selectBtn = document.querySelector(".select-btn")
 const companyItemsWrapper = document.querySelector(".list-items")
 const notCategorizedWrapper = document.querySelector(".not-categorized")
+const noCompaniesTeaser = document.querySelector(".NoCompanies")
+const checked = document.querySelectorAll(".checked");
+const btnText = document.querySelector(".btn-text");
+const listItems = document.querySelector(".list-items")
 
 
 let tmpPool = [];
@@ -407,7 +411,6 @@ async function getCompanies(e) {
         if (response.ok) {
             const data = await response.json();
             const allCompanies = data.allCompanies;
-
             if (allCompanies.length !== 0) {
 
                 var list = document.querySelector('.list-items');
@@ -446,6 +449,12 @@ async function getCompanies(e) {
                 setButtonText()
 
             }
+            else{
+                btnText.innerText = "No companies to select";
+                listItems.style.display = "none";
+
+
+            }
         } else {
             throw new Error('Error from server while trying to request the server');
         }
@@ -455,9 +464,6 @@ async function getCompanies(e) {
 }
 
 function setButtonText() {
-    let checked = document.querySelectorAll(".checked");
-    let btnText = document.querySelector(".btn-text");
-
     if (checked && checked.length > 0) {
         btnText.innerText = `${checked.length} Selected`;
     } else {
@@ -554,6 +560,7 @@ async function initCompanies() {
                     getPoolForEachCompany(companyWrapper)
                 });
             }
+            else noCompaniesTeaser.style.display = "block"
         } else {
             throw new Error('Error from server while trying to request the server');
         }
@@ -674,8 +681,6 @@ async function getPoolForEachCompany(companyWrapper) {
                 syncWrapper.appendChild(syncButton)
 
             }
-
-
 
         } else {
             throw new Error('Error server while trying to request the server');

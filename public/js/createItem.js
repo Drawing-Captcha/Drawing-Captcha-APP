@@ -63,7 +63,7 @@ function updateSliderValue(event) {
     }
 }
 
-function updateBackgroundSize(){
+function updateBackgroundSize() {
     backgroundSize = rangeInput.value + "%";
     imageResizeValue.innerHTML = backgroundSize
     var existingStyles = canvas.getAttribute('style')
@@ -113,7 +113,7 @@ fileInput.addEventListener("change", async () => {
         reader.readAsDataURL(file);
     } else {
         alert("Please select a PNG file.");
-        fileInput.value = ""; 
+        fileInput.value = "";
     }
 });
 
@@ -128,11 +128,11 @@ function buildCubes() {
     }
 }
 
-function changeImg(){
+function changeImg() {
     changeImageButton.style.display = "none";
     fileInput.style.display = "block";
     todoTitle = todoTextArea.value
-    
+
 }
 
 let mouseIsDown = false
@@ -162,9 +162,9 @@ function reset() {
     });
 }
 
-function continueWidth(){
+function continueWidth() {
     backgroundSize = rangeInput.value;
-    if(backgroundImage){
+    if (backgroundImage) {
         toDo.innerHTML = "Please provide a short description of what you should draw in the Drawing Captcha below. ✏️";
         imageResizeWrapper.style.display = "none"
         todoTitleWrapper.style.display = "flex"
@@ -173,7 +173,7 @@ function continueWidth(){
     }
 }
 
-async function continueCompany(){
+async function continueCompany() {
     await getCompanies()
     toDo.innerHTML = "Please now select the companies where the captcha should be displayed. 🌐";
     imageResizeWrapper.style.display = "none"
@@ -184,15 +184,15 @@ async function continueCompany(){
 
 }
 
-function continueBeforeValid(){
+function continueBeforeValid() {
     let companiesList = document.querySelectorAll(".item")
     companiesList.forEach(company => {
-        if(company.classList.contains("checked")){
+        if (company.classList.contains("checked")) {
             selectedCompanies.push(company.getAttribute("obj-id"))
         }
     })
 
-    if(selectedCompanies.length < 1 ){
+    if (selectedCompanies.length < 1) {
         alert("You haven't chosen any specific company, so this captcha will not be categorized under any company.")
     }
 
@@ -207,7 +207,7 @@ function continueValid() {
     toDo.innerHTML = "Please draw the cubes on the canvas that you want to count as valid. These cubes will be considered as 'True'.✏️"
     validateTrueCubes = Array.from(document.querySelectorAll(".cube")).filter(cube => cube.classList.contains("selected")).map(cube => cube.id);
 
-    if(validateTrueCubes.length < 1){
+    if (validateTrueCubes.length < 1) {
         alert("The minimum number of cubes cannot be below 1. Please select more.")
         return
     }
@@ -223,7 +223,7 @@ function continueValid() {
 function continueMin() {
     validateMinCubes = Array.from(document.querySelectorAll(".cube")).filter(cube => cube.classList.contains("selected")).map(cube => cube.id);
 
-    if(validateMinCubes.length < 1){
+    if (validateMinCubes.length < 1) {
         alert("The minimum number of cubes cannot be below 1. Please select more.")
         return
     }
@@ -243,7 +243,7 @@ function continueMin() {
 function continueMax() {
     validateMaxCubes = Array.from(document.querySelectorAll(".cube")).filter(cube => cube.classList.contains("selected")).map(cube => cube.id);
 
-    if(validateMaxCubes.length < 1){
+    if (validateMaxCubes.length < 1) {
         alert("The minimum number of cubes cannot be below 1. Please select more.")
         return
     }
@@ -289,29 +289,29 @@ function pushToServer() {
         },
         body: JSON.stringify(requestData)
     })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        } else {
-            throw new Error('Server responded with an error status: ' + response.status);
-        }
-    })
-    .then(data => {
-        if (data.isValid) {
-            toDo.innerHTML = "Congratulations 🎉🥳, you have successfully created an item for your Drawing-Captcha!";
-            innerBox.style.display = "none";
-            captchaContainer.style.display = "none";
-            setTimeout(() => {
-                window.location.replace("/dashboard")
-            }, 2000);
-        } else {
-            console.log("An error occurred while trying to fetch data from the server.");
-        }
-    })
-    .catch(error => {
-        console.error('Fetch error:', error);
-        alert('An error occurred. Please try again later.');
-    });
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Server responded with an error status: ' + response.status);
+            }
+        })
+        .then(data => {
+            if (data.isValid) {
+                toDo.innerHTML = "Congratulations 🎉🥳, you have successfully created an item for your Drawing-Captcha!";
+                innerBox.style.display = "none";
+                captchaContainer.style.display = "none";
+                setTimeout(() => {
+                    window.location.replace("/dashboard")
+                }, 2000);
+            } else {
+                console.log("An error occurred while trying to fetch data from the server.");
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            alert('An error occurred. Please try again later.');
+        });
 }
 
 async function getCompanies() {
@@ -364,6 +364,14 @@ async function getCompanies() {
                         }
                     });
                 })
+            }
+            else {
+                const checked = document.querySelectorAll(".checked");
+                const btnText = document.querySelector(".btn-text");
+                const listItems = document.querySelector(".list-items")
+                
+                btnText.innerText = "No companies to select";
+                listItems.style.display = "none";
             }
         } else {
             throw new Error('Error from server while trying to request the server');

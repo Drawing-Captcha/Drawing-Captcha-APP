@@ -117,7 +117,7 @@ async function getAllCompanies() {
                 syncWrapper.style.cursor = "pointer";
 
                 const syncMessage = document.createElement("h3");
-                syncMessage.innerHTML = "No items in pool currently, sync here.. 🤔🔄";
+                syncMessage.innerHTML = "No companies here currently, sync here.. 🤔🔄";
 
                 wrapper.appendChild(syncWrapper);
                 syncWrapper.appendChild(syncMessage);

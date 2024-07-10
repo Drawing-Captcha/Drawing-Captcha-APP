@@ -223,13 +223,13 @@ function deleteAllKeys() {
 }
 
 async function addApiKey(){
-    companyAccessLabel.innerHTML = "Please select the company from which the Captchas should be used, you can choose multiple. (If no company is selected the 'not categorized' will be used as default)"
+    companyAccessParagraph.innerHTML = "Please select the company from which the Captchas should be used, you can choose multiple. (If no company is selected the 'not categorized' will be used as default)"
     await getCompanies()
     companyAccessSection.forEach(item => {
         item.style.display = "block"
     })
     toDo.innerHTML = "Add API Key 🔑"
-    toDoLabel.innerHTML = "Key Name"
+    toDoLabel.innerHTML = "Key Name:"
     submitButton.innerHTML = "Add Key"
     shellLayout.style.display = "none"
     sectionHeader.style.display = "none"
@@ -350,6 +350,14 @@ async function getCompanies() {
                         }
                     });
                 })
+            }
+            else{
+                const checked = document.querySelectorAll(".checked");
+                const btnText = document.querySelector(".btn-text");
+                const listItems = document.querySelector(".list-items")
+                
+                btnText.innerText = "No companies to select";
+                listItems.style.display = "none";
             }
         } else {
             throw new Error('Error from server while trying to request the server');

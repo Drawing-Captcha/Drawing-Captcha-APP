@@ -4,7 +4,7 @@ const submitButton = createForm.querySelector("button")
 const inputName = createForm.querySelector("input")
 const sectionHeader = document.querySelector(".section_page-header3")
 const shellLayout = document.querySelector(".section_shell2-layout")
-const companyAccessLabel = document.querySelector("label#companyAccess")
+const companyAccessParagraph = document.querySelector("p#companyAccess")
 
 let originName;
 async function getOrigins() {
@@ -101,13 +101,12 @@ async function getOrigins() {
 
 }
 
-
 async function addOrigin() {
     await getCompanies();
-    companyAccessLabel.innerHTML = "Please choose your related company. Without a selection, it won't be categorized."
+    companyAccessParagraph.innerHTML = "Please choose your related company. Without a selection, it won't be categorized."
     toDo.innerHTML = "Add new Origin 🔒";
     toDoLabel.innerHTML = "Important: if the domain has a seperate port please define it so you can access it properly."
-    submitButton.innerHTML = "Add Origin"
+    submitButton.innerHTML = "Add Origin:"
     shellLayout.style.display = "none"
     sectionHeader.style.display = "none"
     inputName.setAttribute("placeholder", "OriginURL")

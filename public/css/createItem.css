@@ -214,7 +214,7 @@ form {
     display: flex;
     justify-content: space-around;
     flex-direction: column;
-    gap: 2em;
+    gap: 1em;
     width: 100%;
 
 }

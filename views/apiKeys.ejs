@@ -6,7 +6,7 @@
   <meta charset="utf-8">
   <title>Dashboard Drawing-Captcha</title>
   <meta content="width=device-width, initial-scale=1" name="viewport">
-  <meta content="Webflow" name="generator">
+  <link href="images/favicon.png" rel="shortcut icon" type="image/x-icon">
   <link href="/css/normalize-webAppUI.css" rel="stylesheet" type="text/css">
   <link href="/css/webflow-webAppUI.css" rel="stylesheet" type="text/css">
   <link rel="stylesheet" href="/css/viewOnBiggerScreen.css">
@@ -755,7 +755,8 @@ a,
                   <div class="sidebar1_menu-bottom">
                     <div class="line-divider"></div>
                     <div class="sidebar1_link-list">
-                      <a href="mailto:info@wpesic.dev?subject=Drawing-Captcha%20%7C%20Support%20%23&body=Hello%2C%0A%0AI%20am%20reaching%20out%20to%20request%20your%20assistance.%0A%0AKind%20regards%2C" class="sidebar1_link w-inline-block mailTo">
+                      <a href="mailto:info@wpesic.dev?subject=Drawing-Captcha%20%7C%20Support%20%23&body=Hello%2C%0A%0AI%20am%20reaching%20out%20to%20request%20your%20assistance.%0A%0AKind%20regards%2C"
+                        class="sidebar1_link w-inline-block mailTo">
                         <div class="sidebar1_link-wrapper">
                           <div class="icon-embed-xsmall w-embed"><svg width="100%" height="100%" viewbox="0 0 24 24"
                               fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -872,19 +873,27 @@ a,
                 <h3>Add API key 🔑</h3>
                 <div class="innerToDoBox">
                   <form>
-                    <label for="captchaItemName">Key Name</label>
-                    <input type="text" onclick="this.focus()" required placeholder="KeyName">
-                    <label for="companyAccess" id="companyAccess">Please select the company from which the Captchas should be used, you can choose multiple. (If no company is selected the "not categorized" will be used as default)</label>
-                    <div id="companyAccess">
-                      <div class="select-btn">
-                        <span class="btn-text">Select Company</span>
-                        <span class="arrow-dwn">
-                          <i class="fa-solid fa-chevron-down"></i>
-                        </span>
-                      </div>
-                      <ul class="list-items">
+                    <div class="subWrapper">
+                      <label for="captchaItemName">Key Name:</label>
+                      <input type="text" onclick="this.focus()" required placeholder="KeyName">
+                    </div>
+                    <div class="subWrapper">
+                      <label for="companyAccess">Choose a Company:</label>
+                      <p id="companyAccess">Please select the company from which the Captchas
+                        should be used, you can choose multiple. (If no company is selected the "not categorized" will
+                        be used as default)</p>
+                        <br>
+                      <div id="companyAccess">
+                        <div class="select-btn">
+                          <span class="btn-text">Select Company</span>
+                          <span class="arrow-dwn">
+                            <i class="fa-solid fa-chevron-down"></i>
+                          </span>
+                        </div>
+                        <ul class="list-items">
 
-                      </ul>
+                        </ul>
+                      </div>
                     </div>
                     <button>Create Key</button>
                   </form>
@@ -1032,9 +1041,9 @@ a,
 
                                     </svg>
                                   </button>
-                                  <button onclick="deleteAllOrigins()">
+                                  <!-- <button onclick="deleteAllOrigins()">
                                     <p>Delete all origins</p>
-                                  </button>
+                                  </button> -->
                                   <% } %>
                               </div>
                             </div>

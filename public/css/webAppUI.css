@@ -1,6 +1,12 @@
 .padding-custom{
   padding: 1rem !important;
 }
+
+.createItem{
+  width: 64% !important;
+  align-items: center !important;
+}
+
 .subWrapper {
   width: 100%;
 }
