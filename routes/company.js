@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const CompanyModel = require("../models/Company.js")
+const CaptchaModel = require("../models/Captcha.js")
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const authMiddleware = require("../middlewares/authMiddleware");
 const notReadOnly = require("../middlewares/notReadOnly.js")
@@ -96,16 +97,23 @@ router.delete('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly
         }
 
         const company = await CompanyModel.findOne({ companyId });
+
         if (!company) {
             return res.status(404).json({ message: "Company not found." });
         }
 
         await CompanyModel.deleteOne({ companyId });
 
-        res.status(200).json({ message: "Company successfully deleted." });
+        await CaptchaModel.updateMany(
+            { companies: companyId },
+            { $pull: { companies: companyId } }
+        );
+
+        res.status(200).json({ message: "Company and related captchas successfully updated." });
     } catch (error) {
         console.error("Error occurred while deleting the company:", error);
         res.status(500).json({ message: "An error occurred while deleting the company." });
     }
 });
+
 module.exports = router;
