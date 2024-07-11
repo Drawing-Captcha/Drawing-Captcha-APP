@@ -1,10 +1,6 @@
 <h1 align="center" id="title">Drawing Captcha App (Alpha)🛡️</h1>
 
 <p align="center">
-<img src="https://socialify.git.ci/wpesicDev/Drawing-Captcha-App-Alpha/image?description=1&amp;descriptionEditable=%20Secure%20your%20platform%20with%20fun%2C%20interactive%20drawing%20tasks%20that%20engage%20users%20and%20boost%20brand%20awareness!%20With%20the%20power%20of%20Grid.&amp;font=Inter&amp;language=1&amp;logo=https%3A%2F%2Fdrawing.wpesic.dev%2Fimages%2Fdrawing-Captcha_small.png&amp;name=1&amp;pattern=Signal&amp;theme=Light" alt="project-image">
-</p>
-
-<p align="center">
 <img src="https://wpesicdev.github.io/Drawing-Captcha-Demo-Alpha/assets/shots%20(2).png" alt="project-image">
 </p>
 
