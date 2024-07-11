@@ -25,7 +25,7 @@
   width: 23em;
   border-radius: 100%;
   border: 2px solid black;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .close-button {
