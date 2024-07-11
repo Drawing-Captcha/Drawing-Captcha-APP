@@ -10,6 +10,10 @@ Drawing Captcha is an innovative and engaging software designed to verify human 
 
 With Drawing Captcha, you can easily create, modify, and design your own captchas to suit your specific needs. 🛠️ The user-friendly interface allows for a seamless experience, making it accessible to users of all skill levels. Whether you want to enhance security, boost brand recognition, or simply provide a fun user interaction, Drawing Captcha is the perfect solution. 🎨
 
+<p align="center">
+<img src="https://wpesicdev.github.io/Drawing-Captcha-Demo-Alpha/assets/shots%20(2).png" alt="project-image">
+</p>
+
 ## 🚀 Demo
 
 [Drawing Captcha Demo](https://wpesicdev.github.io/Drawing-Captcha-Demo-Alpha/)
@@ -32,6 +36,7 @@ Here are some of the project's best features:
 - CORS Protection
 - Everything stored in MongoDB
 - User Management
+- Organization Management
 - EASY IMPLEMENTATION!
 
 ## 🛠️ Installation Steps
