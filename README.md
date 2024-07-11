@@ -86,6 +86,9 @@ Please note to change these variables:
 
 <p>If you haven't changed the default port, it should be working on http://localhost:9091.</p>
 
+## Tutorials and implementation Frontend (Connection with API will be comming soon :) )
+You will find the docs here soon : https://docs.captcha.wpesic.dev
+
 ## 🍰 Contribution Guidelines
 
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
