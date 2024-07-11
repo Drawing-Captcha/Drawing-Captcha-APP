@@ -41,7 +41,7 @@ Here are some of the project's best features:
 
 1. Clone this project:
    ```sh
-   git clone [https://github.com/wpesicDev/Drawing-Captcha-App-Alpha.git](https://github.com/wpesicDev/Drawing-Captcha-App-Alpha.git "https://github.com/wpesicdev/drawing-captcha-app-alpha.git")
+   git clone https://github.com/wpesicdev/drawing-captcha-app-alpha.git
    ```
 2. Create and change your `.env` settings:
 
