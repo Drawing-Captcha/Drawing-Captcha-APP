@@ -5,6 +5,10 @@ const RegisterKeySchema = new Schema ({
     RegisterKey:{
         type: String,
         required: true
+    },
+    company:{
+        type: String,
+        required: false 
     }
 })
 
