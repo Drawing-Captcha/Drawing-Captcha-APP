@@ -143,8 +143,8 @@ async function getKeys(){
 
 }
 
-function copyApiKey(e){
-    navigator.clipboard.writeText(e.apiKey)
+async function copyApiKey(e){
+    await navigator.clipboard.writeText(e.apiKey)
     alert(`Api key ${e.name} copied!`)
 }
 

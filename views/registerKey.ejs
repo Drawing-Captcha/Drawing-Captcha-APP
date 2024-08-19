@@ -844,7 +844,7 @@ a,
                     <div class="page-header3_component">
                       <div class="page-header3_content-wrapper">
                         <div class="max-width-large">
-                          <h1 class="heading-style-h2">Register Key 🔑</h1>
+                          <h1 class="heading-style-h2">Manage your Register Key's 🔑</h1>
                           <div class="margin-top margin-xxsmall">
                             <div>Here you can manage your registration key for adding new members.</div>
                           </div>
@@ -855,6 +855,7 @@ a,
                 </div>
               </div>
             </div>
+            <% if (appAdmin) { %>
             <div class="section_shell2-layout">
               <div class="padding-horizontal padding-medium">
                 <div class="container-large">
@@ -866,13 +867,13 @@ a,
                           <div class="padding-bottom padding-small">
                             <div class="section-header2_content-wrapper">
                               <div class="max-width-large">
-                                <h2 class="heading-style-h5">Register Key</h2>
+                                <h2 class="heading-style-h5">App register key</h2>
                                 <div class="margin-top margin-xxsmall">
                                   <div>This key will be reseted every 24 hours, but you can reset it manually:</div>
                                 </div>
                               </div>
                               <div class="section-header2_content-right">
-                                <button onclick="resetKey()">
+                                <button onclick="resetKey(true)">
                                   Reset Key
                                 </button>
                                 <button onclick="window.location.reload()">
@@ -900,7 +901,7 @@ a,
                           </div>
                         </div>
                         <hr>
-                        <div class="stacked-list1_list-wrapper">
+                        <div class="AppKey stacked-list1_list-wrapper">
                         </div>
                       </div>
                     </div>
@@ -908,6 +909,7 @@ a,
                 </div>
               </div>
             </div>
+            <% } %>
           </main>
         </div>
       </div>
