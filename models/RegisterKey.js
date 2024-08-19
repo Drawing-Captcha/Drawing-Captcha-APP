@@ -9,6 +9,10 @@ const RegisterKeySchema = new Schema ({
     Company:{
         type: String,
         required: false 
+    },
+    AppKey: {
+        type: Boolean,
+        required: false
     }
 })
 

@@ -67,7 +67,8 @@ async function initializeRegisterKey() {
 
     if (!existingRegisterKey) {
         const newRegisterKey = new registerKeyModel({
-            RegisterKey: crypto.randomUUID()
+            RegisterKey: crypto.randomUUID(),
+            AppKey: true
         });
 
         await newRegisterKey.save();

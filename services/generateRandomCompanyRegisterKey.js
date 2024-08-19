@@ -1,14 +1,13 @@
 const registerKeyModel = require("../models/RegisterKey.js")
 const crypto = require("crypto");
 
-async function generateRegisterKey(req, res){
+async function generateRandomRegisterKey(req, res, companyId){
     let message;
     const existingRegisterKey = await registerKeyModel.findOne();
 
     if (!existingRegisterKey) {
         const newRegisterKey = new registerKeyModel({
-            RegisterKey: crypto.randomUUID(),
-            AppKey: true
+            RegisterKey: crypto.randomUUID()
         });
 
         await newRegisterKey.save();
@@ -17,7 +16,6 @@ async function generateRegisterKey(req, res){
         return res.status(201).json({ success: true, message, key: newRegisterKey.RegisterKey });
     } else {
         existingRegisterKey.RegisterKey = crypto.randomUUID();
-        existingRegisterKey.AppKey = true;
         await existingRegisterKey.save();
         message = "Register key successfully updated";
         console.log(message);
@@ -26,4 +24,4 @@ async function generateRegisterKey(req, res){
     }
 }
 
-module.exports = generateRegisterKey;
+module.exports = generateRandomRegisterKey;

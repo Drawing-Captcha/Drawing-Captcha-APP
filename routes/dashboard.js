@@ -375,14 +375,29 @@ router.get("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFT
 })
 router.get("/registerKey/assets", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        const registerKeyENV = process.env.REGISTER_KEY;
-        const registerKeyDB = await registerKeyModel.findOne({});
-        const returnedKey = registerKeyDB ? registerKeyDB.RegisterKey : registerKeyENV;
+        console.log("test");
+        let userRole = req.session.user.companies;
+        let userAppAdmin = req.session.user.appAdmin;
+        let allKeys = await registerKeyModel.find({});
+        let returnedKey;
 
-        console.log("returned Key", returnedKey);
+        if (userAppAdmin) {
+            if (allKeys.length) {
+                returnedKey = allKeys;
+            }
+        } else {
+            returnedKey = [];
+            allKeys.forEach(key => {
+                if (userRole.includes(key.Company)) {  
+                    returnedKey.push(key);
+                }
+            });
+        }
+        console.log("returned Key's:", returnedKey);
 
         res.json({ returnedKey });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });

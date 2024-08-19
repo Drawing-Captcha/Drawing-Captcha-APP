@@ -19,7 +19,7 @@ async function getRegisterKey() {
             console.log(returnedKey);
 
             const wrapper = document.querySelector(".stacked-list1_list-wrapper");
-
+    
             if (returnedKey.length !== 0) {
                 const item = document.createElement("div");
                 item.classList.add("stacked-list1_item");
