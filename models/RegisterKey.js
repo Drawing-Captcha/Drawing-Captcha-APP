@@ -6,7 +6,7 @@ const RegisterKeySchema = new Schema ({
         type: String,
         required: true
     },
-    company:{
+    Company:{
         type: String,
         required: false 
     }

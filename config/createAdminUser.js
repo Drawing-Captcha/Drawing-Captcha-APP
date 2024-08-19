@@ -19,7 +19,8 @@ async function createAdminUser() {
             email: process.env.DC_ADMIN_EMAIL,
             password: hashedPassword,
             role: "admin",
-            initialUser: true
+            initialUser: true,
+            appAdmin: true
         });
 
         await newUser.save();

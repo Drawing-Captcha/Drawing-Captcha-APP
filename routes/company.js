@@ -5,6 +5,7 @@ const CaptchaModel = require("../models/Captcha.js")
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const authMiddleware = require("../middlewares/authMiddleware");
 const notReadOnly = require("../middlewares/notReadOnly.js")
+const createCompanyRegisterKey = require("../services/createCompanyRegisterKey.js")
 const crypto = require("crypto");
 
 
@@ -12,7 +13,7 @@ router.get('/', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, re
     try {
         const allCompanies = await CompanyModel.find();
         let returnedCompanies = []
-        if(req.session.user.role === "admin"){
+        if(req.session.user.appAdmin){
             returnedCompanies = allCompanies;
         }
         else{
@@ -38,26 +39,35 @@ router.get('/', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, re
 
 router.post('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     try {
-        let companyExists = await CompanyModel.findOne({name: req.body.name});
-        if(companyExists){
-            return res.status(400).json({message: "A company with this name already exists."});
+        let companyExists = await CompanyModel.findOne({ name: req.body.name });
+        if (companyExists) {
+            return res.status(400).json({ message: "A company with this name already exists." });
         }
 
+        const randomUUID = crypto.randomUUID();
+
         const company = new CompanyModel({
-            companyId: crypto.randomUUID(),
+            companyId: randomUUID,
             name: req.body.name,
             ppURL: req.body.ppURL
         });
 
+        const registerKeyResult = await createCompanyRegisterKey(randomUUID);
+
+        if (!registerKeyResult.success) {
+            return res.status(400).json({ message: registerKeyResult.message });
+        }
+
         await company.save();
 
-        return res.status(201).json({message: "Company successfully created.", company});
+        return res.status(201).json({ message: "Company successfully created.", company });
 
-    } catch(error) {
+    } catch (error) {
         console.error(error);
-        return res.status(500).json({message: "An error occurred while creating the company."});
+        return res.status(500).json({ message: "An error occurred while creating the company." });
     }
 });
+
 
 router.put('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     try {

@@ -25,10 +25,11 @@ router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, asy
     try {
         let globalPool = await initializePool()
         let userRole = req.session.user.role;
+        let appAdmin = req.session.user.appAdmin;
         let returnedPool
 
         if (globalPool) {
-            if (userRole === "admin") {
+            if (appAdmin) {
                 returnedPool = globalPool
             }
             else {
@@ -208,6 +209,23 @@ router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, 
 router.get('/deletedArchiveAssets', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     let globalDeletedBin = await initializeBin()
     let userRole = req.session.user.role
+
+    if (globalDeletedBin) {
+        if (userRole === "admin") {
+            returnedPool = globalDeletedBin
+        }
+        else {
+            returnedPool = []
+            globalDeletedBin.forEach(item => {
+                if (item.companies === null || item.companies.length === 0 || item.companies.some(company => req.session.user.companies.includes(company))) {
+                    returnedPool.push(item)
+                }
+            })
+        }
+    } else {
+        console.error("pool not defined");
+    }
+
     if (globalDeletedBin) {
         res.json({ globalDeletedBin, userRole });
     }
