@@ -375,7 +375,6 @@ router.get("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFT
 })
 router.get("/registerKey/assets", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        console.log("test");
         let userRole = req.session.user.companies;
         let userAppAdmin = req.session.user.appAdmin;
         let allKeys = await registerKeyModel.find({});

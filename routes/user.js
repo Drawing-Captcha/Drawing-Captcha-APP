@@ -7,22 +7,47 @@ const User = require("../models/User.js")
 const isAuthorizedUpdating = require("../middlewares/authorizedUpdateUser.js")
 const isAuthorizedDeleting = require("../middlewares/authorizedDeletingUser.js")
 
+console.log("user.js loaded");
 
 router.get('/ownUser', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+    console.log("ownUser endpoint hit, user:", req.session.user);
     res.json({ user: req.session.user });
 })
 
 router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+    console.log("allUsers endpoint hit");
     try {
-        const allUsers = await User.find().select('username email role companies ppURL _id initialUser');
-        if (allUsers) {
-            console.log("Successfully found all Users: ", allUsers);
+        console.log("User companies:", req.session.user.companies);
+        console.log("User role:", req.session.user.role);
+        console.log("User id:", req.session.user._id);
+
+        const userCompany = req.session.user.companies
+        const isAppAdmin = req.session.user.appAdmin
+        let returnedUsers
+
+        if (isAppAdmin) {
+            console.log("Fetching all users since user is app admin");
+            returnedUsers = await User.find().select('username email role companies ppURL _id initialUser appAdmin');
+        } else {
+            console.log("Fetching users with companies since user is not app admin");
+            returnedUsers = await User.find({
+                $or: [
+                    { companies: userCompany },
+                    { companies: { $in: userCompany } },
+                    { appAdmin: true }
+                ]
+            }).select('username email role companies ppURL _id initialUser appAdmin');
         }
-        let ownUser =  {
+
+        let ownUser = {
             role: req.session.user.role,
             _id: req.session.user._id
         }
-        res.json({allUsers, ownUser: ownUser})
+
+        console.log("Returning users:", returnedUsers);
+        console.log("Returning own user:", ownUser);
+
+        res.json({allUsers: returnedUsers, ownUser: ownUser})
     }
     catch (error) {
         console.error("Error occurred during admin initialization:", error);
@@ -30,9 +55,10 @@ router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async 
 })
 
 router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+    console.log("updateUser endpoint hit");
     try {
         const { id, username, email, ppURL, shouldChangePassword, password, role, companies } = req.body.submittedData;
-        
+
         if (!id || !username || !email) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
@@ -53,6 +79,8 @@ router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.v
             return res.status(404).json({ message: 'User not found' });
         }
 
+        console.log("User updated successfully:", updatedUser);
+
         res.status(200).json({ message: 'User updated successfully', user: updatedUser });
     } catch (error) {
         console.error("An error occurred while updating the user:", error);
@@ -61,6 +89,7 @@ router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.v
 });
 
 router.delete('/deleteUser', authMiddleware, isAuthorizedDeleting, csrfMiddleware.validateCSRFToken, async (req, res) => {
+    console.log("deleteUser endpoint hit");
     try {
         const user = req.body.user;
         console.log("User being deleted:", user);
@@ -78,9 +107,11 @@ router.delete('/deleteUser', authMiddleware, isAuthorizedDeleting, csrfMiddlewar
                         console.error("Session destruction error:", err);
                         return res.status(500).json({ message: 'Failed to destroy session', error: err.message });
                     }
+                    console.log("Session destroyed");
                     return res.status(200).json({ message: 'User deleted successfully. Redirecting to login...', redirect: '/login' });
                 });
             } else {
+                console.log("User deleted successfully.");
                 return res.status(200).json({ message: 'User deleted successfully.' });
             }
         } else {
