@@ -5,6 +5,7 @@ const CaptchaModel = require("../models/Captcha.js")
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const authMiddleware = require("../middlewares/authMiddleware");
 const notReadOnly = require("../middlewares/notReadOnly.js")
+const deleteAllRelations = require("../services/deleteAllCompanyRelation.js")
 const createCompanyRegisterKey = require("../services/createCompanyRegisterKey.js")
 const crypto = require("crypto");
 
@@ -106,18 +107,20 @@ router.delete('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly
             return res.status(400).json({ message: "Company ID is required." });
         }
 
-        const company = await CompanyModel.findOne({ companyId });
+        await deleteAllRelations(companyId)
 
-        if (!company) {
-            return res.status(404).json({ message: "Company not found." });
-        }
+        // const company = await CompanyModel.findOne({ companyId });
 
-        await CompanyModel.deleteOne({ companyId });
+        // if (!company) {
+        //     return res.status(404).json({ message: "Company not found." });
+        // }
 
-        await CaptchaModel.updateMany(
-            { companies: companyId },
-            { $pull: { companies: companyId } }
-        );
+        // await CompanyModel.deleteOne({ companyId });
+
+        // await CaptchaModel.updateMany(
+        //     { companies: companyId },
+        //     { $pull: { companies: companyId } }
+        // );
 
         res.status(200).json({ message: "Company and related captchas successfully updated." });
     } catch (error) {

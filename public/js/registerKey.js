@@ -208,35 +208,40 @@ async function copyKey(e) {
     alert(`Register Key copied!`);
 }
 
-function resetKey(isAppKey, key) {
-    console.log("isappKey: ", isAppKey)
-    console.log("companyId: ", key)
-    // const generateNewKey = true;
+function resetKey(isAppKey, companyId) {
+    const payload = {
+        isAppKey,
+        companyId
+    };
+    
+    console.log("Request payload:", payload);
 
-    // fetch("/dashboard/registerKey", {
-    //     method: 'PUT',
-    //     headers: {
-    //         'Content-Type': 'application/json'
-    //     },
-    //     body: JSON.stringify({ generateNewKey })
-    // })
-    //     .then(response => {
-    //         if (!response.ok) {
-    //             throw new Error('Server error while trying to request the server');
-    //         }
-    //         return response.json();
-    //     })
-    //     .then(data => {
-    //         if (data.success) {
-    //             alert(data.message);
-    //             location.reload();
-    //         } else {
-    //             alert(data.message);
-    //             location.reload();
-    //         }
-    //     })
-    //     .catch(error => {
-    //         console.error('Error:', error);
-    //         alert('An error occurred. Please try again later.');
-    //     });
+    fetch("/dashboard/registerKey", {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+        .then(response => {
+            console.log("Response:", response);
+            if (!response.ok) {
+                throw new Error('Server error while trying to request the server');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Data:", data);
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                console.error('Error:', data.message);
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error.message);
+            alert('An error occurred. Please try again later.');
+        });
 }

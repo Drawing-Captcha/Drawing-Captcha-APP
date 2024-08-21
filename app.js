@@ -25,7 +25,6 @@ createInitCaptcha()
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
 
-
 async function initialize() {
     origins = await initializeAllowedOrigins()
     await pool

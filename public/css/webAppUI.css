@@ -459,7 +459,7 @@ figcaption {
 
 .max-width-large {
   width: 100%;
-  max-width: 48rem;
+  max-width: fit-content;
 }
 
 .max-width-small {

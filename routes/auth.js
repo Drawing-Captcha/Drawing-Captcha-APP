@@ -42,10 +42,9 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
         console.log("Registering User...")
         const { username, email, password, registerKey } = req.body;
-        const registerKeyENV = process.env.REGISTER_KEY;
-        const registerKeyDB = await registerKeyModel.findOne({});
-        console.log(registerKeyDB)
-        const returnedKey = registerKeyDB != null && registerKeyDB.RegisterKey != null ? registerKeyDB.RegisterKey : registerKeyENV;
+        const registerKeyDB = await registerKeyModel.findOne({RegisterKey: registerKey});
+        const returnedKey = registerKeyDB.RegisterKey;
+        const companyKeyId = registerKeyDB.Company;
     
         console.log("register Key: ", returnedKey)
     
@@ -65,7 +64,8 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
                 username,
                 email,
                 password: hashedPassword,
-                role: "read"
+                role: "read",
+                companies: [companyKeyId]
             });
 
             await newUser.save();
