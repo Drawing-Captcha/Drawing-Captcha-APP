@@ -85,7 +85,9 @@ async function initCompanies() {
 
                 });
             }
-            else noCompaniesTeaser.style.display = "block"
+            else {
+
+            } 
 
             await getRegisterKey();
         } else {

@@ -12,22 +12,27 @@ const crypto = require("crypto");
 
 router.get('/', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
+        console.log('request session: ', req.session);
         const allCompanies = await CompanyModel.find();
+        console.log('allCompanies: ', allCompanies);
         let returnedCompanies = []
         if(req.session.user.appAdmin){
             returnedCompanies = allCompanies;
+            console.log('returnedCompanies as appAdmin: ', returnedCompanies);
         }
         else{
-            let sessionCompanies = req.session.user.companies
+            let sessionCompanies = req.session.user.company
+            console.log('sessionCompanies: ', sessionCompanies);
 
             allCompanies.forEach(company => {
-                if(sessionCompanies.includes(company.companyId)){
+                if(sessionCompanies === company.companyId){
                     console.log(company)
                     returnedCompanies.push(company)
                 }
             })            
-            
+            console.log('returnedCompanies as user: ', returnedCompanies);
         }
+        console.log("companies that are being returned to the user: ", returnedCompanies)
         if (allCompanies) {
             console.log("Successfully found all Companies: ", returnedCompanies);
         }

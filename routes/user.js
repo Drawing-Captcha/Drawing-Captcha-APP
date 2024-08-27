@@ -17,26 +17,25 @@ router.get('/ownUser', authMiddleware, csrfMiddleware.validateCSRFToken, async (
 router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     console.log("allUsers endpoint hit");
     try {
-        console.log("User companies:", req.session.user.companies);
+        console.log("User company:", req.session.user.company);
         console.log("User role:", req.session.user.role);
         console.log("User id:", req.session.user._id);
 
-        const userCompany = req.session.user.companies
+        const userCompany = req.session.user.company
         const isAppAdmin = req.session.user.appAdmin
         let returnedUsers
 
         if (isAppAdmin) {
             console.log("Fetching all users since user is app admin");
-            returnedUsers = await User.find().select('username email role companies ppURL _id initialUser appAdmin');
+            returnedUsers = await User.find().select('username email role company ppURL _id initialUser appAdmin');
         } else {
             console.log("Fetching users with companies since user is not app admin");
             returnedUsers = await User.find({
                 $or: [
-                    { companies: userCompany },
-                    { companies: { $in: userCompany } },
+                    { company: userCompany },
                     { appAdmin: true }
                 ]
-            }).select('username email role companies ppURL _id initialUser appAdmin');
+            }).select('username email role company ppURL _id initialUser appAdmin');
         }
 
         let ownUser = {
@@ -57,13 +56,22 @@ router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async 
 router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     console.log("updateUser endpoint hit");
     try {
-        const { id, username, email, ppURL, shouldChangePassword, password, role, companies } = req.body.submittedData;
+        const { id, username, email, ppURL, shouldChangePassword, password, role, company } = req.body.submittedData;
+        console.log("company given:", company)
 
         if (!id || !username || !email) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
-        let updateData = { username, email, ppURL, role, companies };
+        let updateData = { username, email, ppURL, role };
+        if(company !== undefined){
+            console.log("company given has company")
+            updateData.company = company
+        }
+        else{
+            console.log("company given is undefined")
+            updateData.company = null
+        }
 
         if (shouldChangePassword) {
             if (!password || password.length < 5) {
@@ -86,7 +94,7 @@ router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.v
         console.error("An error occurred while updating the user:", error);
         res.status(500).json({ message: 'An error occurred while updating the user', error: error.message });
     }
-});
+})
 
 router.delete('/deleteUser', authMiddleware, isAuthorizedDeleting, csrfMiddleware.validateCSRFToken, async (req, res) => {
     console.log("deleteUser endpoint hit");
@@ -122,8 +130,5 @@ router.delete('/deleteUser', authMiddleware, isAuthorizedDeleting, csrfMiddlewar
         return res.status(500).json({ message: 'An error occurred while deleting the user', error: error.message });
     }
 });
-
-
-
 
 module.exports = router;

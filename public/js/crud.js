@@ -550,6 +550,7 @@ async function initCompanies() {
         if (response.ok) {
             const data = await response.json();
             const allCompanies = data.allCompanies;
+            console.log("allCompanies: ", allCompanies)
             let mainWrapper = document.querySelector('.shell2_main-wrapper');
 
             if (allCompanies.length !== 0) {
@@ -588,9 +589,9 @@ async function getPoolForEachCompany(companyWrapper) {
 
             let itemsWrapper = companyWrapper.querySelector(".stacked-list1_list-wrapper")
         
-            if (pool.length != 0 && pool.some(elementData => elementData.companies.includes(companyWrapper.getAttribute("companyId")))) {
+            if (pool.length != 0 && pool.some(elementData => elementData.company === companyWrapper.getAttribute("companyId"))) {
                 pool.forEach(elementData => {
-                    if (elementData.companies.includes(companyWrapper.getAttribute("companyId"))) {
+                    if (elementData.company === companyWrapper.getAttribute("companyId")) {
 
                         const item = document.createElement("div");
                         item.classList.add("stacked-list1_item");

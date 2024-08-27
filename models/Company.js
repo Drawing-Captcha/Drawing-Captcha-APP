@@ -15,7 +15,7 @@ const companySchema = new Schema ({
         type: String,
         required: false
     },
-    
+
 })
 
 module.exports = mongoose.model("Company", companySchema)

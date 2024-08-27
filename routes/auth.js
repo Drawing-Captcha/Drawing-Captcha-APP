@@ -42,18 +42,28 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
         console.log("Registering User...")
         const { username, email, password, registerKey } = req.body;
+        
+        console.log("register Key: ", registerKey)
+
         const registerKeyDB = await registerKeyModel.findOne({RegisterKey: registerKey});
+        if (!registerKeyDB) {
+            console.log("registerKeyDB is null")
+            req.session.RegisterMessage = "Register Key is wrong, please enter the register key given by your organization";
+            return res.redirect('/register');
+        }
+
         const returnedKey = registerKeyDB.RegisterKey;
         const companyKeyId = registerKeyDB.Company;
-    
-        console.log("register Key: ", returnedKey)
-    
+
+        console.log("returned Key: ", returnedKey)
+
         req.session.RegisterMessage = "";
-    
+
         if (registerKey === returnedKey) {
             const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
 
             if (existingUser) {
+                console.log("existingUser exists")
                 req.session.RegisterMessage = "User with this email or username already exists";
                 return res.redirect('/register');
             }
@@ -65,7 +75,7 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
                 email,
                 password: hashedPassword,
                 role: "read",
-                companies: [companyKeyId]
+                company: companyKeyId
             });
 
             await newUser.save();

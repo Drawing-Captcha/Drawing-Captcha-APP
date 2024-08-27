@@ -54,21 +54,24 @@ async function getAllUser() {
 
             let wrapper
             const shells = document.querySelectorAll(".section_shell2-layout")
+            const userWithoutCompanyShell = document.querySelector(".noCompanyShell")
 
             if (allUser.length !== 0) {
                 allUser.forEach(elementData => {
                     console.log(elementData)
                     if (elementData.appAdmin) {
-                        console.log("admin")
                         wrapper = document.querySelector(".stacked-list1_list-wrapper");
                     }
-                    else {
+                    else if (elementData.company) {
                         shells.forEach(shell => {
                             console.log(shell)
-                            if (elementData.companies.includes(shell.getAttribute("companyid"))) {
+                            if (elementData.company === shell.getAttribute("companyid")) {
                                 wrapper = shell.querySelector(".stacked-list1_list-wrapper")
                             }
                         })
+                    }
+                    else {
+                        wrapper = userWithoutCompanyShell.querySelector(".stacked-list1_list-wrapper")
                     }
 
                     const item = document.createElement("div");
@@ -146,19 +149,10 @@ async function getAllUser() {
                     item.appendChild(contentRight);
                     wrapper.appendChild(item);
                 });
-            } else {
-                const syncWrapper = document.createElement("div");
-                syncWrapper.classList.add("syncWrapper");
-
-                syncWrapper.addEventListener("click", () => window.location.reload());
-                syncWrapper.style.cursor = "pointer";
-
-                const syncMessage = document.createElement("h3");
-                syncMessage.innerHTML = "No items in pool currently, sync here.. 🤔🔄";
-
-                wrapper.appendChild(syncWrapper);
-                syncWrapper.appendChild(syncMessage);
             }
+
+            await addSyncMessage(shells)
+            
         } else {
             throw new Error('Error server while trying to request the server');
         }
@@ -167,6 +161,30 @@ async function getAllUser() {
     }
 }
 
+async function addSyncMessage(shells){
+    shells.forEach(shell => {
+        let stackedList = shell.querySelectorAll(".stacked-list1_list-wrapper > *")
+        let wrapper = shell.querySelector(".stacked-list1_list-wrapper")
+        if(stackedList.length < 1){
+            buildSyncMessage(wrapper)
+        }
+    })
+}
+
+function buildSyncMessage(wrapper){
+    const syncWrapper = document.createElement("div");
+    syncWrapper.classList.add("syncWrapper");
+
+    syncWrapper.addEventListener("click", () => window.location.reload());
+    syncWrapper.style.cursor = "pointer";
+
+    const syncMessage = document.createElement("h3");
+    syncMessage.innerHTML = "No items in shell currently, sync here.. 🤔🔄";
+
+    wrapper.appendChild(syncWrapper);
+    syncWrapper.appendChild(syncMessage);
+
+}
 async function getCompanies() {
     try {
         const response = await fetch("/company", {
@@ -243,7 +261,7 @@ async function changeDetails(e) {
     let btnText = document.querySelector(".btn-text")
     let counter = 0;
     items.forEach(item => {
-        if (e.companies.includes(item.getAttribute("obj-id"))) {
+        if (e.company === item.getAttribute("obj-id")) {
             counter++;
             console.log(counter)
             item.classList.add("checked")
@@ -313,13 +331,14 @@ function submitForm(event) {
     }
 
     const selectorItems = dialog.querySelectorAll(".item")
-    let selectorItemsArray = []
+    let selectorItem
     selectorItems.forEach(item => {
         if (item.classList.contains("checked")) {
-            selectorItemsArray.push(item.getAttribute("obj-id"))
+            selectorItem = item.getAttribute("obj-id")
         }
     })
 
+    console.log("SelectorItem: ", selectorItem)
 
     const submittedData = {
         id: elementID,
@@ -329,7 +348,7 @@ function submitForm(event) {
         shouldChangePassword,
         password: password,
         role: roleSelect.value,
-        companies: selectorItemsArray
+        company: selectorItem
     };
 
     fetch("/user/updateUser", {
@@ -481,7 +500,11 @@ async function initCompanies() {
 
                 });
             }
-            else noCompaniesTeaser.style.display = "block"
+            else {
+                const noCompanies = document.querySelector(".NoCompanies")
+                noCompanies.style.display = "block"
+
+            }
 
             await getAllUser();
         } else {
