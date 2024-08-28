@@ -33,8 +33,8 @@ imageUpload.addEventListener('change', function () {
 });
 
 async function initialize() {
-    await initCompanies();
-    await getCompanies();
+    await buildCompanyShells();
+    await buildEditCompanies();
 
 }
 
@@ -58,22 +58,36 @@ async function getAllUser() {
 
             if (allUser.length !== 0) {
                 allUser.forEach(elementData => {
-                    console.log(elementData)
                     if (elementData.appAdmin) {
+                        shells.forEach(shell => {
+                            if (shell.classList.contains("appAdmin")) {
+                                wrapper = shell.querySelector(".stacked-list1_list-wrapper");
+                            }
+                        });
                         wrapper = document.querySelector(".stacked-list1_list-wrapper");
                     }
-                    else if (elementData.company) {
-                        shells.forEach(shell => {
-                            console.log(shell)
-                            if (elementData.company === shell.getAttribute("companyid")) {
-                                wrapper = shell.querySelector(".stacked-list1_list-wrapper")
-                            }
-                        })
-                    }
                     else {
-                        wrapper = userWithoutCompanyShell.querySelector(".stacked-list1_list-wrapper")
-                    }
+                        if (elementData.company && elementData.role === "admin") {
+                            shells.forEach(shell => {
+                                if (elementData.company === shell.getAttribute("companyid") && shell.classList.contains("companyAdmin")) {
+                                    wrapper = shell.querySelector(".stacked-list1_list-wrapper")
+                                }
+                            })
+                        }
+                        else {
+                            if (elementData.company) {
+                                shells.forEach(shell => {
+                                    if (elementData.company === shell.getAttribute("companyid")) {
+                                        wrapper = shell.querySelector(".stacked-list1_list-wrapper")
+                                    }
+                                })
+                            }
+                            else {
+                                wrapper = userWithoutCompanyShell.querySelector(".stacked-list1_list-wrapper")
+                            }
+                        }
 
+                    }
                     const item = document.createElement("div");
                     item.classList.add("stacked-list1_item");
 
@@ -196,46 +210,8 @@ async function getCompanies() {
         });
         if (response.ok) {
             const data = await response.json();
-            const allCompanies = data.allCompanies;
+            return data
 
-            if (allCompanies.length !== 0) {
-                var list = document.querySelector('.list-items');
-                allCompanies.forEach(function (company) {
-                    var li = document.createElement('li');
-                    li.classList.add('item');
-                    li.setAttribute("obj-id", company.companyId)
-
-                    var checkboxSpan = document.createElement('span');
-                    checkboxSpan.classList.add('checkbox');
-                    var checkboxIcon = document.createElement('i');
-                    checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
-                    checkboxSpan.appendChild(checkboxIcon);
-                    li.appendChild(checkboxSpan);
-
-                    var textSpan = document.createElement('span');
-                    textSpan.classList.add('item-text');
-                    textSpan.textContent = company.name;
-                    li.appendChild(textSpan);
-
-                    list.appendChild(li);
-                });
-                items = document.querySelectorAll(".item");
-
-                items.forEach(item => {
-                    item.addEventListener("click", () => {
-                        item.classList.toggle("checked");
-
-                        let checked = document.querySelectorAll(".checked"),
-                            btnText = document.querySelector(".btn-text");
-
-                        if (checked && checked.length > 0) {
-                            btnText.innerText = `${checked.length} Selected`;
-                        } else {
-                            btnText.innerText = "Select Company";
-                        }
-                    });
-                })
-            }
         } else {
             throw new Error('Error from server while trying to request the server');
         }
@@ -244,7 +220,74 @@ async function getCompanies() {
     }
 }
 
+async function buildEditCompanies() {
+    let data = await getCompanies();
+    const allCompanies = data.allCompanies;
 
+    if (allCompanies.length !== 0) {
+        var list = document.querySelector('.list-items');
+        allCompanies.forEach(function (company) {
+            var li = document.createElement('li');
+            li.classList.add('item');
+            li.setAttribute("obj-id", company.companyId)
+
+            var checkboxSpan = document.createElement('span');
+            checkboxSpan.classList.add('checkbox');
+            var checkboxIcon = document.createElement('i');
+            checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
+            checkboxSpan.appendChild(checkboxIcon);
+            li.appendChild(checkboxSpan);
+
+            var textSpan = document.createElement('span');
+            textSpan.classList.add('item-text');
+            textSpan.textContent = company.name;
+            li.appendChild(textSpan);
+
+            list.appendChild(li);
+        });
+        items = document.querySelectorAll(".item");
+        let btnText = document.querySelector(".btn-text")
+        let checked
+        items.forEach(item => {
+            item.addEventListener("click", () => {
+                if (item.classList.contains("checked")) {
+                    removeCheck(item)
+                    checked = "";
+                }
+                else {
+                    removeCheck()
+                    checked = item.querySelector(".item-text").innerText
+                    item.classList.toggle("checked");
+                }
+                
+            if (checked && checked.length > 0) {
+                btnText.innerText = `${checked} selected`;
+            } else {
+                btnText.innerText = "No company selected";
+            }
+            })
+        })
+    }
+}
+
+async function removeCheck(element) {
+    const items = document.querySelectorAll(".item")
+    if (element) {
+        items.forEach(item => {
+            if (element = item && item.classList.contains("checked")) {
+                item.classList.remove("checked")
+            }
+        })
+    }
+    else {
+        items.forEach(item => {
+            if (item.classList.contains("checked")) {
+                item.classList.remove("checked")
+            }
+        })
+    }
+
+}
 function resetCheckboxes() {
     let items = document.querySelectorAll(".item");
     items.forEach(item => {
@@ -254,34 +297,21 @@ function resetCheckboxes() {
 
 
 async function changeDetails(e) {
+    let allCompaniesData = await getCompanies();
+    let elementCompany = allCompaniesData.allCompanies.find(company => e.company === company.companyId);
     dialog.showModal();
     closeSelectBtn();
     resetCheckboxes();
     let items = document.querySelectorAll(".item")
     let btnText = document.querySelector(".btn-text")
-    let counter = 0;
+    btnText.innerHTML = "Select Company"
     items.forEach(item => {
         if (e.company === item.getAttribute("obj-id")) {
-            counter++;
-            console.log(counter)
+            btnText.innerHTML = elementCompany.name + " Selected"
             item.classList.add("checked")
         }
     })
 
-    if (counter > 0) {
-        btnText.innerHTML = counter + " Selected"
-    }
-    else {
-        btnText.innerHTML = "Select Company"
-    }
-
-    if (ownUser.role === "admin" && e.role != "admin") {
-        companyAccessField.style.display = "block"
-    }
-    else {
-        companyAccessField.style.display = "none"
-
-    }
     if (ownUser.role === "admin") {
 
         if (!e.initialUser) {
@@ -481,7 +511,7 @@ function createCompanySection(company) {
 function createCompanyAdminSection(company) {
     return `
     <hr>
-    <div class="section_shell2-layout companyAdmin ${company.name}" companyId="${company.companyId}>
+    <div class="section_shell2-layout companyAdmin ${company.name}" companyId="${company.companyId}">
               <div class="padding-horizontal padding-medium">
                 <div class="container-large">
                   <div class="padding-vertical padding-custom">
@@ -534,42 +564,28 @@ function createCompanyAdminSection(company) {
 }
 
 
-async function initCompanies() {
-    try {
-        const response = await fetch("/company", {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+async function buildCompanyShells() {
+    let data = await getCompanies()
+    const allCompanies = data.allCompanies;
+    let mainWrapper = document.querySelector('.shell2_main-wrapper');
+
+    if (allCompanies.length !== 0) {
+        allCompanies.forEach(function (company) {
+            let companyAdminSection = createCompanyAdminSection(company);
+            let companySection = createCompanySection(company);
+            mainWrapper.insertAdjacentHTML('beforeend', companyAdminSection);
+            mainWrapper.insertAdjacentHTML('beforeend', companySection);
+
         });
-        if (response.ok) {
-            const data = await response.json();
-            const allCompanies = data.allCompanies;
-            let mainWrapper = document.querySelector('.shell2_main-wrapper');
-
-            if (allCompanies.length !== 0) {
-                allCompanies.forEach(function (company) {
-                    let companyAdminSection = createCompanyAdminSection(company);
-                    let companySection = createCompanySection(company);
-                    mainWrapper.insertAdjacentHTML('beforeend', companyAdminSection);
-                    mainWrapper.insertAdjacentHTML('beforeend', companySection);
-
-                });
-            }
-            else {
-                const noCompanies = document.querySelector(".NoCompanies")
-                noCompanies.style.display = "block"
-
-            }
-
-            await getAllUser();
-        } else {
-            throw new Error('Error from server while trying to request the server');
-        }
-    } catch (error) {
-        console.log('Error in getCompanies:', error);
     }
+    else {
+        const noCompanies = document.querySelector(".NoCompanies")
+        noCompanies.style.display = "block"
+
+    }
+
+    await getAllUser();
+
 }
 
 
