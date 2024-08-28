@@ -304,7 +304,7 @@ async function changeDetails(e) {
     resetCheckboxes();
     let items = document.querySelectorAll(".item")
     let btnText = document.querySelector(".btn-text")
-    btnText.innerHTML = "Select Company"
+    btnText.innerHTML = "No company selected"
     items.forEach(item => {
         if (e.company === item.getAttribute("obj-id")) {
             btnText.innerHTML = elementCompany.name + " Selected"

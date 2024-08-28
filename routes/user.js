@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs")
 const User = require("../models/User.js")
 const isAuthorizedUpdating = require("../middlewares/authorizedUpdateUser.js")
 const isAuthorizedDeleting = require("../middlewares/authorizedDeletingUser.js")
+const mongoose = require('mongoose');
 
 console.log("user.js loaded");
 
@@ -57,44 +58,43 @@ router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.v
     console.log("updateUser endpoint hit");
     try {
         const { id, username, email, ppURL, shouldChangePassword, password, role, company } = req.body.submittedData;
-        console.log("company given:", company)
+        const userRole = req.session.user.role;
 
-        if (!id || !username || !email) {
-            return res.status(400).json({ message: 'Missing required fields' });
+        const focusedUser = await User.findById(id);
+
+        if(focusedUser.appAdmin){
+            if(!(req.session.user.appAdmin)) return res.status(401).json({ message: 'You are not authorized to perform this action' })
         }
 
-        let updateData = { username, email, ppURL, role };
-        if(company !== undefined){
-            console.log("company given has company")
-            updateData.company = company
-        }
-        else{
-            console.log("company given is undefined")
-            updateData.company = null
+        if(focusedUser.company != req.session.user.company && userRole === "admin"){
+            if(!req.session.user.appAdmin || req.session.user.email != focusedUser.email) return res.status(401).json({ message: 'You are not authorized to perform this action' })
         }
 
-        if (shouldChangePassword) {
-            if (!password || password.length < 5) {
-                return res.status(400).json({ message: 'Password must be at least 8 characters long' });
-            }
+        if (!id || !username || !email) return res.status(400).json({ message: 'Missing required fields' });
+
+        let updateData = { username, email, ppURL };
+
+        if(shouldChangePassword){
+            if (!password || password.length < 5) return res.status(400).json({ message: 'Password must be at least 8 characters long' });
             const hashedPassword = await bcrypt.hash(password, 12);
             updateData.password = hashedPassword;
         }
 
+        if(role !== undefined) updateData.role = role;
+        if(company !== undefined) updateData.company = company;
+
         const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true }).exec();
 
-        if (!updatedUser) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+        if (!updatedUser) return res.status(404).json({ message: 'User not found' });
 
         console.log("User updated successfully:", updatedUser);
 
         res.status(200).json({ message: 'User updated successfully', user: updatedUser });
     } catch (error) {
         console.error("An error occurred while updating the user:", error);
-        res.status(500).json({ message: 'An error occurred while updating the user', error: error.message });
+        return res.status(500).json({ message: 'An error occurred while updating the user', error: error.message });
     }
-})
+});
 
 router.delete('/deleteUser', authMiddleware, isAuthorizedDeleting, csrfMiddleware.validateCSRFToken, async (req, res) => {
     console.log("deleteUser endpoint hit");
