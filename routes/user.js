@@ -57,7 +57,7 @@ router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async 
 router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     console.log("updateUser endpoint hit");
     try {
-        const { id, username, email, ppURL, shouldChangePassword, password, role, company } = req.body.submittedData;
+        const { id, username, email, ppURL, shouldChangePassword, password, role, company, appAdmin } = req.body.submittedData;
         const userRole = req.session.user.role;
 
         const focusedUser = await User.findById(id);
@@ -73,6 +73,10 @@ router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.v
         if (!id || !username || !email) return res.status(400).json({ message: 'Missing required fields' });
 
         let updateData = { username, email, ppURL };
+
+        if(!focusedUser.initialUser){
+            updateData.appAdmin = appAdmin;
+        }
 
         if(shouldChangePassword){
             if (!password || password.length < 5) return res.status(400).json({ message: 'Password must be at least 8 characters long' });

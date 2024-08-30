@@ -1012,6 +1012,17 @@ a,
             <option value="read">Read Only</option>
           </select>
         </div>
+        <% if (appAdmin) { %>
+        <div class="subWrapper">
+          <label for="role">App Admin: <span class="text-color-muted">(Give's this user full access over the app.)</span></label>
+          <div class="slider-wrapper">
+            <label class="switch">
+              <input type="checkbox">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+        <% } %>
         <div class="subWrapper">
           <label for="password">Passwort:</label>
           <input type="password" id="password" name="password"

@@ -312,6 +312,9 @@ async function changeDetails(e) {
         }
     })
 
+    let appAdminCheckbox = dialog.querySelector(".switch input[type='checkbox']");
+    appAdminCheckbox.checked = e.appAdmin;
+
     if (ownUser.role === "admin") {
 
         if (!e.initialUser) {
@@ -368,6 +371,9 @@ function submitForm(event) {
         }
     })
 
+    let appAdminCheckbox = dialog.querySelector(".switch input[type='checkbox']");
+    const appAdmin = appAdminCheckbox.checked
+    console.log("appadmin: ", appAdmin)
     console.log("SelectorItem: ", selectorItem)
 
     const submittedData = {
@@ -378,7 +384,8 @@ function submitForm(event) {
         shouldChangePassword,
         password: password,
         role: roleSelect.value,
-        company: selectorItem
+        company: selectorItem,
+        appAdmin: appAdmin
     };
 
     fetch("/user/updateUser", {
