@@ -63,10 +63,12 @@ router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.v
         const focusedUser = await User.findById(id);
 
         if(focusedUser.appAdmin){
+            console.log("log1")
             if(!(req.session.user.appAdmin)) return res.status(401).json({ message: 'You are not authorized to perform this action' })
         }
 
-        if(focusedUser.company != req.session.user.company && userRole === "admin"){
+        if(focusedUser.company != req.session.user.company && userRole === "admin" && req.session.user.appAdmin != true){
+            console.log("log2")
             if(!req.session.user.appAdmin || req.session.user.email != focusedUser.email) return res.status(401).json({ message: 'You are not authorized to perform this action' })
         }
 
