@@ -4,10 +4,11 @@ let pool;
 var isDelete;
 
 async function initialize() {
+    await buildCompanyShells();
     await getDeletedBin();
 }
 
-async function getDeletedBin() {
+async function getDeletedBin () {
     try {
         const response = await fetch("/dashboard/deletedArchiveAssets", {
             method: 'GET',
@@ -22,11 +23,12 @@ async function getDeletedBin() {
             const userRole = data.userRole;
             console.log(deletedBin)
 
-            const wrapper = document.querySelector(".stacked-list1_list-wrapper");
+            let wrapper;
 
             if (deletedBin.length != 0) {
 
                 deletedBin.forEach(elementData => {
+                    console.log(elementData)
                     const item = document.createElement("div");
                     item.classList.add("stacked-list1_item");
 

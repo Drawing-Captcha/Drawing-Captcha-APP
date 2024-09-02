@@ -180,8 +180,19 @@ async function getPool() {
 }
 
 async function getComponent(e) {
-    await getCompanies(e);
+    const allCompanies = await getCompanies(e);
+    const elementCompany =  allCompanies.allCompanies.find(company => e.companies.includes(company.companyId))
     removeCurrentItems();
+
+    let items = document.querySelectorAll(".item")
+    let btnText = document.querySelector(".btn-text")
+    btnText.innerHTML = "No company selected"
+    items.forEach(item => {
+        if (e.companies.includes(item.getAttribute("obj-id"))) {
+            btnText.innerHTML = elementCompany.name + " Selected"
+            item.classList.add("checked")
+        }
+    })
 
     const sectionHeader = document.querySelector(".section_page-header3")
     sectionHeader.style.display = "none";
@@ -251,7 +262,6 @@ async function getComponent(e) {
     rangeInput.value = e.backgroundSize ? e.backgroundSize : 70
     updateBackgroundSize()
     toDoDescription.value = e.todoTitle ? e.todoTitle : ""
-
 
 }
 
@@ -447,12 +457,8 @@ async function getCompanies(e) {
 
                 items = document.querySelectorAll(".item");
                 let btnText = document.querySelector(".btn-text")
-                let checked = document.querySelector(".checked").querySelector(".item-text").innerText
-                if (checked && checked.length > 0) {
-                    btnText.innerText = `${checked} selected`;
-                } else {
-                    btnText.innerText = "No company selected";
-                }
+                let checked = "";
+
                 items.forEach(item => {
                     item.addEventListener("click", () => {
                         if (item.classList.contains("checked")) {
@@ -480,6 +486,7 @@ async function getCompanies(e) {
 
 
             }
+            return data;
         } else {
             throw new Error('Error from server while trying to request the server');
         }

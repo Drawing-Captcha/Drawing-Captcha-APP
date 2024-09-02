@@ -152,7 +152,7 @@ router.put("/crud", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnl
 
 
 router.get('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role })
+    res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin })
 })
 
 router.get('/notAuthorized', authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
@@ -209,16 +209,17 @@ router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, 
 
 router.get('/deletedArchiveAssets', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     let globalDeletedBin = await initializeBin()
-    let userRole = req.session.user.role
+    let appAdmin = req.session.user.appAdmin
+    let returnedPool
 
     if (globalDeletedBin) {
-        if (userRole === "admin") {
+        if (appAdmin) {
             returnedPool = globalDeletedBin
         }
         else {
             returnedPool = []
             globalDeletedBin.forEach(item => {
-                if (item.companies === null || item.companies.length === 0 || item.companies.some(company => req.session.user.companies.includes(company))) {
+                if (item.companies.some(company => req.session.user.company === company)) {
                     returnedPool.push(item)
                 }
             })
@@ -228,7 +229,7 @@ router.get('/deletedArchiveAssets', authMiddleware, csrfMiddleware.validateCSRFT
     }
 
     if (globalDeletedBin) {
-        res.json({ globalDeletedBin, userRole });
+        res.json({ globalDeletedBin: returnedPool, userRole: req.session.user.role });
     }
     else console.error("deletedBin not defined")
 });
