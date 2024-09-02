@@ -1,5 +1,5 @@
-function isAppAdmin (res, req, next){
-    if(req.session.user.appAdmin){
+function isAppAdmin (req, res, next){
+    if(req.session && req.session.user && req.session.user.appAdmin){
         next()
     }
     else{
@@ -9,3 +9,4 @@ function isAppAdmin (res, req, next){
 }
 
 module.exports = isAppAdmin;
+

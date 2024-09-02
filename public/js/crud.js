@@ -58,6 +58,7 @@ function updateBackgroundSize() {
 async function initialize() {
     await getPool();
     await initCompanies();
+    console.log(appAdmin)
     if(appAdmin){
         await getNotCategorizedItems();
     }

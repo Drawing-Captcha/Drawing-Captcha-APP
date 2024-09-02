@@ -45,7 +45,7 @@ router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, asy
             console.error("pool not defined");
         }
 
-        res.json({ globalPool: returnedPool, userRole });
+        res.json({ globalPool: returnedPool, userRole, appAdmin: req.session.user.appAdmin });
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: 'Server error' });
