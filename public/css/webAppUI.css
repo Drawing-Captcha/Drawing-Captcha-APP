@@ -94,11 +94,13 @@ input:checked + .slider:before {
 }
 
 #profileImage {
-  height: 23em;
-  width: 23em;
-  border-radius: 100%;
-  border: 2px solid black;
-  object-fit: cover;
+    border-radius: 100%;
+    border: 2px solid black;
+    object-fit: cover;
+    min-width: 15em;
+    min-height: 15em;
+    max-width: 15em;
+    max-height: 15em;
 }
 
 .close-button {

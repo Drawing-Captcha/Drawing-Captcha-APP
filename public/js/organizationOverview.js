@@ -155,7 +155,9 @@ async function getAllUser() {
                         if (!elementData.initialUser) {
                             droppDownToggle.appendChild(deleteButton);
                         }
-                        droppDownToggle.appendChild(returnButton);
+                        if (!elementData.initialUser) {
+                            droppDownToggle.appendChild(returnButton);
+                        }
                     }
                     dropdownComponent.appendChild(droppDownToggle);
                     contentRight.appendChild(dropdownComponent);
@@ -193,7 +195,7 @@ function buildSyncMessage(wrapper) {
     syncWrapper.style.cursor = "pointer";
 
     const syncMessage = document.createElement("h3");
-    syncMessage.innerHTML = "No items in shell currently, sync here.. 🤔🔄";
+    syncMessage.innerHTML = "No user in database, sync here.. 🤔🔄";
 
     wrapper.appendChild(syncWrapper);
     syncWrapper.appendChild(syncMessage);
@@ -313,7 +315,9 @@ async function changeDetails(e) {
     })
 
     let appAdminCheckbox = dialog.querySelector(".switch input[type='checkbox']");
-    appAdminCheckbox.checked = e.appAdmin;
+    if(appAdminCheckbox){
+        appAdminCheckbox.checked = e.appAdmin;
+    }
 
     if (ownUser.role === "admin") {
 
@@ -372,9 +376,13 @@ function submitForm(event) {
     })
 
     let appAdminCheckbox = dialog.querySelector(".switch input[type='checkbox']");
-    const appAdmin = appAdminCheckbox.checked
-    console.log("appadmin: ", appAdmin)
-    console.log("SelectorItem: ", selectorItem)
+    let appAdmin
+    if(appAdminCheckbox){
+        appAdmin = appAdminCheckbox.checked
+    }
+    else{
+        appAdmin = false
+    }
 
     const submittedData = {
         id: elementID,

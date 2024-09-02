@@ -85,10 +85,6 @@ async function initCompanies() {
 
                 });
             }
-            else {
-
-            } 
-
             await getRegisterKey();
         } else {
             throw new Error('Error from server while trying to request the server');

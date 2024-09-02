@@ -87,7 +87,12 @@ router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.v
         }
 
         if(role !== undefined) updateData.role = role;
-        if(company !== undefined) updateData.company = company;
+        if(company !== undefined){
+            updateData.company = company;
+        } 
+        else{
+            updateData.company = null;
+        }
 
         const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true }).exec();
 

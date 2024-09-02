@@ -856,16 +856,9 @@ a,
                 </div>
               </div>
             </div>
-            <div class="section_shell2-layout">
+            <div class="section_shell2-layout allItems">
               <div class="padding-horizontal padding-medium">
                 <div class="container-large">
-                  <!-- <br>
-                  <div class="quotes">
-                    <h4 class="quoteTitle">Quote of the day 🍀:</h4>
-                    <p>"<span class="randomQuote"></span>"</p>
-                    <p>-<span class="randomQuoteAuthor"></span></p>
-                  </div>
-                  <br> -->
                   <div class="padding-vertical padding-large padding-custom">
                     <div id="w-node-_1a30a1e4-8a69-abdf-86cf-348aa176e587-0240322d"
                       class="w-layout-grid shell2-layout_component">
@@ -941,7 +934,7 @@ a,
                                   value="70">
                                 <label for="imageResizer" id="imageResizerValue">70%</label>
                               </div>
-                              <h5>Change or add Companies:</h5>
+                              <h5>Change or add a company:</h5>
                               <div class="subWrapper companyAccessCrud">
                                 <div class="select-btn">
                                   <span class="btn-text">Select Company</span>
@@ -1043,6 +1036,7 @@ a,
                 </div>
               </div>
             </div>
+            <% if (appAdmin) { %>
             <div class="section_shell2-layout not-categorized">
               <div class="padding-horizontal padding-medium">
                 <div class="container-large">
@@ -1094,6 +1088,7 @@ a,
                 </div>
               </div>
             </div>
+            <% } %>
             <hr class="half">
             <div class="section_shell2-layout not-categorized NoCompanies" style="display: none;">
               <div class="padding-horizontal padding-medium">

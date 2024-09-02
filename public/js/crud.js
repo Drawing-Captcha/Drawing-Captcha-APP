@@ -28,6 +28,8 @@ const listItems = document.querySelector(".list-items")
 
 let tmpPool = [];
 let pool;
+let userRole;
+let appAdmin;
 var isDelete;
 let validateTrueCubes;
 let validateMinCubes;
@@ -56,7 +58,9 @@ function updateBackgroundSize() {
 async function initialize() {
     await getPool();
     await initCompanies();
-    await getNotCategorizedItems();
+    if(appAdmin){
+        await getNotCategorizedItems();
+    }
 }
 
 async function getPool() {
@@ -71,8 +75,9 @@ async function getPool() {
 
         if (response.ok) {
             const data = await response.json();
-            const pool = data.globalPool;
-            const userRole = data.userRole;
+            const pool = data.globalPool; 
+            userRole = data.userRole;
+            appAdmin = data.appAdmin;
 
             if (pool.length != 0) {
 
@@ -160,7 +165,7 @@ async function getPool() {
 
                 wrapper.appendChild(syncWrapper)
                 syncWrapper.appendChild(syncMessage)
-                syncWrapper.appendChild(syncButton)
+                // syncWrapper.appendChild(syncButton)
 
             }
 
@@ -177,6 +182,8 @@ async function getComponent(e) {
     await getCompanies(e);
     removeCurrentItems();
 
+    const sectionHeader = document.querySelector(".section_page-header3")
+    sectionHeader.style.display = "none";
     toDo.innerHTML = `Edit item: ${e.Name}`;
     editItemParent.style.display = "block";
 
@@ -432,21 +439,38 @@ async function getCompanies(e) {
                     li.appendChild(textSpan);
 
                     list.appendChild(li);
-                });
-                let items = document.querySelectorAll(".item");
-                let assignedCompanies = e.companies
-
-                items.forEach(item => {
-                    if (assignedCompanies.includes(item.getAttribute("obj-id"))) {
-                        item.classList.add("checked");
+                    if(e.companies.includes(company.companyId)){
+                        li.classList.add("checked")
                     }
-                    item.addEventListener("click", () => {
-                        item.classList.toggle("checked");
-                        setButtonText()
+                });
 
-                    });
+                items = document.querySelectorAll(".item");
+                let btnText = document.querySelector(".btn-text")
+                let checked = document.querySelector(".checked").querySelector(".item-text").innerText
+                if (checked && checked.length > 0) {
+                    btnText.innerText = `${checked} selected`;
+                } else {
+                    btnText.innerText = "No company selected";
+                }
+                items.forEach(item => {
+                    item.addEventListener("click", () => {
+                        if (item.classList.contains("checked")) {
+                            removeCheck(item)
+                            checked = "";
+                        }
+                        else {
+                            removeCheck()
+                            checked = item.querySelector(".item-text").innerText
+                            item.classList.toggle("checked");
+                        }
+                        
+                    if (checked && checked.length > 0) {
+                        btnText.innerText = `${checked} selected`;
+                    } else {
+                        btnText.innerText = "No company selected";
+                    }
+                    })
                 })
-                setButtonText()
 
             }
             else{
@@ -463,12 +487,23 @@ async function getCompanies(e) {
     }
 }
 
-function setButtonText() {
-    if (checked && checked.length > 0) {
-        btnText.innerText = `${checked.length} Selected`;
-    } else {
-        btnText.innerText = "Select Company";
+async function removeCheck(element) {
+    const items = document.querySelectorAll(".item")
+    if (element) {
+        items.forEach(item => {
+            if (element = item && item.classList.contains("checked")) {
+                item.classList.remove("checked")
+            }
+        })
     }
+    else {
+        items.forEach(item => {
+            if (item.classList.contains("checked")) {
+                item.classList.remove("checked")
+            }
+        })
+    }
+
 }
 
 selectBtn.addEventListener("click", () => {
@@ -588,11 +623,9 @@ async function getPoolForEachCompany(companyWrapper) {
             const userRole = data.userRole;
 
             let itemsWrapper = companyWrapper.querySelector(".stacked-list1_list-wrapper")
-        
-            if (pool.length != 0 && pool.some(elementData => elementData.company === companyWrapper.getAttribute("companyId"))) {
+            if (pool.length != 0 && pool.some(elementData => elementData.companies.includes(companyWrapper.getAttribute("companyId")))) {
                 pool.forEach(elementData => {
-                    if (elementData.company === companyWrapper.getAttribute("companyId")) {
-
+                    if (elementData.companies.includes(companyWrapper.getAttribute("companyId"))) {
                         const item = document.createElement("div");
                         item.classList.add("stacked-list1_item");
 

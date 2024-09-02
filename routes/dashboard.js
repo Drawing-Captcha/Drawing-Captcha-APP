@@ -17,6 +17,7 @@ const isAdmin = require("../middlewares/adminMiddleware.js")
 const registerKeyModel = require("../models/RegisterKey.js")
 const generateNewRegisterKey = require("../services/generateRegisterKey.js")
 const notReadOnly = require("../middlewares/notReadOnly.js")
+const isAppAdmin = require("../middlewares/isAppAdmin.js")
 const CaptchaModel = require("../models/Captcha.js")
 const DeletedCaptchaModel = require("../models/DeletedCaptchaModel.js")
 const CompanyModel = require("../models/Company.js")
@@ -35,7 +36,7 @@ router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, asy
             else {
                 returnedPool = []
                 globalPool.forEach(item => {
-                    if (item.companies === null || item.companies.length === 0 || item.companies.some(company => req.session.user.companies.includes(company))) {
+                    if (item.initialCaptcha === true || item.companies.some(company => req.session.user.company === company)) {
                         returnedPool.push(item)
                     }
                 })
@@ -51,7 +52,7 @@ router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, asy
     }
 });
 
-router.get('/getElements/notCategorized', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.get('/getElements/notCategorized', authMiddleware, csrfMiddleware.validateCSRFToken, isAppAdmin, async (req, res) => {
     try {
         let globalPool = await initializePool()
         let userRole = req.session.user.role;
@@ -356,7 +357,7 @@ router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notRead
 })
 
 router.get("/", csrfMiddleware.validateCSRFToken, authMiddleware, (req, res) => {
-    res.render("dashboard", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
+    res.render("dashboard", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 })
 
 router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
@@ -374,6 +375,7 @@ router.get("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFT
     res.render("registerKey", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 })
 router.get("/registerKey/assets", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, async (req, res) => {
+    console.log("registerKey/assets endpoint hit");
     try {
         let userRole = req.session.user.companies;
         let userAppAdmin = req.session.user.appAdmin;
@@ -387,7 +389,7 @@ router.get("/registerKey/assets", authMiddleware, isAdmin, csrfMiddleware.valida
         } else {
             returnedKey = [];
             allKeys.forEach(key => {
-                if (userRole.includes(key.Company)) {  
+                if (req.session.user.company === key.Company) {  
                     returnedKey.push(key);
                 }
             });
