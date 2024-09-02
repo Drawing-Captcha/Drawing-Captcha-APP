@@ -468,6 +468,28 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
     }
 });
 
+router.get("/colorKit", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+    try{
+        const company = req.session.user.company;
+        const appAdmin = req.session.user.appAdmin;
+        let returnedColorKit;
+
+        if(appAdmin){
+            returnedColorKit = await ColorKit.findOne({});
+        }
+        else{
+            returnedColorKit = await ColorKit.findOne({company: company});
+        }
+        if(!returnedColorKit){
+            return res.status(404).json({message: "ColorKit not found"});
+        }
+        res.status(200).json({returnedColorKit});
+    } catch (err){
+        console.error("Error while processing request:", err);
+        res.status(500).json({ error: "An internal server error occurred." });
+    }
+})
+
 router.get("/createItem", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, (req, res) => {
     res.render("createItem", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
 })
@@ -593,7 +615,7 @@ router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken,
         if (originName && !doesOriginExist) {
             let origin = new AllowedOriginModel({
                 allowedOrigin: originName,
-                companies: selectedCompanies
+                company: selectedCompanies
             });
 
             await origin.save();

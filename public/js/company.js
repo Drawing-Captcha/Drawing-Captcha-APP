@@ -224,7 +224,7 @@ function submitOrigin(originName) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ originName })
+        body: JSON.stringify({ originName, companyId })
     })
         .then(response => {
             if (response.ok) {
