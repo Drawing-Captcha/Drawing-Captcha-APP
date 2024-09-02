@@ -7,6 +7,7 @@ const authMiddleware = require("../middlewares/authMiddleware");
 const notReadOnly = require("../middlewares/notReadOnly.js")
 const deleteAllRelations = require("../services/deleteAllCompanyRelation.js")
 const createCompanyRegisterKey = require("../services/createCompanyRegisterKey.js")
+const createCompanyColorKit = require("../services/createCompanyColorKit.js")
 const crypto = require("crypto");
 
 
@@ -65,6 +66,8 @@ router.post('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, 
         }
 
         await company.save();
+        
+        createCompanyColorKit(company.companyId);
 
         return res.status(201).json({ message: "Company successfully created.", company });
 

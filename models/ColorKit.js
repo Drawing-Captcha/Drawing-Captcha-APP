@@ -21,6 +21,10 @@ const colorKitSchema = new Schema ({
     defaultTitle:{
         type: String,
         required: true
+    },
+    company:{
+        type: String,
+        required: true
     }
 })
 

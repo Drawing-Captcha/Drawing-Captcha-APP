@@ -1,7 +1,8 @@
 const CompanyModel = require("../models/Company.js")
 const deleteCaptchaRelation = require("../services/deleteCaptchaRelation.js");
 const deleteUserRelation = require("../services/deleteUserRelation.js")
-const deleteRegisterKey = require("../services/deleteRegisterKey.js")
+const deleteRegisterKey = require("../services/deleteRegisterKey.js");
+const deleteColorKitRelation = require("./deleteColorKitRelation.js");
 
 async function deleteEverythingFromCompany(companyId) {
     try{
@@ -23,6 +24,10 @@ async function deleteEverythingFromCompany(companyId) {
         console.log(`Starting to delete register key for company ID: ${company.companyId}`)
         await deleteRegisterKey(company.companyId)
         console.log(`Finished deleting register key for company ID: ${company.companyId}`)
+
+        console.log(`Starting to delete color kit relation for company ID: ${company.companyId}`)
+        await deleteColorKitRelation(company.companyId)
+        console.log(`Finished deleting color kit relation for company ID: ${company.companyId}`)
 
         console.log(`Deleting company: ${company.name}`)
         await CompanyModel.deleteOne({ companyId: companyId })

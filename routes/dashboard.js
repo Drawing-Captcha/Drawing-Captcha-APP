@@ -361,7 +361,7 @@ router.get("/", csrfMiddleware.validateCSRFToken, authMiddleware, (req, res) => 
     res.render("dashboard", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 })
 
-router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, (req, res) => {
     res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
 })
 

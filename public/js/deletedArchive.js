@@ -36,7 +36,6 @@ async function getDeletedBin () {
                         });
                     }
                     else {
-                        console.log("testtt")
                         if(appAdmin){
                             wrapper = document.querySelector(".appAdmin").querySelector(".stacked-list1_list-wrapper");
                         }
