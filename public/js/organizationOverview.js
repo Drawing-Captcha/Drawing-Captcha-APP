@@ -167,7 +167,7 @@ async function getAllUser() {
                 });
             }
 
-            await addSyncMessage(shells)
+            await addSyncMessage(shells, "users")
 
         } else {
             throw new Error('Error server while trying to request the server');
@@ -175,31 +175,6 @@ async function getAllUser() {
     } catch (error) {
         console.log(error);
     }
-}
-
-async function addSyncMessage(shells) {
-    shells.forEach(shell => {
-        let stackedList = shell.querySelectorAll(".stacked-list1_list-wrapper > *")
-        let wrapper = shell.querySelector(".stacked-list1_list-wrapper")
-        if (stackedList.length < 1) {
-            buildSyncMessage(wrapper)
-        }
-    })
-}
-
-function buildSyncMessage(wrapper) {
-    const syncWrapper = document.createElement("div");
-    syncWrapper.classList.add("syncWrapper");
-
-    syncWrapper.addEventListener("click", () => window.location.reload());
-    syncWrapper.style.cursor = "pointer";
-
-    const syncMessage = document.createElement("h3");
-    syncMessage.innerHTML = "No user in database, sync here.. 🤔🔄";
-
-    wrapper.appendChild(syncWrapper);
-    syncWrapper.appendChild(syncMessage);
-
 }
 async function getCompanies() {
     try {

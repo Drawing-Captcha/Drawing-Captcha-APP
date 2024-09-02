@@ -229,7 +229,7 @@ router.get('/deletedArchiveAssets', authMiddleware, csrfMiddleware.validateCSRFT
     }
 
     if (globalDeletedBin) {
-        res.json({ globalDeletedBin: returnedPool, userRole: req.session.user.role });
+        res.json({ globalDeletedBin: returnedPool, userRole: req.session.user.role, appAdmin: req.session.user.appAdmin }); 
     }
     else console.error("deletedBin not defined")
 });
