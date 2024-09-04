@@ -191,16 +191,15 @@ function continueBeforeValid() {
             selectedCompanies.push(company.getAttribute("obj-id"))
         }
     })
-
     if (selectedCompanies.length < 1) {
-        alert("You haven't chosen any specific company, so this captcha will not be categorized under any company.")
+        alert("You haven't chosen any specific company, please select a company!")
+    }else{
+        todoTitle = todoTextArea.value
+        innerBox.style.display = "none"
+        todoTitleWrapper.style.display = "none"
+        toDo.innerHTML = "Please draw the cubes on the canvas that you want to count as valid. These cubes will be considered as 'True'.✏️"
+        submitButton.setAttribute("onclick", "continueValid()")
     }
-
-    todoTitle = todoTextArea.value
-    innerBox.style.display = "none"
-    todoTitleWrapper.style.display = "none"
-    toDo.innerHTML = "Please draw the cubes on the canvas that you want to count as valid. These cubes will be considered as 'True'.✏️"
-    submitButton.setAttribute("onclick", "continueValid()")
 }
 
 function continueValid() {
