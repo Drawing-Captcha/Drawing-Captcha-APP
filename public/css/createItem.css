@@ -452,6 +452,7 @@ button .close-button:hover {
 .apiWrapper {
     display: flex;
     justify-content: space-between;
+    max-width: 39em !important;
 }
 
 .apiWrapper p {

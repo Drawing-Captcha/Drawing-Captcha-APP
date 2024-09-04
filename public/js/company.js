@@ -98,7 +98,7 @@ async function getAllCompanies() {
                     
                     </svg>`;
                     returnButton.addEventListener("click", () => changeDetails(elementData));
-                    if(userRole != "read"){
+                    if (userRole != "read") {
                         droppDownToggle.appendChild(deleteButton);
                         droppDownToggle.appendChild(returnButton);
                     }
@@ -152,7 +152,7 @@ function addCompany() {
 
 }
 
-function changeDetails(e){
+function changeDetails(e) {
     editDialog.showModal()
 
     profileImageEdit.src = e.ppURL ? e.ppURL : "/images/6191a88a1c0e39463c2bf022_placeholder-image.svg";
@@ -164,7 +164,7 @@ function changeDetails(e){
 
 }
 
-async function submitChanges(event){
+async function submitChanges(event) {
     event.preventDefault();
     let changes = {
         companyId: currentElementId,
@@ -194,7 +194,7 @@ async function submitChanges(event){
             console.error('Error:', error);
             alert(`An error ssoccurred: ${error.message}`);
         });
-    
+
 }
 
 function proofRegex(originName) {
@@ -210,11 +210,10 @@ function proofRegex(originName) {
     const regex = new RegExp(expression);
 
     if (regex.test(originName)) {
-        submitOrigin(originName);
-        return true;
+        return originName;
     } else {
         alert("Regex error: please define your origin like this schema: https://yourdomain.com");
-        return false;
+        return "";
     }
 }
 
@@ -246,97 +245,46 @@ function submitOrigin(originName) {
         });
 }
 
-async function submitCompany(event) {
-    event.preventDefault();
+async function submitCompany() {
+    let submittedData
     if (orginInput.value) {
-        console.log(orginInput.value)
-        if(orginInput.value){
-            const regexResult = proofRegex(orginInput.value)
-            if (regexResult) {
-                let submittedData = {
-                    name: nameInputAdd.value,
-                    ppURL
-                }
-    
-                fetch("/company", {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(submittedData)
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.message) {
-                            alert(data.message);
-                        }
-                        if (data.redirect) {
-                            window.location.href = data.redirect;
-                        } else {
-                            location.reload();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert(`An error occurred: ${error.message}`);
-                    });
-            }
-        }
-        else{
-            fetch("/company", {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(submittedData)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        alert(data.message);
-                    }
-                    if (data.redirect) {
-                        window.location.href = data.redirect;
-                    } else {
-                        location.reload();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert(`An error occurred: ${error.message}`);
-                });
-        }
-        
+        regexResult = await proofRegex(orginInput.value)
     }
     else {
-        let submittedData = {
-            name: nameInputAdd.value,
-            ppURL
-        }
-
-        fetch("/company", {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(submittedData)
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    alert(data.message);
-                }
-                if (data.redirect) {
-                    window.location.href = data.redirect;
-                } else {
-                    location.reload();
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert(`An error occurred: ${error.message}`);
-            });
+        regexResult = "";
     }
+    submittedData = {
+        name: nameInputAdd.value,
+        ppURL,
+        originName: regexResult
+    }
+    console.log(submittedData)
+    await postCompany(submittedData)
+}
+
+async function postCompany(submittedData) {
+    fetch("/company", {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(submittedData)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert(data.message);
+            }
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            } else {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(`An error occurred: ${error.message}`);
+        });
 }
 
 function confirmAndDeleteCompany(companyId) {

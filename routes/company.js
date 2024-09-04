@@ -9,13 +9,12 @@ const deleteAllRelations = require("../services/deleteAllCompanyRelation.js")
 const createCompanyRegisterKey = require("../services/createCompanyRegisterKey.js")
 const createCompanyColorKit = require("../services/createCompanyColorKit.js")
 const crypto = require("crypto");
+const createAllowedOrigin = require('../services/createAllowedOrigin.js');
 
 
 router.get('/', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        console.log('request session: ', req.session);
         const allCompanies = await CompanyModel.find();
-        console.log('allCompanies: ', allCompanies);
         let returnedCompanies = []
         if(req.session.user.appAdmin){
             returnedCompanies = allCompanies;
@@ -68,6 +67,8 @@ router.post('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, 
         await company.save();
         
         createCompanyColorKit(company.companyId);
+        console.log("originname: ", req.body)
+        createAllowedOrigin(company.companyId, req.body.originName);
 
         return res.status(201).json({ message: "Company successfully created.", company });
 

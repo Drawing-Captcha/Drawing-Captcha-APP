@@ -223,8 +223,7 @@ function deleteAllKeys() {
 }
 
 async function addApiKey(){
-    companyAccessParagraph.innerHTML = "Please select the company from which the Captchas should be used, you can choose multiple. (If no company is selected the 'not categorized' will be used as default)"
-    await getCompanies()
+    await buildDropdown()
     companyAccessSection.forEach(item => {
         item.style.display = "block"
     })
@@ -260,7 +259,6 @@ function closeForm(){
 
 }
 function submitApi(event){
-    event.preventDefault()
     let companiesList = document.querySelectorAll(".item")
     let selectedCompanies = []
     companiesList.forEach(company => {
@@ -268,101 +266,98 @@ function submitApi(event){
             selectedCompanies.push(company.getAttribute("obj-id"))
         }
     })
-
-   let apiName = formName.value;
+    console.log(selectedCompanies.length)
+    if(selectedCompanies.length >= 1){
+        let apiName = formName.value;
     
-    fetch("/dashboard/apiKey", {
-        method: "POST",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({apiKeyName: apiName, selectedCompanies})
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        } else {
-            throw new Error('Error server while trying to request the server');
-        }
-    })
-    .then(data => {
-        if (data.successfully) {
-            alert(data.message)
-            location.reload();
-        } else {
-            alert(data.message)
-            location.reload();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again later.');
-    });
+        fetch("/dashboard/apiKey", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({apiKeyName: apiName, selectedCompanies})
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Error server while trying to request the server');
+            }
+        })
+        .then(data => {
+            if (data.successfully) {
+                alert(data.message)
+                location.reload();
+            } else {
+                alert(data.message)
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again later.');
+        });
+    }
+    else{
+        alert("Please select a company!")
+    }
 }
 
-async function getCompanies() {
-    try {
-        const response = await fetch("/company", {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+
+async function buildDropdown() {
+    const data = await fetchCompanies();
+    const allCompanies = data.allCompanies;
+
+    if (allCompanies.length !== 0) {
+        var list = document.querySelector('.list-items');
+        allCompanies.forEach(function (company) {
+            var li = document.createElement('li');
+            li.classList.add('item');
+            li.setAttribute("obj-id", company.companyId)
+
+            var checkboxSpan = document.createElement('span');
+            checkboxSpan.classList.add('checkbox');
+            var checkboxIcon = document.createElement('i');
+            checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
+            checkboxSpan.appendChild(checkboxIcon);
+            li.appendChild(checkboxSpan);
+
+            var textSpan = document.createElement('span');
+            textSpan.classList.add('item-text');
+            textSpan.textContent = company.name;
+            li.appendChild(textSpan);
+
+            list.appendChild(li);
         });
-        if (response.ok) {
-            const data = await response.json();
-            const allCompanies = data.allCompanies;
-
-            if (allCompanies.length !== 0) {
-                var list = document.querySelector('.list-items');
-                allCompanies.forEach(function (company) {
-                    var li = document.createElement('li');
-                    li.classList.add('item');
-                    li.setAttribute("obj-id", company.companyId)
-
-                    var checkboxSpan = document.createElement('span');
-                    checkboxSpan.classList.add('checkbox');
-                    var checkboxIcon = document.createElement('i');
-                    checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
-                    checkboxSpan.appendChild(checkboxIcon);
-                    li.appendChild(checkboxSpan);
-
-                    var textSpan = document.createElement('span');
-                    textSpan.classList.add('item-text');
-                    textSpan.textContent = company.name;
-                    li.appendChild(textSpan);
-
-                    list.appendChild(li);
-                });
-                let items = document.querySelectorAll(".item");
-
-                items.forEach(item => {
-                    item.addEventListener("click", () => {
-                        item.classList.toggle("checked");
-
-                        let checked = document.querySelectorAll(".checked"),
-                            btnText = document.querySelector(".btn-text");
-
-                        if (checked && checked.length > 0) {
-                            btnText.innerText = `${checked.length} Selected`;
-                        } else {
-                            btnText.innerText = "Select Company";
-                        }
-                    });
-                })
-            }
-            else{
-                const checked = document.querySelectorAll(".checked");
-                const btnText = document.querySelector(".btn-text");
-                const listItems = document.querySelector(".list-items")
+        let items = document.querySelectorAll(".item");
+        let btnText = document.querySelector(".btn-text")
+        let checked
+        items.forEach(item => {
+            item.addEventListener("click", () => {
+                if (item.classList.contains("checked")) {
+                    removeCheck(item)
+                    checked = "";
+                }
+                else {
+                    removeCheck()
+                    checked = item.querySelector(".item-text").innerText
+                    item.classList.toggle("checked");
+                }
                 
-                btnText.innerText = "No companies to select";
-                listItems.style.display = "none";
+            if (checked && checked.length > 0) {
+                btnText.innerText = `${checked} selected`;
+            } else {
+                btnText.innerText = "No company selected";
             }
-        } else {
-            throw new Error('Error from server while trying to request the server');
-        }
-    } catch (error) {
-        console.log('Error in getCompanies:', error);
+            })
+        })
+    }
+    else{
+        const checked = document.querySelectorAll(".checked");
+        const btnText = document.querySelector(".btn-text");
+        const listItems = document.querySelector(".list-items")
+        
+        btnText.innerText = "No companies to select";
+        listItems.style.display = "none";
     }
 }

@@ -267,21 +267,17 @@ router.put("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notReadO
 
 router.get("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        let apiKeys = await ApiKeyModel.find();
         let userRole = req.session.user.role
+        let appAdmin = req.session.user.appAdmin
+        let company = req.session.user.company
 
         let returnedKeys
 
-        if(userRole === "admin"){
-            returnedKeys = apiKeys    
+        if(appAdmin){
+            returnedKeys = await ApiKeyModel.find();
         }
         else{
-            returnedKeys = []
-            apiKeys.forEach(Key => {
-                if(Key.companies === null || Key.companies.length === 0 || Key.companies.some(company => req.session.user.companies.includes(company))){
-                    returnedKeys.push(Key)
-                }
-            })
+            returnedKeys = await ApiKeyModel.find({companies: { $in: company }})
         }
 
         res.json({ apiKeys: returnedKeys, userRole });
@@ -606,37 +602,24 @@ router.post('/newValidation/nameExists', authMiddleware, csrfMiddleware.validate
 
 router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        let message;
-        let allowedOrigins = await AllowedOriginModel.find({});
-        let userRole = req.session.user.role;
+        const allowedOrigins = await AllowedOriginModel.find({ initOrigin: false });
+        const userRole = req.session.user.role;
+        const appAdmin = req.session.user.appAdmin;
+        const userCompany = req.session.user.company;
         let returnedOrigins;
+        let message;
 
-        allowedOrigins = allowedOrigins.filter(origin => !origin.initOrigin);
-
-        if (allowedOrigins.length > 0) {
-            if(userRole === "admin"){
-                message = "allowed origins found";
-                console.log(message);
-                returnedOrigins = allowedOrigins;
-            }
-            else{
-                returnedOrigins = [];
-                allowedOrigins.forEach(Origin => {
-                    if(Origin.companies === null || Origin.companies.length === 0 || Origin.companies.some(company => req.session.user.companies.includes(company))){
-                        returnedOrigins.push(Origin);
-                    }
-                });
-            }
-        }
-        else {
-            message = "no allowed origins found";
-            console.log(message);
+        if (appAdmin) {
+            returnedOrigins = allowedOrigins;
+            message = "All allowed origins are being returned since you are an App Admin";
+        } else {
+            returnedOrigins = allowedOrigins.filter(origin => origin.companies.some(company => userCompany.includes(company)));
+            message = "Only allowed origins that are related to your company are being returned since you are not an App Admin";
         }
 
-        res.json({ allowedOrigins: returnedOrigins, message, userRole });
-    }
-    catch (err) {
-        console.log("Error while trying to get AllowedOrigins", err);
+        res.json({ allowedOrigins: returnedOrigins, userRole, message });
+    } catch (err) {
+        console.error("Error while trying to get AllowedOrigins", err);
         return res.status(500).json({ error: "An error occurred while trying to get the AllowedOrigins" });
     }
 })
@@ -647,11 +630,11 @@ router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken,
         let originName = req.body.originName;
         let selectedCompanies = req.body.selectedCompanies
         let doesOriginExist = await AllowedOriginModel.findOne({ allowedOrigin: originName });
-        console.log(doesOriginExist)
         if (originName && !doesOriginExist) {
             let origin = new AllowedOriginModel({
                 allowedOrigin: originName,
-                company: selectedCompanies
+                company: selectedCompanies,
+                initOrigin: false
             });
 
             await origin.save();

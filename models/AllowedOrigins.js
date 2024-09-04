@@ -12,7 +12,7 @@ const allowedOriginschema = new Schema ({
     },
     initOrigin:{
         type: Boolean,
-        required: false
+        required: true
     }
 })
 
