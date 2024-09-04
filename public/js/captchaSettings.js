@@ -22,7 +22,8 @@ let defaultTitle
 let cubes
 let returnedColorKit
 let isResetColorKit = false
-let companyId 
+let companyid
+let initColorKit
 
 document.addEventListener("DOMContentLoaded", initialize);
 
@@ -94,7 +95,8 @@ async function getColorKit() {
             selectedCubeColorPicker.value = returnedColorKit.selectedCubeColorValue
             canvasOnHoverColorPicker.value = returnedColorKit.canvasOnHoverColorValue
             titleInput.value = returnedColorKit.defaultTitle
-            companyId = returnedColorKit.companyId;
+            companyid = returnedColorKit.company;
+            initColorKit = returnedColorKit.initColorKit;
             setColors()
             updateButtonColors()
             updateCubeColors()
@@ -205,8 +207,12 @@ async function submitColorKit() {
         selectedCubeColorValue: selectedCubeColorValue,
         canvasOnHoverColorValue: canvasOnHoverColorValue,
         defaultTitle: defaultTitle,
-        isResetColorKit: isResetColorKit
+        isResetColorKit: isResetColorKit,
+        company: companyid,
+        initColorKit: initColorKit
     };
+    console.log(requestData)
+
 
     try {
         const response = await fetch("/dashboard/captchaSettings", {

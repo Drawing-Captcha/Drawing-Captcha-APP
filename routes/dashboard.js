@@ -361,8 +361,9 @@ router.get("/", csrfMiddleware.validateCSRFToken, authMiddleware, (req, res) => 
     res.render("dashboard", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 })
 
-router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, (req, res) => {
-    res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
+router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
+    const company = await CompanyModel.findOne({companyId: req.session.user.company})
+    res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, company: company.name, appAdmin: req.session.user.appAdmin });
 })
 
 router.get("/registeredUsers", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
@@ -414,7 +415,7 @@ router.put("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFT
 });
 
 
-router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
         console.log(req.body)
         const {
@@ -423,11 +424,19 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
             selectedCubeColorValue,
             canvasOnHoverColorValue,
             defaultTitle,
-            isResetColorKit
+            isResetColorKit,
+            company,
+            initColorKit
         } = req.body;
 
+        console.log("given initcolor: ", initColorKit)
         let message;
 
+        if(initColorKit === true){
+            if(!req.session.user.appAdmin === true){
+                return res.status(403).json({ success: false, message: "You don't have enough rights to perform this action" });
+            }
+        }
         if (isResetColorKit) {
             let deletedKit = await ColorKit.deleteMany({});
             message = deletedKit ? "ColorKit has been reset to default" : "Failed to reset ColorKit to default";
@@ -448,13 +457,29 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
                 await newColorKit.save();
                 message = "ColorKit has been created successfully."
             } else {
-                await ColorKit.updateOne({}, {
-                    buttonColorValue,
-                    buttonColorHoverValue,
-                    selectedCubeColorValue,
-                    canvasOnHoverColorValue,
-                    defaultTitle
-                });
+                if(initColorKit){
+                    console.log("given init: ", initColorKit)
+                    await ColorKit.updateOne({initColorKit: true}, {
+                        buttonColorValue,
+                        buttonColorHoverValue,
+                        selectedCubeColorValue,
+                        canvasOnHoverColorValue,
+                        defaultTitle,
+                        initColorKit
+                    });
+                }
+                else{
+                    if(company){
+                        await ColorKit.updateOne({company: company}, {
+                            buttonColorValue,
+                            buttonColorHoverValue,
+                            selectedCubeColorValue,
+                            canvasOnHoverColorValue,
+                            defaultTitle,
+                            company
+                        });
+                    }
+                }
                 console.log("update one colorKit")
                 message = "ColorKit has been updated successfully."
             }
@@ -475,7 +500,7 @@ router.get("/colorKit", authMiddleware, csrfMiddleware.validateCSRFToken, notRea
         let returnedColorKit;
 
         if(appAdmin){
-            returnedColorKit = await ColorKit.findOne({});
+            returnedColorKit = await ColorKit.findOne({initColorKit: true});
         }
         else{
             returnedColorKit = await ColorKit.findOne({company: company});

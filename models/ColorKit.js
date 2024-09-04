@@ -22,8 +22,14 @@ const colorKitSchema = new Schema ({
         type: String,
         required: true
     },
-    company:{
+    company: {
         type: String,
+        required: function() {
+            return !this.initColorKit;
+        }
+    },
+    initColorKit:{
+        type: Boolean,
         required: true
     }
 })
