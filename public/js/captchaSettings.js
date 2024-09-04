@@ -22,7 +22,7 @@ let defaultTitle
 let cubes
 let returnedColorKit
 let isResetColorKit = false
-let companyId
+let companyId 
 
 document.addEventListener("DOMContentLoaded", initialize);
 

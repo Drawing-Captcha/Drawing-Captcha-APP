@@ -349,20 +349,26 @@ async function getCompanies() {
                     list.appendChild(li);
                 });
                 let items = document.querySelectorAll(".item");
-
+                let btnText = document.querySelector(".btn-text")
+                let checked
                 items.forEach(item => {
                     item.addEventListener("click", () => {
-                        item.classList.toggle("checked");
-
-                        let checked = document.querySelectorAll(".checked"),
-                            btnText = document.querySelector(".btn-text");
-
-                        if (checked && checked.length > 0) {
-                            btnText.innerText = `${checked.length} Selected`;
-                        } else {
-                            btnText.innerText = "Select Company";
+                        if (item.classList.contains("checked")) {
+                            removeCheck(item)
+                            checked = "";
                         }
-                    });
+                        else {
+                            removeCheck()
+                            checked = item.querySelector(".item-text").innerText
+                            item.classList.toggle("checked");
+                        }
+                        
+                    if (checked && checked.length > 0) {
+                        btnText.innerText = `${checked} selected`;
+                    } else {
+                        btnText.innerText = "No company selected";
+                    }
+                    })
                 })
             }
             else {
@@ -379,4 +385,23 @@ async function getCompanies() {
     } catch (error) {
         console.log('Error in getCompanies:', error);
     }
+}
+
+async function removeCheck(element) {
+    const items = document.querySelectorAll(".item")
+    if (element) {
+        items.forEach(item => {
+            if (element = item && item.classList.contains("checked")) {
+                item.classList.remove("checked")
+            }
+        })
+    }
+    else {
+        items.forEach(item => {
+            if (item.classList.contains("checked")) {
+                item.classList.remove("checked")
+            }
+        })
+    }
+
 }
