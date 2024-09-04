@@ -211,8 +211,6 @@ async function submitColorKit() {
         company: companyid,
         initColorKit: initColorKit
     };
-    console.log(requestData)
-
 
     try {
         const response = await fetch("/dashboard/captchaSettings", {
@@ -231,6 +229,7 @@ async function submitColorKit() {
             } else {
                 console.log("An error occurred while trying to fetch data from the Server");
             }
+            location.reload()
         } else {
             throw new Error("Server responded with an error status: " + response.status);
         }

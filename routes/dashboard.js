@@ -437,9 +437,18 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
                 return res.status(403).json({ success: false, message: "You don't have enough rights to perform this action" });
             }
         }
-        if (isResetColorKit) {
-            let deletedKit = await ColorKit.deleteMany({});
-            message = deletedKit ? "ColorKit has been reset to default" : "Failed to reset ColorKit to default";
+        if (isResetColorKit && company) {
+            let initColorKit = await ColorKit.findOne({initColorKit: true});
+            await ColorKit.updateOne({company: company}, {
+                buttonColorValue: initColorKit.buttonColorValue,
+                buttonColorHoverValue: initColorKit.buttonColorHoverValue,
+                selectedCubeColorValue: initColorKit.selectedCubeColorValue,
+                canvasOnHoverColorValue: initColorKit.canvasOnHoverColorValue,
+                defaultTitle: initColorKit.defaultTitle,
+                company: initColorKit.company,
+                initColorKit: false
+            })
+            message = "ColorKit has been reseted successfully."
         }
         else {
 
@@ -452,7 +461,9 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
                     buttonColorHoverValue,
                     selectedCubeColorValue,
                     canvasOnHoverColorValue,
-                    defaultTitle
+                    defaultTitle,
+                    company,
+                    initColorKit
                 });
                 await newColorKit.save();
                 message = "ColorKit has been created successfully."
