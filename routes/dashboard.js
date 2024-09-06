@@ -633,7 +633,7 @@ router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken,
         if (originName && !doesOriginExist) {
             let origin = new AllowedOriginModel({
                 allowedOrigin: originName,
-                company: selectedCompanies,
+                companies: selectedCompanies,
                 initOrigin: false
             });
 
