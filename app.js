@@ -23,7 +23,7 @@ createDirectory()
 connectDB()
 createInitCaptcha()
 createInitColorKit()
-
+configInitDomain()
 
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
