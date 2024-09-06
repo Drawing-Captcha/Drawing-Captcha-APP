@@ -20,7 +20,6 @@ async function getOrigins() {
             const data = await response.json();
             let Origins = data.allowedOrigins;
             let userRole = data.userRole;
-            console.log("Origins: ", data)
 
             if (Origins.length != 0) {
 

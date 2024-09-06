@@ -23,6 +23,7 @@ let apiName
 document.addEventListener("DOMContentLoaded", initialize);
 
 async function initialize(){
+    await buildOriginsShells();
     await getKeys();
     await getOrigins();
 }
@@ -41,8 +42,23 @@ async function getKeys(){
             const data = await response.json();
             Keys = data.apiKeys;
             let userRole = data.userRole
+            const shells = document.querySelectorAll(".stacked-list1_component")
+            let wrapper
+            if (Keys.companies) {
+                if(Keys.comapnies.length != 0){
+                    shells.forEach(shell => {
+                        if(Keys.companies.includes(shell.getAttribute("companyId"))){
+                            console.log(shell)
+                            wrapper = shell.querySelector(".stacked-list1_list-wrapper");
+                        }
+                    })
+                }
+                else{
+                    if(appAdmin){
+                        wrapper = document.querySelector("defaultApiKeys").querySelector(".stacked-list1_list-wrapper");
+                    }
 
-            if (Keys.length != 0) {
+                }
 
                 Keys.forEach(elementData => {
                     const item = document.createElement("div");
@@ -187,39 +203,6 @@ function pushToServer(key, isDelete, element) {
             alert('An error occurred. Please try again later.');
         });
 
-}
-
-function deleteAllKeys() {
-    if (confirm("Are you sure you want to delete all of your keys?") === true) {
-        fetch("/dashboard/apiKey/deleteAll", {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                throw new Error('Error server while trying to request the server');
-            }
-        })
-        .then(data => {
-            if (data.deleteAll) {
-                alert(data.deleteAll);
-                location.reload();
-            } else {
-                alert(data.deleteAll);
-                location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again later.');
-        });
-    } else {
-        return;
-    }
 }
 
 async function addApiKey(){

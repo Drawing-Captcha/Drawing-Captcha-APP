@@ -236,7 +236,7 @@ router.get('/deletedArchiveAssets', authMiddleware, csrfMiddleware.validateCSRFT
 
 router.get("/apiKeySection", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
 
-    res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role });
+    res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 
 })
 
