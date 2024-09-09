@@ -20,12 +20,12 @@ async function buildOriginsShells() {
 
 function createCompanySection(company) {
   return `
-     <div class="stacked-list1_component currentItems" companyId="${company.companyId}>
+     <div class="stacked-list1_component currentItems apiKey" companyId="${company.companyId}">
                           <div class="section-header2_component">
                             <div class="padding-bottom padding-small">
                               <div class="section-header2_content-wrapper">
                                 <div class="max-width-large">
-                                  <h2 class="heading-style-h5">${company.name}'s API Keys</h2>
+                                  <h2 class="heading-style-h5">${company.name}'s API Keys 🔑</h2>
                                   <div class="margin-top margin-xxsmall">
                                     <div>Here you have the Overview over your API Keys:</div>
                                   </div>
@@ -76,16 +76,17 @@ function createCompanySection(company) {
                                 </div>
                               </div>
                             </div>
-                          </div>
+                          </div>  
+                          <hr>
                           <div class="stacked-list1_list-wrapper apiKey">
                           </div>
                         </div>
-                        <div class="stacked-list1_component currentItems" companyId="${company.companyId}">
+                        <div class="stacked-list1_component currentItems origins" companyId="${company.companyId}">
                           <div class="section-header2_component">
                             <div class="padding-bottom padding-small">
                               <div class="section-header2_content-wrapper">
                                 <div class="max-width-large">
-                                  <h2 class="heading-style-h5">${company.name}'s allowed Origins</h2>
+                                  <h2 class="heading-style-h5">${company.name}'s allowed Origins 🤝</h2>
                                   <div class="margin-top margin-xxsmall">
                                     <div>Here you have the overview over your allowed Origins</div>
                                   </div>
@@ -144,7 +145,7 @@ function createCompanySection(company) {
                   </div>
                 </div>
               </div>
-                  <hr>
+                    <hr>
 
     `;
 }

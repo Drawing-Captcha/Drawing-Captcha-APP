@@ -265,7 +265,7 @@ router.put("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notReadO
     }
 });
 
-router.get("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.get("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
         let userRole = req.session.user.role
         let appAdmin = req.session.user.appAdmin
@@ -274,20 +274,21 @@ router.get("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, async (r
         let returnedKeys
 
         if(appAdmin){
-            returnedKeys = await ApiKeyModel.find();
+            returnedKeys = await ApiKeyModel.find({});
         }
         else{
             returnedKeys = await ApiKeyModel.find({companies: { $in: company }})
         }
+        console.log("returnedKeys: ", returnedKeys)
 
-        res.json({ apiKeys: returnedKeys, userRole });
+        res.json({ apiKeys: returnedKeys, userRole, appAdmin: req.session.user.appAdmin });
     } catch (error) {
         console.error("Error fetching API keys:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
-router.post("/apiKey/deleteAll", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.post("/apiKey/deleteAll", authMiddleware, csrfMiddleware.validateCSRFToken, isAppAdmin, async (req, res) => {
     let deleteAll;
     console.log("deleting all api keys....")
     try {
@@ -358,7 +359,8 @@ router.get("/", csrfMiddleware.validateCSRFToken, authMiddleware, (req, res) => 
 })
 
 router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
-    const company = await CompanyModel.findOne({companyId: req.session.user.company})
+    let company = await CompanyModel.findOne({companyId: req.session.user.company})
+
     res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, company: company.name, appAdmin: req.session.user.appAdmin });
 })
 
@@ -602,7 +604,6 @@ router.post('/newValidation/nameExists', authMiddleware, csrfMiddleware.validate
 
 router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        const allowedOrigins = await AllowedOriginModel.find({ initOrigin: false });
         const userRole = req.session.user.role;
         const appAdmin = req.session.user.appAdmin;
         const userCompany = req.session.user.company;
@@ -610,20 +611,21 @@ router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, 
         let message;
 
         if (appAdmin) {
-            returnedOrigins = allowedOrigins;
-            message = "All allowed origins are being returned since you are an App Admin";
+            returnedOrigins = await AllowedOriginModel.find({initOrigin: false});
+            message = "Alle erlaubten Urspr nge werden zur ckgegeben, da Sie App-Administrator sind";
         } else {
-            returnedOrigins = allowedOrigins.filter(origin => origin.companies.some(company => userCompany.includes(company)));
-            message = "Only allowed origins that are related to your company are being returned since you are not an App Admin";
+            returnedOrigins = await AllowedOriginModel.find({companies: {$in: userCompany}, initOrigin: false});
+            message = "Nur die erlaubten Urspr nge, die mit Ihrer Firma in Verbindung stehen, werden zur ckgegeben, da Sie kein App-Administrator sind";
         }
 
-        res.json({ allowedOrigins: returnedOrigins, userRole, message });
+        console.log(returnedOrigins)
+
+        res.json({ allowedOrigins: returnedOrigins, userRole, message, appAdmin: req.session.user.appAdmin });
     } catch (err) {
-        console.error("Error while trying to get AllowedOrigins", err);
-        return res.status(500).json({ error: "An error occurred while trying to get the AllowedOrigins" });
+        console.error("Fehler beim Abrufen der erlaubten Urspr nge", err);
+        return res.status(500).json({ error: "Ein Fehler ist aufgetreten, whrend versucht wurde, die erlaubten Urspr nge abzurufen" });
     }
 })
-
 router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     try {
         let message;
@@ -659,7 +661,7 @@ router.put("/allowedOrigins", authMiddleware, csrfMiddleware.validateCSRFToken, 
         let isOriginDeleted = false;
         try {
             let originExists = await AllowedOriginModel.findOne({ allowedOrigin: origin });
-            if (originExists) {
+            if (originExists && !originExists.initOrigin) {
                 let originDeleted = await AllowedOriginModel.deleteOne({ allowedOrigin: origin });
                 isOriginDeleted = true;
                 initializeAllowedOrigins();

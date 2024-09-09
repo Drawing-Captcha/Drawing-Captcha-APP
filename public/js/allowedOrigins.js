@@ -1,4 +1,3 @@
-const wrapperOrigins = document.querySelector(".stacked-list1_list-wrapper.origins");
 const toDoLabel = createForm.querySelector("label")
 const submitButton = createForm.querySelector("button")
 const inputName = createForm.querySelector("input")
@@ -20,10 +19,25 @@ async function getOrigins() {
             const data = await response.json();
             let Origins = data.allowedOrigins;
             let userRole = data.userRole;
-
+            let appAdmin = data.appAdmin
+            const shells = document.querySelectorAll(".stacked-list1_component.origins")
+            let wrapperOrigins;
             if (Origins.length != 0) {
-
                 Origins.forEach(elementData => {
+                    if (elementData.companies.length != 0) {
+                        shells.forEach(shell => {
+                            if (shell.classList.contains("origins") && elementData.companies.includes(shell.getAttribute("companyId"))) {
+                                wrapperOrigins = shell.querySelector(".stacked-list1_list-wrapper");
+
+                            }
+                        })
+                    }
+                    else {
+                        if (appAdmin) {
+                            wrapperOrigins = document.querySelector(".defaultAllowedOrigins ").querySelector(".stacked-list1_list-wrapper");
+                        }
+
+                    }
                     const item = document.createElement("div");
                     item.classList.add("stacked-list1_item");
 
@@ -74,21 +88,8 @@ async function getOrigins() {
                 });
 
             }
-            else {
-                const syncWrapper = document.createElement("div")
-                syncWrapper.classList.add("syncWrapper")
 
-                syncWrapper.addEventListener("click", () => window.location.reload())
-                syncWrapper.style.cursor = "pointer"
-
-
-                const syncMessage = document.createElement("h3")
-                syncMessage.innerHTML = "No allowed origins currently, sync here.. 🤔🔄"
-
-                wrapperOrigins.appendChild(syncWrapper)
-                syncWrapper.appendChild(syncMessage)
-
-            }
+            await addSyncMessage(shells, "origins")
 
 
         } else {

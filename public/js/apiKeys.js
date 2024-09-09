@@ -22,13 +22,13 @@ let apiName
 
 document.addEventListener("DOMContentLoaded", initialize);
 
-async function initialize(){
+async function initialize() {
     await buildOriginsShells();
     await getKeys();
     await getOrigins();
 }
 
-async function getKeys(){
+async function getKeys() {
     try {
         const response = await fetch("/dashboard/apiKey", {
             method: 'GET',
@@ -40,27 +40,27 @@ async function getKeys(){
 
         if (response.ok) {
             const data = await response.json();
-            Keys = data.apiKeys;
+            let keys = data.apiKeys;
             let userRole = data.userRole
-            const shells = document.querySelectorAll(".stacked-list1_component")
+            let appAdmin = data.appAdmin
+            const shells = document.querySelectorAll(".stacked-list1_component.apiKey")
             let wrapper
-            if (Keys.companies) {
-                if(Keys.comapnies.length != 0){
-                    shells.forEach(shell => {
-                        if(Keys.companies.includes(shell.getAttribute("companyId"))){
-                            console.log(shell)
-                            wrapper = shell.querySelector(".stacked-list1_list-wrapper");
-                        }
-                    })
-                }
-                else{
-                    if(appAdmin){
-                        wrapper = document.querySelector("defaultApiKeys").querySelector(".stacked-list1_list-wrapper");
+            if (keys.length > 0) {
+                keys.forEach(elementData => {
+                    if (elementData.companies.length != 0) {
+                        shells.forEach(shell => {
+                            if (shell.classList.contains("apiKey") && elementData.companies.includes(shell.getAttribute("companyId"))) {
+                                wrapper = shell.querySelector(".stacked-list1_list-wrapper");
+
+                            }
+                        })
                     }
+                    else {
+                        if (appAdmin) {
+                            wrapper = document.querySelector(".defaultApiKeys").querySelector(".stacked-list1_list-wrapper");
+                        }
 
-                }
-
-                Keys.forEach(elementData => {
+                    }
                     const item = document.createElement("div");
                     item.classList.add("stacked-list1_item");
 
@@ -122,7 +122,7 @@ async function getKeys(){
                     deleteButton.addEventListener("click", () => deleteApiKey(elementData));
 
                     droppDownToggle.appendChild(copyButton);
-                    if(userRole != "read"){
+                    if (userRole != "read") {
                         droppDownToggle.appendChild(deleteButton);
                     }
                     dropdownComponent.appendChild(droppDownToggle);
@@ -133,22 +133,8 @@ async function getKeys(){
                 });
 
             }
-            else {
-                const syncWrapper = document.createElement("div")
-                syncWrapper.classList.add("syncWrapper")
 
-                syncWrapper.addEventListener("click", () => window.location.reload())
-                syncWrapper.style.cursor = "pointer"
-
-
-                const syncMessage = document.createElement("h3")
-                syncMessage.innerHTML = "No Keys currently, sync here.. 🤔🔄"
-
-                wrapper.appendChild(syncWrapper)
-                syncWrapper.appendChild(syncMessage)
-
-            }
-
+            await addSyncMessage(shells, "apiKeys")
 
         } else {
             throw new Error('Error server while trying to request the server');
@@ -159,7 +145,7 @@ async function getKeys(){
 
 }
 
-async function copyApiKey(e){
+async function copyApiKey(e) {
     await navigator.clipboard.writeText(e.apiKey)
     alert(`Api key ${e.name} copied!`)
 }
@@ -205,7 +191,7 @@ function pushToServer(key, isDelete, element) {
 
 }
 
-async function addApiKey(){
+async function addApiKey() {
     await buildDropdown()
     companyAccessSection.forEach(item => {
         item.style.display = "block"
@@ -219,9 +205,9 @@ async function addApiKey(){
     createForm.setAttribute("onsubmit", "submitApi(event); return false;")
     addFrom()
 
-    
+
 }
-function addFrom(){
+function addFrom() {
 
     itemPageWrapper.style.display = "flex";
     ItemWrapper.style.display = "flex";
@@ -231,57 +217,56 @@ function addFrom(){
 
 }
 
-function closeForm(){
+function closeForm() {
     shellLayout.style.display = "block"
     sectionHeader.style.display = "block"
     itemPageWrapper.style.opacity = '0';
     setTimeout(() => {
         itemPageWrapper.style.display = "none";
-    }, 300); 
+    }, 300);
     formName.value = "";
 
 }
-function submitApi(event){
+function submitApi(event) {
     let companiesList = document.querySelectorAll(".item")
     let selectedCompanies = []
     companiesList.forEach(company => {
-        if(company.classList.contains("checked")){
+        if (company.classList.contains("checked")) {
             selectedCompanies.push(company.getAttribute("obj-id"))
         }
     })
-    console.log(selectedCompanies.length)
-    if(selectedCompanies.length >= 1){
+    if (selectedCompanies.length >= 1) {
         let apiName = formName.value;
-    
+
         fetch("/dashboard/apiKey", {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({apiKeyName: apiName, selectedCompanies})
+            body: JSON.stringify({ apiKeyName: apiName, selectedCompanies })
         })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                throw new Error('Error server while trying to request the server');
-            }
-        })
-        .then(data => {
-            if (data.successfully) {
-                alert(data.message)
-                location.reload();
-            } else {
-                alert(data.message)
-                location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again later.');
-        });
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Error server while trying to request the server');
+                }
+            })
+            .then(data => {
+                if (data.successfully) {
+                    alert(data.message)
+                    location.reload();
+                } else {
+                    alert(data.message)
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            });
     }
-    else{
+    else {
         alert("Please select a company!")
     }
 }
@@ -326,20 +311,20 @@ async function buildDropdown() {
                     checked = item.querySelector(".item-text").innerText
                     item.classList.toggle("checked");
                 }
-                
-            if (checked && checked.length > 0) {
-                btnText.innerText = `${checked} selected`;
-            } else {
-                btnText.innerText = "No company selected";
-            }
+
+                if (checked && checked.length > 0) {
+                    btnText.innerText = `${checked} selected`;
+                } else {
+                    btnText.innerText = "No company selected";
+                }
             })
         })
     }
-    else{
+    else {
         const checked = document.querySelectorAll(".checked");
         const btnText = document.querySelector(".btn-text");
         const listItems = document.querySelector(".list-items")
-        
+
         btnText.innerText = "No companies to select";
         listItems.style.display = "none";
     }
