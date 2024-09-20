@@ -16,6 +16,7 @@ async function getOrigins() {
         });
 
         if (response.ok) {
+            await buildDropdown()
             const data = await response.json();
             let Origins = data.allowedOrigins;
             let userRole = data.userRole;
@@ -102,7 +103,6 @@ async function getOrigins() {
 }
 
 async function addOrigin() {
-    await buildDropdown()
     toDo.innerHTML = "Add new Origin 🔒";
     toDoLabel.innerHTML = "Important: if the domain has a seperate port please define it so you can access it properly."
     submitButton.innerHTML = "Add Origin"

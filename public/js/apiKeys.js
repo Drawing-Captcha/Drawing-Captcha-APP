@@ -26,6 +26,8 @@ async function initialize() {
     await buildOriginsShells();
     await getKeys();
     await getOrigins();
+    await buildDropdown()
+
 }
 
 async function getKeys() {
@@ -192,7 +194,6 @@ function pushToServer(key, isDelete, element) {
 }
 
 async function addApiKey() {
-    await buildDropdown()
     companyAccessSection.forEach(item => {
         item.style.display = "block"
     })
@@ -278,24 +279,28 @@ async function buildDropdown() {
 
     if (allCompanies.length !== 0) {
         var list = document.querySelector('.list-items');
+
         allCompanies.forEach(function (company) {
-            var li = document.createElement('li');
-            li.classList.add('item');
-            li.setAttribute("obj-id", company.companyId)
+            const existingEl = list.querySelector(`[obj-id="${company.companyId}"]`);
+            if (!existingEl) {
+                var li = document.createElement('li');
+                li.classList.add('item');
+                li.setAttribute("obj-id", company.companyId)
 
-            var checkboxSpan = document.createElement('span');
-            checkboxSpan.classList.add('checkbox');
-            var checkboxIcon = document.createElement('i');
-            checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
-            checkboxSpan.appendChild(checkboxIcon);
-            li.appendChild(checkboxSpan);
+                var checkboxSpan = document.createElement('span');
+                checkboxSpan.classList.add('checkbox');
+                var checkboxIcon = document.createElement('i');
+                checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
+                checkboxSpan.appendChild(checkboxIcon);
+                li.appendChild(checkboxSpan);
 
-            var textSpan = document.createElement('span');
-            textSpan.classList.add('item-text');
-            textSpan.textContent = company.name;
-            li.appendChild(textSpan);
+                var textSpan = document.createElement('span');
+                textSpan.classList.add('item-text');
+                textSpan.textContent = company.name;
+                li.appendChild(textSpan);
 
-            list.appendChild(li);
+                list.appendChild(li);
+            }
         });
         let items = document.querySelectorAll(".item");
         let btnText = document.querySelector(".btn-text")
