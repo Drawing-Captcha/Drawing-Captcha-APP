@@ -140,7 +140,9 @@ imageUploadEdit.addEventListener('change', function () {
     reader.readAsDataURL(this.files[0]);
 });
 function addCompany() {
+    console.log("show")
     addDialog.showModal();
+
 
 }
 
@@ -202,53 +204,29 @@ function proofRegex(originName) {
     const regex = new RegExp(expression);
 
     if (regex.test(originName)) {
-        return originName;
+        return { test: true, value: originName };
     } else {
         alert("Regex error: please define your origin like this schema: https://yourdomain.com");
-        return "";
+        return { test: false, value: "" };
     }
 }
 
-function submitOrigin(originName) {
-    fetch("/dashboard/allowedOrigins", {
-        method: "POST",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ originName, companyId })
-    })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                throw new Error('Error server while trying to request the server');
-            }
-        })
-        .then(data => {
-            if (data.message) {
-                alert(data.message)
-                location.reload();
-            }
-
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again later.');
-        });
-}
 
 async function submitCompany() {
     let submittedData
-    if (orginInput.value) {
-        regexResult = await proofRegex(orginInput.value)
+    let regexResult
+    regexResult = await proofRegex(orginInput.value)
+
+    if(!regexResult.test){
+        return
     }
-    else {
-        regexResult = "";
-    }
+    console.log("regexResult: ", regexResult)
+    
+
     submittedData = {
         name: nameInputAdd.value,
         ppURL,
-        originName: regexResult
+        originName: regexResult.value
     }
     console.log(submittedData)
     await postCompany(submittedData)
@@ -312,5 +290,5 @@ function deleteCompany(companyId) {
 }
 
 
-addDialogForm.addEventListener('submit', submitCompany)
-editDialogForm.addEventListener('submit', submitChanges)
+addDialogForm.addEventListener('submit', event => submitCompany(event))
+editDialogForm.addEventListener('submit', event => submitChanges(event))
