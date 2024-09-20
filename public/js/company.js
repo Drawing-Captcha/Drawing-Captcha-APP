@@ -37,6 +37,7 @@ async function getAllCompanies() {
             let userRole = data.userRole;
 
             const wrapper = document.querySelector(".stacked-list1_list-wrapper");
+            const shell = document.querySelector(".section_shell2-layout");
 
             if (allCompanies.length !== 0) {
                 allCompanies.forEach(elementData => {
@@ -110,17 +111,8 @@ async function getAllCompanies() {
                     wrapper.appendChild(item);
                 });
             } else {
-                const syncWrapper = document.createElement("div");
-                syncWrapper.classList.add("syncWrapper");
+                addSyncMessage(shell, "companies")
 
-                syncWrapper.addEventListener("click", () => window.location.reload());
-                syncWrapper.style.cursor = "pointer";
-
-                const syncMessage = document.createElement("h3");
-                syncMessage.innerHTML = "No companies here currently, sync here.. 🤔🔄";
-
-                wrapper.appendChild(syncWrapper);
-                syncWrapper.appendChild(syncMessage);
             }
         } else {
             throw new Error('Error server while trying to request the server');

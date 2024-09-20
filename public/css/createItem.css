@@ -195,8 +195,14 @@ hr {
     min-height: 50vh;
     padding: 5em !important;
 }
+
+.captcha-list-wrapper{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 .create-item-subWrapper {
-    width: 40vw;
+    width: 54vw;
     display: flex;
     justify-content: center;
     flex-direction: column;
