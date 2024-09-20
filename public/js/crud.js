@@ -58,7 +58,6 @@ function updateBackgroundSize() {
 async function initialize() {
     await getPool();
     await initCompanies();
-    console.log(appAdmin)
     if(appAdmin){
         await getNotCategorizedItems();
     }
@@ -574,7 +573,6 @@ async function initCompanies() {
         if (response.ok) {
             const data = await response.json();
             const allCompanies = data.allCompanies;
-            console.log("allCompanies: ", allCompanies)
             let mainWrapper = document.querySelector('.shell2_main-wrapper');
 
             if (allCompanies.length !== 0) {
@@ -585,7 +583,7 @@ async function initCompanies() {
                     getPoolForEachCompany(companyWrapper)
                 });
             }
-            else noCompaniesTeaser.style.display = "block"
+            else buildNoCompaniesShell();
         } else {
             throw new Error('Error from server while trying to request the server');
         }
@@ -593,8 +591,6 @@ async function initCompanies() {
         console.log('Error in getCompanies:', error);
     }
 }
-
-
 
 async function getPoolForEachCompany(companyWrapper) {
     try {

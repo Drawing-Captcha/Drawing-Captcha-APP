@@ -8,7 +8,7 @@ async function initialize() {
     await getDeletedBin();
 }
 
-async function getDeletedBin () {
+async function getDeletedBin() {
     try {
         const response = await fetch("/dashboard/deletedArchiveAssets", {
             method: 'GET',
@@ -28,7 +28,7 @@ async function getDeletedBin () {
 
             if (deletedBin.length != 0) {
                 deletedBin.forEach(elementData => {
-                    if(elementData.companies){
+                    if (elementData.companies.length > 0) {
                         shells.forEach(shell => {
                             if (elementData.companies.includes(shell.getAttribute("companyId"))) {
                                 wrapper = shell.querySelector(".stacked-list1_list-wrapper");
@@ -36,7 +36,7 @@ async function getDeletedBin () {
                         });
                     }
                     else {
-                        if(appAdmin){
+                        if (appAdmin) {
                             wrapper = document.querySelector(".appAdmin").querySelector(".stacked-list1_list-wrapper");
                         }
                     }

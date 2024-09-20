@@ -511,8 +511,7 @@ figcaption {
 }
 
 .container-large {
-  width: 100%;
-  max-width: 80rem;
+  width: -webkit-fill-available;
   margin-left: auto;
   margin-right: auto;
 }

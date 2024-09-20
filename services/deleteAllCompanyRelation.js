@@ -4,6 +4,7 @@ const deleteUserRelation = require("../services/deleteUserRelation.js")
 const deleteRegisterKey = require("../services/deleteRegisterKey.js");
 const deleteColorKitRelation = require("../services/deleteColorKitRelation.js");
 const deleteAllowedOriginRelation = require("../services/deleteAllowedOriginRelation.js")
+const deleteDeletedArchiveRelation = require("../services/deleteDeletedArchiveRelation.js")
 
 async function deleteEverythingFromCompany(companyId) {
     try{
@@ -33,6 +34,10 @@ async function deleteEverythingFromCompany(companyId) {
         console.log(`Starting to delete allowed origins relation for company ID: ${company.companyId}`)
         await deleteAllowedOriginRelation(company.companyId)
         console.log(`Finished deleting allowed origins relation for company ID: ${company.companyId}`)
+
+        console.log(`Starting to delete deleted Archive relation for company ID: ${company.companyId}`)
+        await deleteDeletedArchiveRelation(company.companyId)
+        console.log(`Finished deleting deleted Archive relation for company ID: ${company.companyId}`)
 
         console.log(`Deleting company: ${company.name}`)
         await CompanyModel.deleteOne({ companyId: companyId })

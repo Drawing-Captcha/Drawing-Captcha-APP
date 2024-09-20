@@ -11,8 +11,7 @@ async function buildCompanyShells() {
         });
     }
     else {
-        const noCompanies = document.querySelector(".NoCompanies")
-        noCompanies.style.display = "block"
+       await buildNoCompaniesShell()
 
     }
 
