@@ -16,7 +16,6 @@ async function getOrigins() {
         });
 
         if (response.ok) {
-            await buildDropdown()
             const data = await response.json();
             let Origins = data.allowedOrigins;
             let userRole = data.userRole;
@@ -154,34 +153,40 @@ async function submitOrigin() {
             selectedCompanies.push(company.getAttribute("obj-id"))
         }
     })
-
-    if (originName) {
-        fetch("/dashboard/allowedOrigins", {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ originName, selectedCompanies })
-        })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    throw new Error('Error server while trying to request the server');
-                }
+    if (selectedCompanies.length >= 1) {
+        if (originName) {
+            fetch("/dashboard/allowedOrigins", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ originName, selectedCompanies })
             })
-            .then(data => {
-                if (data.message) {
-                    alert(data.message)
-                    location.reload();
-                }
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Error server while trying to request the server');
+                    }
+                })
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message)
+                        location.reload();
+                    }
 
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again later.');
-            });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again later.');
+                });
+        }
     }
+    else {
+        alert("Please select a company!")
+        return
+    }
+
 }
 
 

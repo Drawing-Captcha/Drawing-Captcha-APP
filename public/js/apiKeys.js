@@ -269,6 +269,7 @@ function submitApi(event) {
     }
     else {
         alert("Please select a company!")
+        return
     }
 }
 
