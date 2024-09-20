@@ -171,7 +171,7 @@ hr {
     align-items: center;
     flex-direction: column;
     color: rgb(0, 0, 0);
-    gap: 3em;
+    /* gap: 3em; */
     padding: -1em;
     max-width: 100%;
     text-align: center;
@@ -191,8 +191,18 @@ hr {
 
 .itemWrapperCreateItem {
     max-width: 100%;
+    height: fit-content;
+    min-height: 50vh;
+    padding: 5em !important;
 }
-
+.create-item-subWrapper {
+    width: 40vw;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    height: fit-content;
+}
 input {
     border-radius: 8px;
     background-color: white;
