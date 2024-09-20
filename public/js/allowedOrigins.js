@@ -105,7 +105,7 @@ async function addOrigin() {
     await buildDropdown()
     toDo.innerHTML = "Add new Origin 🔒";
     toDoLabel.innerHTML = "Important: if the domain has a seperate port please define it so you can access it properly."
-    submitButton.innerHTML = "Add Origin:"
+    submitButton.innerHTML = "Add Origin"
     shellLayout.style.display = "none"
     sectionHeader.style.display = "none"
     inputName.setAttribute("placeholder", "https://yourdomain.com")
