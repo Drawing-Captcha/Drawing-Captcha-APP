@@ -10,7 +10,10 @@ const createCompanyRegisterKey = require("../services/createCompanyRegisterKey.j
 const createCompanyColorKit = require("../services/createCompanyColorKit.js")
 const crypto = require("crypto");
 const createAllowedOrigin = require('../services/createAllowedOrigin.js');
-
+const isAppAdmin = require("../middlewares/isAppAdmin.js")
+const isAdmin = require("../middlewares/adminMiddleware.js")
+const isCompanyRelation = require("../services/companyRelationMiddleware.js");
+const isRelatedToCompany = require('../services/companyRelationMiddleware.js');
 
 router.get('/', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
@@ -43,7 +46,7 @@ router.get('/', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, re
     }
 })
 
-router.post('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.post('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAppAdmin, async (req, res) => {
     try {
         let companyExists = await CompanyModel.findOne({ name: req.body.name });
         if (companyExists) {
@@ -79,10 +82,13 @@ router.post('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, 
 });
 
 
-router.put('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.put('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
         const { companyId, name, ppURL } = req.body;
 
+        if(!isRelatedToCompany(req, companyId)){
+            return res.status(401).json({ message: "Unauthorized" });
+        }
         if (!companyId) {
             return res.status(400).json({ message: "Company ID is required." });
         }
@@ -108,9 +114,14 @@ router.put('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, a
 });
 
 
-router.delete('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.delete('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
         const { companyId } = req.body;
+
+        if(!isRelatedToCompany(req, companyId)){
+            return res.status(401).json({ message: "Unauthorized" });
+
+        }
 
         if (!companyId) {
             return res.status(400).json({ message: "Company ID is required." });

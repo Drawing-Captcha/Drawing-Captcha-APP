@@ -5,19 +5,23 @@ const deleteRegisterKey = require("../services/deleteRegisterKey.js");
 const deleteColorKitRelation = require("../services/deleteColorKitRelation.js");
 const deleteAllowedOriginRelation = require("../services/deleteAllowedOriginRelation.js")
 const deleteDeletedArchiveRelation = require("../services/deleteDeletedArchiveRelation.js")
-
+const setUserRelationToReadOnly = require("../services/setAllRelatedUsersToReadOnly.js")
 async function deleteEverythingFromCompany(companyId) {
-    try{
+    try {
         console.log(`Deleting all company relations with company ID: ${companyId}`)
         const company = await CompanyModel.findOne({ companyId: companyId })
         console.log(`Found company: ${company ? company.name : "not found"}`)
-        if(!company){
+        if (!company) {
             console.log("Company not found")
-            return {success: false, message: "Company not found"}
+            return { success: false, message: "Company not found" }
         }
         console.log(`Starting to delete captcha relations for company ID: ${company.companyId}`)
         await deleteCaptchaRelation(company.companyId)
         console.log(`Finished deleting captcha relations for company ID: ${company.companyId}`)
+
+        console.log(`Starting to set all users with company ID: ${company.companyId} to Read Only`)
+        await setUserRelationToReadOnly(company.companyId)
+        console.log(`Finished setting all users with company ID: ${company.companyId} to Read Only`)
 
         console.log(`Starting to delete user relations for company ID: ${company.companyId}`)
         await deleteUserRelation(company.companyId)
@@ -43,9 +47,9 @@ async function deleteEverythingFromCompany(companyId) {
         await CompanyModel.deleteOne({ companyId: companyId })
         console.log(`Finished deleting company: ${company.name}`)
 
-    }catch(error){
+    } catch (error) {
         console.error("Error occurred while deleting all company relations:", error)
-        return {success: false, message: "An error occurred while deleting all company relations."}
+        return { success: false, message: "An error occurred while deleting all company relations." }
     }
 }
 

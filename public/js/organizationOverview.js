@@ -152,10 +152,10 @@ async function getAllUser() {
                     </svg>`;
                     returnButton.addEventListener("click", () => changeDetails(elementData));
                     if (ownUser.role === "admin" || ownUser._id === elementData._id) {
-                        if (!elementData.initialUser) {
+                        if (!elementData.initialUser && !elementData.appAdmin) {
                             droppDownToggle.appendChild(deleteButton);
                         }
-                        if (!elementData.initialUser) {
+                        if (!elementData.initialUser && !elementData.appAdmin) {
                             droppDownToggle.appendChild(returnButton);
                         }
                     }
