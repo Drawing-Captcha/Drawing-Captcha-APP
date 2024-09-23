@@ -875,7 +875,6 @@ a,
                           </span>
                         </div>
                         <ul class="list-items">
-
                         </ul>
                       </div>
                     </div>
@@ -893,7 +892,7 @@ a,
                         <div class="max-width-large">
                           <h1 class="heading-style-h2">Add an API Key 🔑 | Edit your allowed origins</h1>
                           <div class="margin-top margin-xxsmall">
-                            <div>ℹ️⚠️ You can integrate these keys into your external Captcha. With them, you'll gain
+                            <div>⚠️ You can integrate these keys into your external Captcha. With them, you'll gain
                               access to the following endpoints: "/getImage" and "/checkCubes".</div>
                           </div>
                         </div>
@@ -903,13 +902,13 @@ a,
                 </div>
               </div>
             </div>
-            <% if (appAdmin) { %>
-              <div class="section_shell2-layout">
-                <div class="padding-horizontal padding-medium">
-                  <div class="container-large">
-                    <div class="padding-vertical">
-                      <div id="w-node-_1a30a1e4-8a69-abdf-86cf-348aa176e587-0240322d"
-                        class="w-layout-grid shell2-layout_component">
+            <div class="section_shell2-layout">
+              <div class="padding-horizontal padding-medium">
+                <div class="container-large">
+                  <div class="padding-vertical">
+                    <div id="w-node-_1a30a1e4-8a69-abdf-86cf-348aa176e587-0240322d"
+                      class="w-layout-grid shell2-layout_component">
+                      <% if (appAdmin) { %>
                         <div class="stacked-list1_component currentItems defaultApiKeys apiKey">
                           <div class="section-header2_component">
                             <div class="padding-bottom padding-small">
@@ -1035,12 +1034,12 @@ a,
                           </div>
                         </div>
                         <hr>
-                      </div>
                     </div>
+                    <% } %>
                   </div>
                 </div>
               </div>
-              <% } %>
+            </div>
           </main>
         </div>
       </div>
@@ -1059,4 +1058,5 @@ a,
   <script src="/js/addSyncShells.js"></script>
   <script src="/js/noCompaniesShell.js"></script>
 </body>
+
 </html>

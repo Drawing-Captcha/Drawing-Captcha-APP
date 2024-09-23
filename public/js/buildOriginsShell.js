@@ -2,8 +2,7 @@ async function buildOriginsShells() {
   let data = await fetchCompanies()
   const allCompanies = data.allCompanies;
   let mainWrapper = document.querySelector('.shell2-layout_component');
-
-  if (allCompanies.length !== 0) {
+  if (mainWrapper && allCompanies.length !== 0) {
     allCompanies.forEach(function (company) {
       let companySection = createCompanySection(company);
       mainWrapper.insertAdjacentHTML('beforeend', companySection);
@@ -14,7 +13,6 @@ async function buildOriginsShells() {
     await buildNoCompaniesShell()
 
   }
-
 }
 
 function createCompanySection(company) {
