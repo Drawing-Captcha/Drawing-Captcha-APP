@@ -161,6 +161,7 @@ function deleteApiKey(e) {
     let tmpKey = e.apiKey
     let isDelete = true
     pushToServer(tmpKey, isDelete, e)
+    console.log(tmpKey)
 }
 
 function pushToServer(key, isDelete, element) {
@@ -203,7 +204,9 @@ async function addApiKey() {
         item.style.display = "block"
     })
     let noCompaniesShell = document.querySelector(".not-categorized")
-    noCompaniesShell.style.display = "none";
+    if(noCompaniesShell){
+        noCompaniesShell.style.display = "none";
+    }
     toDo.innerHTML = "Add API Key 🔑"
     toDoLabel.innerHTML = "Key Name:"
     submitButton.innerHTML = "Add Key"
@@ -227,7 +230,9 @@ function addFrom() {
 
 function closeForm() {
     let noCompaniesShell = document.querySelector(".not-categorized")
-    noCompaniesShell.style.display = "block";
+    if(noCompaniesShell){
+        noCompaniesShell.style.display = "block";
+    }
     shellLayout.style.display = "block"
     sectionHeader.style.display = "block"
     itemPageWrapper.style.opacity = '0';

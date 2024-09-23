@@ -21,6 +21,7 @@ const isAppAdmin = require("../middlewares/isAppAdmin.js")
 const CaptchaModel = require("../models/Captcha.js")
 const DeletedCaptchaModel = require("../models/DeletedCaptchaModel.js")
 const CompanyModel = require("../models/Company.js")
+const isRelatedToCompany = require("../services/companyRelationMiddleware.js")
 
 router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
@@ -85,7 +86,13 @@ router.put("/crud", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnl
 
     let deletedObject;
     let tmpPool = req.body.tmpPool;
+    let companyId = tmpPool[0].companies[0];
     let index;
+
+    if (!isRelatedToCompany(req, companyId)) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
     console.log("tmpPool", tmpPool);
 
     if (Array.isArray(tmpPool)) {
@@ -160,12 +167,18 @@ router.get('/notAuthorized', authMiddleware, csrfMiddleware.validateCSRFToken, (
 })
 
 router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+
     let globalPool = await initializePool();
     let globalDeletedBin = await initializeBin();
 
     let deletedObject;
     let tmpPool = req.body.tmpPool;
+    let companyId = tmpPool[0].companies[0];
     let index;
+
+    if (!isRelatedToCompany(req, companyId)) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
     console.log("given pool: ", tmpPool);
 
     if (Array.isArray(tmpPool)) {
@@ -234,18 +247,24 @@ router.get('/deletedArchiveAssets', authMiddleware, csrfMiddleware.validateCSRFT
     else console.error("deletedBin not defined")
 });
 
-router.get("/apiKeySection", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+router.get("/apiKeySection", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, (req, res) => {
 
     res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 
 })
 
-router.put("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.put("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
+
     if (req.body.isDelete) {
         let key = req.body.key;
         let isKeyDeleted = false;
         try {
+
             let keyExists = await ApiKeyModel.findOne({ apiKey: key });
+            let companyId = keyExists.companies[0];
+            if (!isRelatedToCompany(req, companyId)) {
+                return res.status(401).json({ message: "Unauthorized" });
+            }
             if (keyExists) {
                 let keyDeleted = await ApiKeyModel.deleteOne({ apiKey: key });
                 isKeyDeleted = true;
@@ -314,12 +333,16 @@ router.post("/apiKey/deleteAll", authMiddleware, csrfMiddleware.validateCSRFToke
 
 })
 
-router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     let successfully;
     let message;
     try {
         let name = req.body.apiKeyName;
         let selectedCompanies = req.body.selectedCompanies;
+        let companyId = req.body.selectedCompanies[0];
+        if (!isRelatedToCompany(req, companyId)) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
         let doesNameExist = await ApiKeyModel.findOne({ name: name });
         if (!doesNameExist) {
             let apiKey = crypto.randomUUID();
@@ -366,7 +389,7 @@ router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken,
         if (company) {
             companyData.company = company.name;
         }
-    } catch (error){
+    } catch (error) {
         console.error("Error while fetching company data:", error);
         return res.status(500).json({ error: "An internal server error occurred." });
     }
@@ -415,6 +438,10 @@ router.get("/registerKey/assets", authMiddleware, isAdmin, csrfMiddleware.valida
 
 router.put("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     try {
+        let companyId = req.body.companyId;
+        if (!isRelatedToCompany(req, companyId)) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
         generateNewRegisterKey(req, res);
     } catch (error) {
         console.error("Error handling register key:", error);
@@ -437,6 +464,10 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
             initColorKit
         } = req.body;
 
+        let companyId = company;
+        if (!isRelatedToCompany(req, companyId)) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
         console.log("given initcolor: ", initColorKit)
         let message;
 
@@ -557,6 +588,11 @@ router.post('/newValidation', authMiddleware, csrfMiddleware.validateCSRFToken, 
     const backgroundSize = req.body.backgroundSize;
     const selectedCompanies = req.body.selectedCompanies
 
+    let companyId = selectedCompanies[0];
+    if (!isRelatedToCompany(req, companyId)) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
     let isValid = false;
 
     if (validateTrueCubes && validateMinCubes && validateMaxCubes && componentName) {
@@ -636,12 +672,18 @@ router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, 
         return res.status(500).json({ error: "Ein Fehler ist aufgetreten, whrend versucht wurde, die erlaubten Urspr nge abzurufen" });
     }
 })
-router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
         let message;
         let originName = req.body.originName;
         let selectedCompanies = req.body.selectedCompanies
         let doesOriginExist = await AllowedOriginModel.findOne({ allowedOrigin: originName });
+
+        let companyId = selectedCompanies[0];
+        if (!isRelatedToCompany(req, companyId)) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
         if (originName && !doesOriginExist) {
             let origin = new AllowedOriginModel({
                 allowedOrigin: originName,
@@ -665,12 +707,16 @@ router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken,
     }
 });
 
-router.put("/allowedOrigins", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.put("/allowedOrigins", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     if (req.body.isDelete) {
         let origin = req.body.allowedOrigin;
         let isOriginDeleted = false;
         try {
             let originExists = await AllowedOriginModel.findOne({ allowedOrigin: origin });
+            let companyId = originExists.companies[0];
+            if (!isRelatedToCompany(req, companyId)) {
+                return res.status(401).json({ message: "Unauthorized" });
+            }
             if (originExists && !originExists.initOrigin) {
                 let originDeleted = await AllowedOriginModel.deleteOne({ allowedOrigin: origin });
                 isOriginDeleted = true;

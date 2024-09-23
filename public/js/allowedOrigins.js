@@ -103,7 +103,9 @@ async function getOrigins() {
 
 async function addOrigin() {
     let noCompaniesShell = document.querySelector(".not-categorized")
-    noCompaniesShell.style.display = "none";
+    if(noCompaniesShell){
+        noCompaniesShell.style.display = "none";
+    }
     toDo.innerHTML = "Add new Origin 🔒";
     toDoLabel.innerHTML = "Important: if the domain has a seperate port please define it so you can access it properly."
     submitButton.innerHTML = "Add Origin"
