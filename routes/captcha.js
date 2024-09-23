@@ -183,7 +183,7 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
         }
 
         const finishedURL = `/tmpimg/${uniqueFileName}`;
-
+//Nicht die gesamte session zurückgeben!!!!!!
         res.json({ finishedURL, clientData, session: req.session, itemAssets });
 
 
