@@ -48,12 +48,17 @@ async function getKeys() {
             const shells = document.querySelectorAll(".stacked-list1_component.apiKey")
             let wrapper
             if (keys.length > 0) {
+                console.log(keys.length)
                 keys.forEach(elementData => {
+                    console.log(elementData)
                     if (elementData.companies.length != 0) {
                         shells.forEach(shell => {
                             if (shell.classList.contains("apiKey") && elementData.companies.includes(shell.getAttribute("companyId"))) {
                                 wrapper = shell.querySelector(".stacked-list1_list-wrapper");
 
+                            }
+                            else {
+                                wrapper = document.querySelector(".defaultApiKeys").querySelector(".stacked-list1_list-wrapper");
                             }
                         })
                     }
@@ -197,6 +202,8 @@ async function addApiKey() {
     companyAccessSection.forEach(item => {
         item.style.display = "block"
     })
+    let noCompaniesShell = document.querySelector(".not-categorized")
+    noCompaniesShell.style.display = "none";
     toDo.innerHTML = "Add API Key 🔑"
     toDoLabel.innerHTML = "Key Name:"
     submitButton.innerHTML = "Add Key"
@@ -219,6 +226,8 @@ function addFrom() {
 }
 
 function closeForm() {
+    let noCompaniesShell = document.querySelector(".not-categorized")
+    noCompaniesShell.style.display = "block";
     shellLayout.style.display = "block"
     sectionHeader.style.display = "block"
     itemPageWrapper.style.opacity = '0';

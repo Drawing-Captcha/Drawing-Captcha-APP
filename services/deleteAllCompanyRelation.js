@@ -6,6 +6,7 @@ const deleteColorKitRelation = require("../services/deleteColorKitRelation.js");
 const deleteAllowedOriginRelation = require("../services/deleteAllowedOriginRelation.js")
 const deleteDeletedArchiveRelation = require("../services/deleteDeletedArchiveRelation.js")
 const setUserRelationToReadOnly = require("../services/setAllRelatedUsersToReadOnly.js")
+const deleteApiKeyRelation = require("../services/deleteApiKeyRelation.js")
 async function deleteEverythingFromCompany(companyId) {
     try {
         console.log(`Deleting all company relations with company ID: ${companyId}`)
@@ -42,6 +43,10 @@ async function deleteEverythingFromCompany(companyId) {
         console.log(`Starting to delete deleted Archive relation for company ID: ${company.companyId}`)
         await deleteDeletedArchiveRelation(company.companyId)
         console.log(`Finished deleting deleted Archive relation for company ID: ${company.companyId}`)
+
+        console.log(`Starting to delete api key relations for company ID: ${company.companyId}`)
+        await deleteApiKeyRelation(company.companyId)
+        console.log(`Finished deleting api key relations for company ID: ${company.companyId}`)
 
         console.log(`Deleting company: ${company.name}`)
         await CompanyModel.deleteOne({ companyId: companyId })
