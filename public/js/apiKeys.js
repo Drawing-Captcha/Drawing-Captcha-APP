@@ -188,7 +188,6 @@ function pushToServer(key, isDelete, element) {
             else {
                 alert(`API Key ${element.name} failed to delete!`)
                 location.reload()
-
             }
 
         })

@@ -29,10 +29,13 @@ router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, (req, res) => {
 
 router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
     try {
+        let apiKey = req.body.apiKey
+        let apiKeyDB = await ApiKeyModel.findOne({ apiKey })
+        let companyId = apiKeyDB.companies[0]
         console.log("captcha settings getting fetched..")
         let returnedColorKit
         let message
-        let colorKit = await ColorKit.findOne({});
+        let colorKit = await ColorKit.findOne({ company: companyId });
         if (colorKit) {
             message = "ColorKit found"
             console.log(message)
@@ -56,6 +59,7 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
 
     let globalPool = await initializePool()
     try {
+        const captchaIdentifier = uuid.v4();
         let apiKeys = await ApiKeyModel.find();
         if (req.body.session) {
             req.session.cookie = req.body.session.cookie;
@@ -65,8 +69,6 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
             req.session.uniqueFileName = req.body.session.uniqueFileName;
 
         }
-        const captchaIdentifier = uuid.v4();
-        console.log(captchaIdentifier)
 
         if (!globalPool || globalPool.length === 0) {
             console.error("Pool is empty or not initialized.");
@@ -80,10 +82,12 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
                 selectedApiKey = key
             }
         })
+        let companyId = selectedApiKey.companies[0]
+
         console.log("requested key: ", req.body.apiKey)
         console.log("returned key: ", selectedApiKey)
 
-        if(req.body.apiKey){
+        if (req.body.apiKey) {
             if (selectedApiKey && selectedApiKey.companies != null && selectedApiKey.companies != "") {
                 console.log("returned categorized to client")
                 globalPool.forEach(item => {
@@ -92,7 +96,7 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
                     }
                 })
                 console.log("TMP Content: ", tmpContent)
-                if(tmpContent.length === 0 || tmpContent === null ){
+                if (tmpContent.length === 0 || tmpContent === null) {
                     setNotCategorized()
                 }
             }
@@ -104,10 +108,10 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
             setNotCategorized()
         }
 
-        function setNotCategorized(){
+        function setNotCategorized() {
             console.log("returned not categorized to client")
             globalPool.forEach(item => {
-                if(item.companies === null || item.companies.length === 0){
+                if (item.companies === null || item.companies.length === 0) {
                     tmpContent.push(item)
                 }
             })
@@ -119,7 +123,8 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
 
         console.log("selectedContent: ", selectedContent)
 
-        captchaSession.set(captchaIdentifier, {
+        req.session.captchaSession = {
+            CaptchaIdentifier: captchaIdentifier,
             ID: selectedContent.ID,
             imgURL: selectedContent.URL,
             Name: selectedContent.Name,
@@ -128,14 +133,24 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
             Path: selectedContent.Path,
             minToleranceOfPool: selectedContent.MinTolerance,
             maxToleranceOfPool: selectedContent.MaxTolerance,
-        });
+        };
+        let client = req.session.captchaSession;
 
-        let client = captchaSession.get(captchaIdentifier);
         req.session.clientSpecificData = {
             ID: captchaIdentifier,
         };
 
-        let clientData = req.session.clientSpecificData;
+        //Session based solution
+
+
+
+
+
+        // hier weiter machen
+
+
+
+        // let clientData = req.session.clientSpecificData;
 
         let itemAssets = {
             itemTitle: selectedContent.todoTitle,
@@ -180,17 +195,20 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
 });
 
 router.post('/checkCubes', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
-    const selectedFields = req.body.selectedIds;
-    const selectedId = req.body.clientData.ID;
-    if (req.body.session && req.body.session.uniqueFileName) {
-        console.log("body session", req.body.session.uniqueFileName)
-        req.session.uniqueFileName = req.body.session.uniqueFileName;
-    }
-    console.log("unique file name: ", req.session)
+    try {
+        const selectedFields = req.body.selectedIds;
+        const selectedId = req.body.clientData.ID;
 
-    let client = captchaSession.get(selectedId);
+        if (req.body.session && req.body.session.uniqueFileName) {
+            req.session.uniqueFileName = req.body.session.uniqueFileName;
+        }
 
-    if (client) {
+        const client = captchaSession.get(selectedId);
+
+        if (!client) {
+            return res.status(400).json({ error: 'Client data not found' });
+        }
+
         const expectedFieldsMinTolerance = Math.ceil(Number(client.minToleranceOfPool) * client.expectedFields.length);
         const selectedFieldsMaxTolerance = Math.ceil(Number(client.maxToleranceOfPool) * client.expectedFields.length);
 
@@ -198,25 +216,44 @@ router.post('/checkCubes', csrfMiddleware.validateCSRFOrExternalKey, async (req,
 
         const isValid = successfullySelectedFields >= expectedFieldsMinTolerance && selectedFields.length <= selectedFieldsMaxTolerance;
 
-        console.log({
-            isValid,
-            expectedFields: client.expectedFields,
-            successfullySelectedFields,
-            expectedFieldsMinTolerance,
-            selectedFieldsLength: selectedFields.length,
-            selectedFieldsMaxTolerance
-        });
+        if (isValid) {
+            req.session.captchaValidated = true;
+            req.session.captchaValidatedTime = Date.now();
+        }
 
         res.json({ isValid });
-    } else {
-        res.status(400).json({ error: 'Client data not found' });
+
+        if (req.session.uniqueFileName) {
+            deleteFile.deleteFile(`./tmpimg/${req.session.uniqueFileName}`);
+        }
+
+        captchaSession.delete(selectedId);
+
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.get('/check-captcha', (req, res) => {
+    const validated = req.session.captchaValidated;
+    const validatedTime = req.session.captchaValidatedTime;
+
+    if (!validated) {
+        res.json({ valid: false });
+        return;
     }
 
-    console.log("Deleting: ", req.session.uniqueFileName)
-    deleteFile.deleteFile(`./tmpimg/${req.session.uniqueFileName}`)
+    const thirtyMinutes = 30 * 60 * 1000;
+    const currentTime = Date.now();
 
-    captchaSession.delete(selectedId);
+    if ((currentTime - validatedTime) < thirtyMinutes) {
+        res.json({ valid: true });
+    } else {
+        res.json({ valid: false });
+    }
 });
+
+
 
 
 module.exports = router

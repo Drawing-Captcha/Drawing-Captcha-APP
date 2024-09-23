@@ -76,7 +76,11 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: store,
+    cookie: {
+        maxAge: 1800000 
+    }
 }));
+
 
 const indexRoutes = require("./routes/index.js")
 const authRoutes = require("./routes/auth.js")
