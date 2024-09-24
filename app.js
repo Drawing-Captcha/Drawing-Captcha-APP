@@ -17,6 +17,7 @@ const configInitDomain = require("./config/configInitDomain.js")
 const createInitColorKit = require("./config/createInitColorKit.js")
 const createDirectory = require("./services/createDirectory.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
+const store = require("./models/store.js")
 const port = process.env.PORT;
 let origins
 createDirectory()
@@ -49,6 +50,7 @@ app.use(cookieParser());
 const csrfProtection = csrf({ cookie: true });
 
 app.use(cors({
+
     origin: function (origin, callback) {
         if (!origin) {
             return callback(null, true);
@@ -62,11 +64,6 @@ app.use(cors({
     credentials: true
 }));
 
-const mongoURI = process.env.MONGO_URI
-const store = new MongoDBSession({
-    uri: mongoURI,
-    collection: "mySessions",
-})
 
 app.set("view engine", "ejs")
 app.use(express.urlencoded({ extended: true }));

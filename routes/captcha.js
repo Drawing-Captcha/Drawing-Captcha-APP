@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require("path");
 const { promises: fsPromises } = require('fs');
+const rateLimit = require("express-rate-limit");
 const fs = require("fs");
 const uuid = require('uuid');
 const router = express.Router();
@@ -9,7 +10,9 @@ const ColorKit = require("../models/ColorKit.js");
 const generateUniqueName = require("../services/generateUniqueName.js")
 const deleteFile = require("../services/deleteFiles.js");
 const { pool, initializePool } = require('../controllers/initializeController.js');
-const captchaSession = new Map();
+const store = require('../models/store.js');
+
+
 const defaultColorKit = {
     buttonColorValue: "#007BFF",
     buttonColorHoverValue: "#0056b3",
@@ -19,7 +22,11 @@ const defaultColorKit = {
 }
 const ApiKeyModel = require("../models/ApiKey.js")
 
-router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, (req, res) => {
+router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 50,
+    message: "You have exceeded the maximum number of requests for this endpoint. Please try again later."
+}), (req, res) => {
     if (req.body.session && req.body.session.uniqueFileName) {
         req.session.uniqueFileName = req.body.session.uniqueFileName;
     }
@@ -27,7 +34,11 @@ router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, (req, res) => {
 
 });
 
-router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
+router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 50,
+    message: "You have exceeded the maximum number of requests for this endpoint. Please try again later."
+}), async (req, res) => {
     try {
         let apiKey = req.body.apiKey
         let apiKeyDB = await ApiKeyModel.findOne({ apiKey })
@@ -45,7 +56,6 @@ router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, async 
             console.log(message);
             returnedColorKit = defaultColorKit
         }
-        console.log("returned colorKit: ", returnedColorKit);
 
         res.status(200).json({ returnedColorKit, message });
 
@@ -55,19 +65,39 @@ router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, async 
     }
 });
 
-router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
+router.post('/assets', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 50,
+    message: "You have exceeded the maximum number of requests for this endpoint. Please try again later."
+}), async (req, res) => {
 
     let globalPool = await initializePool()
     try {
-        const captchaIdentifier = uuid.v4();
-        let apiKeys = await ApiKeyModel.find();
-        if (req.body.session) {
-            req.session.cookie = req.body.session.cookie;
-            req.session.authMethod = req.body.session.authMethod;
-            req.session.apiKey = req.body.session.apiKey;
-            req.session.clientSpecificData = req.body.session.clientSpecificData;
-            req.session.uniqueFileName = req.body.session.uniqueFileName;
 
+        let captchaIdentifier = uuid.v4();
+        let selectedApiKey = await ApiKeyModel.findOne({ apiKey: req.body.apiKey });
+        let tmpContent = []
+        let uniqueFileName;
+        let savePath;
+        let finishedURL;
+
+        if (req.body.session) {
+            if (req.body.session) {
+                req.session.client = {
+                    clientIdentifier: req.body.session.clientIdentifier,
+                    authMethod: req.body.session.authMethod,
+                    clientSpecificData: req.body.session.clientSpecificData,
+                    uniqueFileName: req.body.session.uniqueFileName
+                };
+            }
+        }
+        else {
+            req.session.client = {
+                clientIdentifier: captchaIdentifier,
+                authMethod: "drawing-captcha",
+                uniqueFileName: null,
+                itemAssets: {}
+            };
         }
 
         if (!globalPool || globalPool.length === 0) {
@@ -75,32 +105,13 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
             return res.status(500).json({ error: 'Pool is empty or not initialized.' });
         }
 
-        let tmpContent = []
-        let selectedApiKey
-        apiKeys.forEach(key => {
-            if (req.body.apiKey === key.apiKey) {
-                selectedApiKey = key
-            }
-        })
-        let companyId = selectedApiKey.companies[0]
-
-        console.log("requested key: ", req.body.apiKey)
-        console.log("returned key: ", selectedApiKey)
-
-        if (req.body.apiKey) {
-            if (selectedApiKey && selectedApiKey.companies != null && selectedApiKey.companies != "") {
-                console.log("returned categorized to client")
-                globalPool.forEach(item => {
-                    if (item.companies.some(company => selectedApiKey.companies.includes(company))) {
-                        tmpContent.push(item)
-                    }
-                })
-                console.log("TMP Content: ", tmpContent)
-                if (tmpContent.length === 0 || tmpContent === null) {
-                    setNotCategorized()
+        if (selectedApiKey && selectedApiKey.companies != null && selectedApiKey.companies != "") {
+            globalPool.forEach(item => {
+                if (item.companies.some(company => selectedApiKey.companies.includes(company))) {
+                    tmpContent.push(item)
                 }
-            }
-            else {
+            })
+            if (tmpContent.length === 0 || tmpContent === null) {
                 setNotCategorized()
             }
         }
@@ -109,7 +120,6 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
         }
 
         function setNotCategorized() {
-            console.log("returned not categorized to client")
             globalPool.forEach(item => {
                 if (item.companies === null || item.companies.length === 0) {
                     tmpContent.push(item)
@@ -117,11 +127,8 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
             })
         }
 
-        console.log(tmpContent)
         const randomIndex = Math.floor(Math.random() * tmpContent.length);
         const selectedContent = tmpContent[randomIndex];
-
-        console.log("selectedContent: ", selectedContent)
 
         req.session.captchaSession = {
             CaptchaIdentifier: captchaIdentifier,
@@ -134,38 +141,12 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
             minToleranceOfPool: selectedContent.MinTolerance,
             maxToleranceOfPool: selectedContent.MaxTolerance,
         };
-        let client = req.session.captchaSession;
 
-        req.session.clientSpecificData = {
-            ID: captchaIdentifier,
-        };
-
-        //Session based solution
-
-
-
-
-
-        // hier weiter machen
-
-
-
-        // let clientData = req.session.clientSpecificData;
-
-        let itemAssets = {
-            itemTitle: selectedContent.todoTitle,
-            backgroundSize: selectedContent.backgroundSize
-        }
-
-        let uniqueFileName;
-        let savePath;
-
-        if (client.imgURL) {
-            const imageBase64 = client.imgURL;
+        if (req.session.captchaSession.imgURL) {
+            const imageBase64 = req.session.captchaSession.imgURL;
             const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
             const imageBuffer = Buffer.from(base64Data, 'base64');
             uniqueFileName = generateUniqueName.generateUniqueName(`${uuid.v4()}.png`);
-            req.session.uniqueFileName = uniqueFileName;
 
             savePath = `./tmpimg/${uniqueFileName}`;
 
@@ -182,9 +163,17 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
             return res.status(500).json({ error: 'client.imgURL is undefined.' });
         }
 
-        const finishedURL = `/tmpimg/${uniqueFileName}`;
-//Nicht die gesamte session zurückgeben!!!!!!
-        res.json({ finishedURL, clientData, session: req.session, itemAssets });
+        finishedURL = `/tmpimg/${uniqueFileName}`;
+
+        req.session.client.itemAssets = {
+            itemTitle: selectedContent.todoTitle,
+            backgroundSize: selectedContent.backgroundSize,
+            finishedURL: finishedURL
+        }
+
+        req.session.client.uniqueFileName = uniqueFileName;
+
+        res.json({ client: req.session.client });
 
 
     } catch (err) {
@@ -193,50 +182,69 @@ router.post('/getAssets', csrfMiddleware.validateCSRFOrExternalKey, async (req, 
     }
 
 });
+router.post('/checkCubes', rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 50,
+    message: "You have exceeded the maximum number of requests for this endpoint. Please try again later."
+}), csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
+    let givenSession = req.body.session;
+    let existSession = await store.collection.findOne({
+        'session.client.clientIdentifier': givenSession.clientIdentifier
+    })
 
-router.post('/checkCubes', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
+    const selectedFields = req.body.selectedIds;
+
+    if (!existSession) {
+        return res.status(400).json({ error: 'Client data not found' });
+    }
+
+    const client = existSession.session.captchaSession;
+    if (!client) {
+        return res.status(400).json({ error: 'Client data not found' });
+    }
+
+    const expectedFieldsMinTolerance = Math.ceil(Number(client.minToleranceOfPool) * client.expectedFields.length);
+    const selectedFieldsMaxTolerance = Math.ceil(Number(client.maxToleranceOfPool) * client.expectedFields.length);
+
+    const successfullySelectedFields = selectedFields.filter(selectedField => client.expectedFields.includes(selectedField)).length;
+
+    const isValid = successfullySelectedFields >= expectedFieldsMinTolerance && selectedFields.length <= selectedFieldsMaxTolerance;
+
+    if (isValid) {
+        existSession.session.captchaValidated = true;
+        existSession.session.captchaValidatedTime = Date.now();
+    }
+
     try {
-        const selectedFields = req.body.selectedIds;
-        const selectedId = req.body.clientData.ID;
-
-        if (req.body.session && req.body.session.uniqueFileName) {
-            req.session.uniqueFileName = req.body.session.uniqueFileName;
-        }
-
-        const client = captchaSession.get(selectedId);
-
-        if (!client) {
-            return res.status(400).json({ error: 'Client data not found' });
-        }
-
-        const expectedFieldsMinTolerance = Math.ceil(Number(client.minToleranceOfPool) * client.expectedFields.length);
-        const selectedFieldsMaxTolerance = Math.ceil(Number(client.maxToleranceOfPool) * client.expectedFields.length);
-
-        const successfullySelectedFields = selectedFields.filter(selectedField => client.expectedFields.includes(selectedField)).length;
-
-        const isValid = successfullySelectedFields >= expectedFieldsMinTolerance && selectedFields.length <= selectedFieldsMaxTolerance;
-
-        if (isValid) {
-            req.session.captchaValidated = true;
-            req.session.captchaValidatedTime = Date.now();
-        }
-
-        res.json({ isValid });
-
-        if (req.session.uniqueFileName) {
-            deleteFile.deleteFile(`./tmpimg/${req.session.uniqueFileName}`);
-        }
-
-        captchaSession.delete(selectedId);
-
+        await store.collection.updateOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier}, { $set: { 'session.captchaValidated': existSession.session.captchaValidated, 'session.captchaValidatedTime': existSession.session.captchaValidatedTime } });
     } catch (error) {
-        res.status(500).json({ error: 'Internal server error' });
+        console.error("Error while updating session:", error);
+        return res.status(500).json({ error: 'Error while updating session.' });
+    }
+
+    res.json({ isValid });
+
+    if (existSession.session.client.uniqueFileName) {
+        deleteFile.deleteFile(`./tmpimg/${existSession.session.client.uniqueFileName}`);
     }
 });
 
-router.get('/check-captcha', (req, res) => {
-    const validated = req.session.captchaValidated;
-    const validatedTime = req.session.captchaValidatedTime;
+router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
+    console.log("checkcaptcha")
+    const givenSession = req.body.session;
+    if(!req.body.session){
+        res.json({ valid: false });
+    }
+    const existSession = await store.collection.findOne({
+        'session.client.clientIdentifier': givenSession.clientIdentifier
+    })
+
+    if (!existSession) {
+        return res.status(400).json({ error: 'Client data not found' });
+    }
+
+    const validated = existSession.session.captchaValidated;
+    const validatedTime = existSession.session.captchaValidatedTime;
 
     if (!validated) {
         res.json({ valid: false });
