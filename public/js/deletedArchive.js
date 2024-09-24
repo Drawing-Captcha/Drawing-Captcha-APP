@@ -4,6 +4,7 @@ let pool;
 var isDelete;
 
 async function initialize() {
+    await buildCompanyShells();
     await getDeletedBin();
 }
 
@@ -20,13 +21,25 @@ async function getDeletedBin() {
             const data = await response.json();
             const deletedBin = data.globalDeletedBin;
             const userRole = data.userRole;
-            console.log(deletedBin)
+            const appAdmin = data.appAdmin;
 
-            const wrapper = document.querySelector(".stacked-list1_list-wrapper");
+            let wrapper;
+            const shells = document.querySelectorAll(".section_shell2-layout");
 
             if (deletedBin.length != 0) {
-
                 deletedBin.forEach(elementData => {
+                    if (elementData.companies.length > 0) {
+                        shells.forEach(shell => {
+                            if (elementData.companies.includes(shell.getAttribute("companyId"))) {
+                                wrapper = shell.querySelector(".stacked-list1_list-wrapper");
+                            }
+                        });
+                    }
+                    else {
+                        if (appAdmin) {
+                            wrapper = document.querySelector(".appAdmin").querySelector(".stacked-list1_list-wrapper");
+                        }
+                    }
                     const item = document.createElement("div");
                     item.classList.add("stacked-list1_item");
 
@@ -96,20 +109,8 @@ async function getDeletedBin() {
                     wrapper.appendChild(item);
                 });
             }
-            else {
-                const syncWrapper = document.createElement("div")
-                syncWrapper.classList.add("syncWrapper")
 
-                syncWrapper.addEventListener("click", () => window.location.reload())
-                syncWrapper.style.cursor = "pointer"
-
-
-                const syncMessage = document.createElement("h3")
-                syncMessage.innerHTML = "No items in pool currently, sync here.. 🤔🔄"
-
-                wrapper.appendChild(syncWrapper)
-                syncWrapper.appendChild(syncMessage)
-            }
+            await addSyncMessage(shells, "captchas")
 
 
         } else {

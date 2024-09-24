@@ -5,27 +5,37 @@ const CaptchaModel = require("../models/Captcha.js")
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const authMiddleware = require("../middlewares/authMiddleware");
 const notReadOnly = require("../middlewares/notReadOnly.js")
+const deleteAllRelations = require("../services/deleteAllCompanyRelation.js")
+const createCompanyRegisterKey = require("../services/createCompanyRegisterKey.js")
+const createCompanyColorKit = require("../services/createCompanyColorKit.js")
 const crypto = require("crypto");
-
+const createAllowedOrigin = require('../services/createAllowedOrigin.js');
+const isAppAdmin = require("../middlewares/isAppAdmin.js")
+const isAdmin = require("../middlewares/adminMiddleware.js")
+const isCompanyRelation = require("../services/companyRelationMiddleware.js");
+const isRelatedToCompany = require('../services/companyRelationMiddleware.js');
 
 router.get('/', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
         const allCompanies = await CompanyModel.find();
         let returnedCompanies = []
-        if(req.session.user.role === "admin"){
+        if(req.session.user.appAdmin){
             returnedCompanies = allCompanies;
+            console.log('returnedCompanies as appAdmin: ', returnedCompanies);
         }
         else{
-            let sessionCompanies = req.session.user.companies
+            let sessionCompanies = req.session.user.company
+            console.log('sessionCompanies: ', sessionCompanies);
 
             allCompanies.forEach(company => {
-                if(sessionCompanies.includes(company.companyId)){
+                if(sessionCompanies === company.companyId){
                     console.log(company)
                     returnedCompanies.push(company)
                 }
             })            
-            
+            console.log('returnedCompanies as user: ', returnedCompanies);
         }
+        console.log("companies that are being returned to the user: ", returnedCompanies)
         if (allCompanies) {
             console.log("Successfully found all Companies: ", returnedCompanies);
         }
@@ -36,33 +46,49 @@ router.get('/', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, re
     }
 })
 
-router.post('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.post('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAppAdmin, async (req, res) => {
     try {
-        let companyExists = await CompanyModel.findOne({name: req.body.name});
-        if(companyExists){
-            return res.status(400).json({message: "A company with this name already exists."});
+        let companyExists = await CompanyModel.findOne({ name: req.body.name });
+        if (companyExists) {
+            return res.status(400).json({ message: "A company with this name already exists." });
         }
 
+        const randomUUID = crypto.randomUUID();
+
         const company = new CompanyModel({
-            companyId: crypto.randomUUID(),
+            companyId: randomUUID,
             name: req.body.name,
             ppURL: req.body.ppURL
         });
 
+        const registerKeyResult = await createCompanyRegisterKey(randomUUID);
+
+        if (!registerKeyResult.success) {
+            return res.status(400).json({ message: registerKeyResult.message });
+        }
+
         await company.save();
+        
+        createCompanyColorKit(company.companyId);
+        console.log("originname: ", req.body)
+        createAllowedOrigin(company.companyId, req.body.originName);
 
-        return res.status(201).json({message: "Company successfully created.", company});
+        return res.status(201).json({ message: "Company successfully created.", company });
 
-    } catch(error) {
+    } catch (error) {
         console.error(error);
-        return res.status(500).json({message: "An error occurred while creating the company."});
+        return res.status(500).json({ message: "An error occurred while creating the company." });
     }
 });
 
-router.put('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+
+router.put('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
         const { companyId, name, ppURL } = req.body;
 
+        if(!isRelatedToCompany(req, companyId)){
+            return res.status(401).json({ message: "Unauthorized" });
+        }
         if (!companyId) {
             return res.status(400).json({ message: "Company ID is required." });
         }
@@ -88,26 +114,33 @@ router.put('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, a
 });
 
 
-router.delete('/', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.delete('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
         const { companyId } = req.body;
+
+        if(!isRelatedToCompany(req, companyId)){
+            return res.status(401).json({ message: "Unauthorized" });
+
+        }
 
         if (!companyId) {
             return res.status(400).json({ message: "Company ID is required." });
         }
 
-        const company = await CompanyModel.findOne({ companyId });
+        await deleteAllRelations(companyId)
 
-        if (!company) {
-            return res.status(404).json({ message: "Company not found." });
-        }
+        // const company = await CompanyModel.findOne({ companyId });
 
-        await CompanyModel.deleteOne({ companyId });
+        // if (!company) {
+        //     return res.status(404).json({ message: "Company not found." });
+        // }
 
-        await CaptchaModel.updateMany(
-            { companies: companyId },
-            { $pull: { companies: companyId } }
-        );
+        // await CompanyModel.deleteOne({ companyId });
+
+        // await CaptchaModel.updateMany(
+        //     { companies: companyId },
+        //     { $pull: { companies: companyId } }
+        // );
 
         res.status(200).json({ message: "Company and related captchas successfully updated." });
     } catch (error) {

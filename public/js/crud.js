@@ -28,6 +28,8 @@ const listItems = document.querySelector(".list-items")
 
 let tmpPool = [];
 let pool;
+let userRole;
+let appAdmin;
 var isDelete;
 let validateTrueCubes;
 let validateMinCubes;
@@ -56,7 +58,9 @@ function updateBackgroundSize() {
 async function initialize() {
     await getPool();
     await initCompanies();
-    await getNotCategorizedItems();
+    if(appAdmin){
+        await getNotCategorizedItems();
+    }
 }
 
 async function getPool() {
@@ -71,8 +75,9 @@ async function getPool() {
 
         if (response.ok) {
             const data = await response.json();
-            const pool = data.globalPool;
-            const userRole = data.userRole;
+            const pool = data.globalPool; 
+            userRole = data.userRole;
+            appAdmin = data.appAdmin;
 
             if (pool.length != 0) {
 
@@ -160,7 +165,7 @@ async function getPool() {
 
                 wrapper.appendChild(syncWrapper)
                 syncWrapper.appendChild(syncMessage)
-                syncWrapper.appendChild(syncButton)
+                // syncWrapper.appendChild(syncButton)
 
             }
 
@@ -174,9 +179,22 @@ async function getPool() {
 }
 
 async function getComponent(e) {
-    await getCompanies(e);
+    const allCompanies = await getCompanies(e);
+    const elementCompany =  allCompanies.allCompanies.find(company => e.companies.includes(company.companyId))
     removeCurrentItems();
 
+    let items = document.querySelectorAll(".item")
+    let btnText = document.querySelector(".btn-text")
+    btnText.innerHTML = "No company selected"
+    items.forEach(item => {
+        if (e.companies.includes(item.getAttribute("obj-id"))) {
+            btnText.innerHTML = elementCompany.name + " Selected"
+            item.classList.add("checked")
+        }
+    })
+
+    const sectionHeader = document.querySelector(".section_page-header3")
+    sectionHeader.style.display = "none";
     toDo.innerHTML = `Edit item: ${e.Name}`;
     editItemParent.style.display = "block";
 
@@ -243,7 +261,6 @@ async function getComponent(e) {
     rangeInput.value = e.backgroundSize ? e.backgroundSize : 70
     updateBackgroundSize()
     toDoDescription.value = e.todoTitle ? e.todoTitle : ""
-
 
 }
 
@@ -432,21 +449,34 @@ async function getCompanies(e) {
                     li.appendChild(textSpan);
 
                     list.appendChild(li);
+                    if(e.companies.includes(company.companyId)){
+                        li.classList.add("checked")
+                    }
                 });
-                let items = document.querySelectorAll(".item");
-                let assignedCompanies = e.companies
+
+                items = document.querySelectorAll(".item");
+                let btnText = document.querySelector(".btn-text")
+                let checked = "";
 
                 items.forEach(item => {
-                    if (assignedCompanies.includes(item.getAttribute("obj-id"))) {
-                        item.classList.add("checked");
-                    }
                     item.addEventListener("click", () => {
-                        item.classList.toggle("checked");
-                        setButtonText()
-
-                    });
+                        if (item.classList.contains("checked")) {
+                            removeCheck(item)
+                            checked = "";
+                        }
+                        else {
+                            removeCheck()
+                            checked = item.querySelector(".item-text").innerText
+                            item.classList.toggle("checked");
+                        }
+                        
+                    if (checked && checked.length > 0) {
+                        btnText.innerText = `${checked} selected`;
+                    } else {
+                        btnText.innerText = "No company selected";
+                    }
+                    })
                 })
-                setButtonText()
 
             }
             else{
@@ -455,19 +485,12 @@ async function getCompanies(e) {
 
 
             }
+            return data;
         } else {
             throw new Error('Error from server while trying to request the server');
         }
     } catch (error) {
         console.log('Error in getCompanies:', error);
-    }
-}
-
-function setButtonText() {
-    if (checked && checked.length > 0) {
-        btnText.innerText = `${checked.length} Selected`;
-    } else {
-        btnText.innerText = "Select Company";
     }
 }
 
@@ -560,7 +583,7 @@ async function initCompanies() {
                     getPoolForEachCompany(companyWrapper)
                 });
             }
-            else noCompaniesTeaser.style.display = "block"
+            else buildNoCompaniesShell();
         } else {
             throw new Error('Error from server while trying to request the server');
         }
@@ -568,8 +591,6 @@ async function initCompanies() {
         console.log('Error in getCompanies:', error);
     }
 }
-
-
 
 async function getPoolForEachCompany(companyWrapper) {
     try {
@@ -587,11 +608,9 @@ async function getPoolForEachCompany(companyWrapper) {
             const userRole = data.userRole;
 
             let itemsWrapper = companyWrapper.querySelector(".stacked-list1_list-wrapper")
-        
             if (pool.length != 0 && pool.some(elementData => elementData.companies.includes(companyWrapper.getAttribute("companyId")))) {
                 pool.forEach(elementData => {
                     if (elementData.companies.includes(companyWrapper.getAttribute("companyId"))) {
-
                         const item = document.createElement("div");
                         item.classList.add("stacked-list1_item");
 

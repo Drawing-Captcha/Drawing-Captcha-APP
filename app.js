@@ -14,17 +14,20 @@ const { pool, deletedBin, allowedOrigins, defaultOrigin, initializeAllowedOrigin
 const createInitCaptcha = require("./config/createInitCaptcha.js")
 const generateNewRegisterKey = require("./services/generateRegisterKey.js")
 const configInitDomain = require("./config/configInitDomain.js")
+const createInitColorKit = require("./config/createInitColorKit.js")
 const createDirectory = require("./services/createDirectory.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
+const store = require("./models/store.js")
 const port = process.env.PORT;
 let origins
 createDirectory()
 connectDB()
 createInitCaptcha()
+createInitColorKit()
+configInitDomain()
 
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
-
 
 async function initialize() {
     origins = await initializeAllowedOrigins()
@@ -47,6 +50,7 @@ app.use(cookieParser());
 const csrfProtection = csrf({ cookie: true });
 
 app.use(cors({
+
     origin: function (origin, callback) {
         if (!origin) {
             return callback(null, true);
@@ -60,11 +64,6 @@ app.use(cors({
     credentials: true
 }));
 
-const mongoURI = process.env.MONGO_URI
-const store = new MongoDBSession({
-    uri: mongoURI,
-    collection: "mySessions",
-})
 
 app.set("view engine", "ejs")
 app.use(express.urlencoded({ extended: true }));
@@ -74,7 +73,11 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: store,
+    cookie: {
+        maxAge: 1800000 
+    }
 }));
+
 
 const indexRoutes = require("./routes/index.js")
 const authRoutes = require("./routes/auth.js")

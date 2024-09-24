@@ -17,24 +17,27 @@ const isAdmin = require("../middlewares/adminMiddleware.js")
 const registerKeyModel = require("../models/RegisterKey.js")
 const generateNewRegisterKey = require("../services/generateRegisterKey.js")
 const notReadOnly = require("../middlewares/notReadOnly.js")
+const isAppAdmin = require("../middlewares/isAppAdmin.js")
 const CaptchaModel = require("../models/Captcha.js")
 const DeletedCaptchaModel = require("../models/DeletedCaptchaModel.js")
 const CompanyModel = require("../models/Company.js")
+const isRelatedToCompany = require("../services/companyRelationMiddleware.js")
 
 router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
         let globalPool = await initializePool()
         let userRole = req.session.user.role;
+        let appAdmin = req.session.user.appAdmin;
         let returnedPool
 
         if (globalPool) {
-            if (userRole === "admin") {
+            if (appAdmin) {
                 returnedPool = globalPool
             }
             else {
                 returnedPool = []
                 globalPool.forEach(item => {
-                    if (item.companies === null || item.companies.length === 0 || item.companies.some(company => req.session.user.companies.includes(company))) {
+                    if (item.initialCaptcha === true || item.companies.some(company => req.session.user.company === company)) {
                         returnedPool.push(item)
                     }
                 })
@@ -43,14 +46,14 @@ router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, asy
             console.error("pool not defined");
         }
 
-        res.json({ globalPool: returnedPool, userRole });
+        res.json({ globalPool: returnedPool, userRole, appAdmin: req.session.user.appAdmin });
     } catch (error) {
         console.error(error);
         res.status(500).send({ message: 'Server error' });
     }
 });
 
-router.get('/getElements/notCategorized', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.get('/getElements/notCategorized', authMiddleware, csrfMiddleware.validateCSRFToken, isAppAdmin, async (req, res) => {
     try {
         let globalPool = await initializePool()
         let userRole = req.session.user.role;
@@ -83,7 +86,13 @@ router.put("/crud", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnl
 
     let deletedObject;
     let tmpPool = req.body.tmpPool;
+    let companyId = tmpPool[0].companies[0];
     let index;
+
+    if (!isRelatedToCompany(req, companyId)) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
     console.log("tmpPool", tmpPool);
 
     if (Array.isArray(tmpPool)) {
@@ -150,7 +159,7 @@ router.put("/crud", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnl
 
 
 router.get('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role })
+    res.render("deletedArchive", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin })
 })
 
 router.get('/notAuthorized', authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
@@ -158,12 +167,18 @@ router.get('/notAuthorized', authMiddleware, csrfMiddleware.validateCSRFToken, (
 })
 
 router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+
     let globalPool = await initializePool();
     let globalDeletedBin = await initializeBin();
 
     let deletedObject;
     let tmpPool = req.body.tmpPool;
+    let companyId = tmpPool[0].companies[0];
     let index;
+
+    if (!isRelatedToCompany(req, companyId)) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
     console.log("given pool: ", tmpPool);
 
     if (Array.isArray(tmpPool)) {
@@ -207,25 +222,49 @@ router.put('/deletedArchive', authMiddleware, csrfMiddleware.validateCSRFToken, 
 
 router.get('/deletedArchiveAssets', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     let globalDeletedBin = await initializeBin()
-    let userRole = req.session.user.role
+    let appAdmin = req.session.user.appAdmin
+    let returnedPool
+
     if (globalDeletedBin) {
-        res.json({ globalDeletedBin, userRole });
+        if (appAdmin) {
+            returnedPool = globalDeletedBin
+        }
+        else {
+            returnedPool = []
+            globalDeletedBin.forEach(item => {
+                if (item.companies.some(company => req.session.user.company === company)) {
+                    returnedPool.push(item)
+                }
+            })
+        }
+    } else {
+        console.error("pool not defined");
+    }
+
+    if (globalDeletedBin) {
+        res.json({ globalDeletedBin: returnedPool, userRole: req.session.user.role, appAdmin: req.session.user.appAdmin });
     }
     else console.error("deletedBin not defined")
 });
 
-router.get("/apiKeySection", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
+router.get("/apiKeySection", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, (req, res) => {
 
-    res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role });
+    res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 
 })
 
-router.put("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.put("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
+
     if (req.body.isDelete) {
         let key = req.body.key;
         let isKeyDeleted = false;
         try {
+
             let keyExists = await ApiKeyModel.findOne({ apiKey: key });
+            let companyId = keyExists.companies[0];
+            if (!isRelatedToCompany(req, companyId)) {
+                return res.status(401).json({ message: "Unauthorized" });
+            }
             if (keyExists) {
                 let keyDeleted = await ApiKeyModel.deleteOne({ apiKey: key });
                 isKeyDeleted = true;
@@ -245,33 +284,30 @@ router.put("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notReadO
     }
 });
 
-router.get("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.get("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
-        let apiKeys = await ApiKeyModel.find();
         let userRole = req.session.user.role
+        let appAdmin = req.session.user.appAdmin
+        let company = req.session.user.company
 
         let returnedKeys
 
-        if(userRole === "admin"){
-            returnedKeys = apiKeys    
+        if (appAdmin) {
+            returnedKeys = await ApiKeyModel.find({});
         }
-        else{
-            returnedKeys = []
-            apiKeys.forEach(Key => {
-                if(Key.companies === null || Key.companies.length === 0 || Key.companies.some(company => req.session.user.companies.includes(company))){
-                    returnedKeys.push(Key)
-                }
-            })
+        else {
+            returnedKeys = await ApiKeyModel.find({ companies: { $in: company } })
         }
+        console.log("returnedKeys: ", returnedKeys)
 
-        res.json({ apiKeys: returnedKeys, userRole });
+        res.json({ apiKeys: returnedKeys, userRole, appAdmin: req.session.user.appAdmin });
     } catch (error) {
         console.error("Error fetching API keys:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
-router.post("/apiKey/deleteAll", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.post("/apiKey/deleteAll", authMiddleware, csrfMiddleware.validateCSRFToken, isAppAdmin, async (req, res) => {
     let deleteAll;
     console.log("deleting all api keys....")
     try {
@@ -297,12 +333,16 @@ router.post("/apiKey/deleteAll", authMiddleware, csrfMiddleware.validateCSRFToke
 
 })
 
-router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     let successfully;
     let message;
     try {
         let name = req.body.apiKeyName;
         let selectedCompanies = req.body.selectedCompanies;
+        let companyId = req.body.selectedCompanies[0];
+        if (!isRelatedToCompany(req, companyId)) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
         let doesNameExist = await ApiKeyModel.findOne({ name: name });
         if (!doesNameExist) {
             let apiKey = crypto.randomUUID();
@@ -338,39 +378,70 @@ router.post("/apiKey", authMiddleware, csrfMiddleware.validateCSRFToken, notRead
 })
 
 router.get("/", csrfMiddleware.validateCSRFToken, authMiddleware, (req, res) => {
-    res.render("dashboard", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
+    res.render("dashboard", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 })
 
-router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
+router.get("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
+    let companyData = {};
+
+    try {
+        let company = await CompanyModel.findOne({ companyId: req.session.user.company })
+        if (company) {
+            companyData.company = company.name;
+        }
+    } catch (error) {
+        console.error("Error while fetching company data:", error);
+        return res.status(500).json({ error: "An internal server error occurred." });
+    }
+
+    res.render("captchaSettings", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, ...companyData, appAdmin: req.session.user.appAdmin });
 })
 
 router.get("/registeredUsers", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("users", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
+    res.render("users", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 })
 router.get("/companies", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("company", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
+    res.render("company", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 })
 
 router.get("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, (req, res) => {
-    res.render("registerKey", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
+    res.render("registerKey", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 })
 router.get("/registerKey/assets", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, async (req, res) => {
+    console.log("registerKey/assets endpoint hit");
     try {
-        const registerKeyENV = process.env.REGISTER_KEY;
-        const registerKeyDB = await registerKeyModel.findOne({});
-        const returnedKey = registerKeyDB ? registerKeyDB.RegisterKey : registerKeyENV;
+        let userRole = req.session.user.companies;
+        let userAppAdmin = req.session.user.appAdmin;
+        let allKeys = await registerKeyModel.find({});
+        let returnedKey;
 
-        console.log("returned Key", returnedKey);
+        if (userAppAdmin) {
+            if (allKeys.length) {
+                returnedKey = allKeys;
+            }
+        } else {
+            returnedKey = [];
+            allKeys.forEach(key => {
+                if (req.session.user.company === key.Company) {
+                    returnedKey.push(key);
+                }
+            });
+        }
+        console.log("returned Key's:", returnedKey);
 
         res.json({ returnedKey });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 router.put("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
     try {
+        let companyId = req.body.companyId;
+        if (!isRelatedToCompany(req, companyId)) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
         generateNewRegisterKey(req, res);
     } catch (error) {
         console.error("Error handling register key:", error);
@@ -379,7 +450,7 @@ router.put("/registerKey", authMiddleware, isAdmin, csrfMiddleware.validateCSRFT
 });
 
 
-router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
         console.log(req.body)
         const {
@@ -388,14 +459,35 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
             selectedCubeColorValue,
             canvasOnHoverColorValue,
             defaultTitle,
-            isResetColorKit
+            isResetColorKit,
+            company,
+            initColorKit
         } = req.body;
 
+        let companyId = company;
+        if (!isRelatedToCompany(req, companyId)) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        console.log("given initcolor: ", initColorKit)
         let message;
 
-        if (isResetColorKit) {
-            let deletedKit = await ColorKit.deleteMany({});
-            message = deletedKit ? "ColorKit has been reset to default" : "Failed to reset ColorKit to default";
+        if (initColorKit === true) {
+            if (!req.session.user.appAdmin === true) {
+                return res.status(403).json({ success: false, message: "You don't have enough rights to perform this action" });
+            }
+        }
+        if (isResetColorKit && company) {
+            let initColorKit = await ColorKit.findOne({ initColorKit: true });
+            await ColorKit.updateOne({ company: company }, {
+                buttonColorValue: initColorKit.buttonColorValue,
+                buttonColorHoverValue: initColorKit.buttonColorHoverValue,
+                selectedCubeColorValue: initColorKit.selectedCubeColorValue,
+                canvasOnHoverColorValue: initColorKit.canvasOnHoverColorValue,
+                defaultTitle: initColorKit.defaultTitle,
+                company: initColorKit.company,
+                initColorKit: false
+            })
+            message = "ColorKit has been reseted successfully."
         }
         else {
 
@@ -408,18 +500,36 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
                     buttonColorHoverValue,
                     selectedCubeColorValue,
                     canvasOnHoverColorValue,
-                    defaultTitle
+                    defaultTitle,
+                    company,
+                    initColorKit
                 });
                 await newColorKit.save();
                 message = "ColorKit has been created successfully."
             } else {
-                await ColorKit.updateOne({}, {
-                    buttonColorValue,
-                    buttonColorHoverValue,
-                    selectedCubeColorValue,
-                    canvasOnHoverColorValue,
-                    defaultTitle
-                });
+                if (initColorKit) {
+                    console.log("given init: ", initColorKit)
+                    await ColorKit.updateOne({ initColorKit: true }, {
+                        buttonColorValue,
+                        buttonColorHoverValue,
+                        selectedCubeColorValue,
+                        canvasOnHoverColorValue,
+                        defaultTitle,
+                        initColorKit
+                    });
+                }
+                else {
+                    if (company) {
+                        await ColorKit.updateOne({ company: company }, {
+                            buttonColorValue,
+                            buttonColorHoverValue,
+                            selectedCubeColorValue,
+                            canvasOnHoverColorValue,
+                            defaultTitle,
+                            company
+                        });
+                    }
+                }
                 console.log("update one colorKit")
                 message = "ColorKit has been updated successfully."
             }
@@ -433,8 +543,30 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
     }
 });
 
+router.get("/colorKit", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+    try {
+        const company = req.session.user.company;
+        const appAdmin = req.session.user.appAdmin;
+        let returnedColorKit;
+
+        if (appAdmin) {
+            returnedColorKit = await ColorKit.findOne({ initColorKit: true });
+        }
+        else {
+            returnedColorKit = await ColorKit.findOne({ company: company });
+        }
+        if (!returnedColorKit) {
+            return res.status(404).json({ message: "ColorKit not found" });
+        }
+        res.status(200).json({ returnedColorKit });
+    } catch (err) {
+        console.error("Error while processing request:", err);
+        res.status(500).json({ error: "An internal server error occurred." });
+    }
+})
+
 router.get("/createItem", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, (req, res) => {
-    res.render("createItem", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role  });
+    res.render("createItem", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role });
 })
 
 router.post("/logout", authMiddleware, csrfMiddleware.validateCSRFToken, (req, res) => {
@@ -455,6 +587,11 @@ router.post('/newValidation', authMiddleware, csrfMiddleware.validateCSRFToken, 
     const todoTitle = req.body.todoTitle;
     const backgroundSize = req.body.backgroundSize;
     const selectedCompanies = req.body.selectedCompanies
+
+    let companyId = selectedCompanies[0];
+    if (!isRelatedToCompany(req, companyId)) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
 
     let isValid = false;
 
@@ -513,52 +650,45 @@ router.post('/newValidation/nameExists', authMiddleware, csrfMiddleware.validate
 
 router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        let message;
-        let allowedOrigins = await AllowedOriginModel.find({});
-        let userRole = req.session.user.role;
+        const userRole = req.session.user.role;
+        const appAdmin = req.session.user.appAdmin;
+        const userCompany = req.session.user.company;
         let returnedOrigins;
+        let message;
 
-        allowedOrigins = allowedOrigins.filter(origin => !origin.initOrigin);
-
-        if (allowedOrigins.length > 0) {
-            if(userRole === "admin"){
-                message = "allowed origins found";
-                console.log(message);
-                returnedOrigins = allowedOrigins;
-            }
-            else{
-                returnedOrigins = [];
-                allowedOrigins.forEach(Origin => {
-                    if(Origin.companies === null || Origin.companies.length === 0 || Origin.companies.some(company => req.session.user.companies.includes(company))){
-                        returnedOrigins.push(Origin);
-                    }
-                });
-            }
-        }
-        else {
-            message = "no allowed origins found";
-            console.log(message);
+        if (appAdmin) {
+            returnedOrigins = await AllowedOriginModel.find({ initOrigin: false });
+            message = "Alle erlaubten Urspr nge werden zur ckgegeben, da Sie App-Administrator sind";
+        } else {
+            returnedOrigins = await AllowedOriginModel.find({ companies: { $in: userCompany }, initOrigin: false });
+            message = "Nur die erlaubten Urspr nge, die mit Ihrer Firma in Verbindung stehen, werden zur ckgegeben, da Sie kein App-Administrator sind";
         }
 
-        res.json({ allowedOrigins: returnedOrigins, message, userRole });
-    }
-    catch (err) {
-        console.log("Error while trying to get AllowedOrigins", err);
-        return res.status(500).json({ error: "An error occurred while trying to get the AllowedOrigins" });
+        console.log(returnedOrigins)
+
+        res.json({ allowedOrigins: returnedOrigins, userRole, message, appAdmin: req.session.user.appAdmin });
+    } catch (err) {
+        console.error("Fehler beim Abrufen der erlaubten Urspr nge", err);
+        return res.status(500).json({ error: "Ein Fehler ist aufgetreten, whrend versucht wurde, die erlaubten Urspr nge abzurufen" });
     }
 })
-
-router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
         let message;
         let originName = req.body.originName;
         let selectedCompanies = req.body.selectedCompanies
         let doesOriginExist = await AllowedOriginModel.findOne({ allowedOrigin: originName });
-        console.log(doesOriginExist)
+
+        let companyId = selectedCompanies[0];
+        if (!isRelatedToCompany(req, companyId)) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
         if (originName && !doesOriginExist) {
             let origin = new AllowedOriginModel({
                 allowedOrigin: originName,
-                companies: selectedCompanies
+                companies: selectedCompanies,
+                initOrigin: false
             });
 
             await origin.save();
@@ -577,13 +707,17 @@ router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken,
     }
 });
 
-router.put("/allowedOrigins", authMiddleware, csrfMiddleware.validateCSRFToken, notReadOnly, async (req, res) => {
+router.put("/allowedOrigins", authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     if (req.body.isDelete) {
         let origin = req.body.allowedOrigin;
         let isOriginDeleted = false;
         try {
             let originExists = await AllowedOriginModel.findOne({ allowedOrigin: origin });
-            if (originExists) {
+            let companyId = originExists.companies[0];
+            if (!isRelatedToCompany(req, companyId)) {
+                return res.status(401).json({ message: "Unauthorized" });
+            }
+            if (originExists && !originExists.initOrigin) {
                 let originDeleted = await AllowedOriginModel.deleteOne({ allowedOrigin: origin });
                 isOriginDeleted = true;
                 initializeAllowedOrigins();

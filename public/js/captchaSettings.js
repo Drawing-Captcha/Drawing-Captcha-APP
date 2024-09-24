@@ -22,6 +22,8 @@ let defaultTitle
 let cubes
 let returnedColorKit
 let isResetColorKit = false
+let companyid
+let initColorKit
 
 document.addEventListener("DOMContentLoaded", initialize);
 
@@ -69,8 +71,8 @@ function resetColorKit(){
 }
 
 async function getColorKit() {
-    fetch("/captcha/captchaSettings", {
-        method: 'POST',
+    fetch("/dashboard/colorKit", {
+        method: 'GET',
         headers: {
             'Content-Type': 'application/json'
         }
@@ -84,6 +86,7 @@ async function getColorKit() {
     })
     .then(data => {
         if (data) {
+            console.log(data)
             console.log(data.message)
             console.log(data.returnedColorKit)
             returnedColorKit = data.returnedColorKit
@@ -92,6 +95,8 @@ async function getColorKit() {
             selectedCubeColorPicker.value = returnedColorKit.selectedCubeColorValue
             canvasOnHoverColorPicker.value = returnedColorKit.canvasOnHoverColorValue
             titleInput.value = returnedColorKit.defaultTitle
+            companyid = returnedColorKit.company;
+            initColorKit = returnedColorKit.initColorKit;
             setColors()
             updateButtonColors()
             updateCubeColors()
@@ -202,7 +207,9 @@ async function submitColorKit() {
         selectedCubeColorValue: selectedCubeColorValue,
         canvasOnHoverColorValue: canvasOnHoverColorValue,
         defaultTitle: defaultTitle,
-        isResetColorKit: isResetColorKit
+        isResetColorKit: isResetColorKit,
+        company: companyid,
+        initColorKit: initColorKit
     };
 
     try {
@@ -222,6 +229,7 @@ async function submitColorKit() {
             } else {
                 console.log("An error occurred while trying to fetch data from the Server");
             }
+            location.reload()
         } else {
             throw new Error("Server responded with an error status: " + response.status);
         }

@@ -6,7 +6,7 @@
   <meta charset="utf-8">
   <title>Companies Drawing-Captcha</title>
   <meta content="width=device-width, initial-scale=1" name="viewport">
-  <link href="images/favicon.png" rel="shortcut icon" type="image/x-icon">
+  <link href="images/favicon.ico" rel="shortcut icon" type="image/x-icon">
   <link href="/css/normalize-webAppUI.css" rel="stylesheet" type="text/css">
   <link href="/css/webflow-webAppUI.css" rel="stylesheet" type="text/css">
   <link href="/css/webAppUI.css" rel="stylesheet" type="text/css">
@@ -36,7 +36,7 @@
   </style>
   <script
     type="text/javascript">!function (o, c) { var n = c.documentElement, t = " w-mod-"; n.className += t + "js", ("ontouchstart" in o || o.DocumentTouch && c instanceof DocumentTouch) && (n.className += t + "touch") }(window, document);</script>
-  <link href="images/favicon.png" rel="shortcut icon" type="image/x-icon">
+  <link href="images/favicon.ico" rel="shortcut icon" type="image/x-icon">
   <link href="images/webclip.png" rel="apple-touch-icon"><!--  Keep this css code to improve the font quality -->
   <style>
     * {
@@ -575,48 +575,54 @@ a,
                               <div>Create new Item</div>
                             </div>
                           </a>
-                          <a href="/dashboard/captchaSettings" class="sidebar1_link is-indent w-inline-block">
-                            <div class="sidebar1_link-wrapper">
-                              <div class="icon-embed-xsmall w-embed"><svg width="100%" height="100%" viewbox="0 0 24 24"
-                                  fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path
-                                    d="M22.0001 7.99899C21.9999 7.82052 21.9519 7.64535 21.8612 7.49166C21.7705 7.33798 21.6402 7.21137 21.4841 7.12499L12.4621 2.12499C12.3138 2.04332 12.1473 2.00049 11.9781 2.00049C11.8088 2.00049 11.6423 2.04332 11.4941 2.12499L2.51607 7.08499C2.3601 7.17136 2.23006 7.29785 2.13941 7.45136C2.04876 7.60487 2.0008 7.77983 2.00049 7.95811C2.00018 8.13639 2.04754 8.31151 2.13767 8.46534C2.22779 8.61916 2.3574 8.7461 2.51307 8.83299L11.5351 13.873C11.6836 13.9564 11.8511 14.0004 12.0214 14.0005C12.1918 14.0007 12.3594 13.9571 12.5081 13.874L21.4861 8.87399C21.642 8.78727 21.7719 8.6604 21.8623 8.50654C21.9527 8.35268 22.0002 8.17744 22.0001 7.99899ZM12.0231 11.854L5.06007 7.96499L11.9771 4.14299L18.9411 8.00199L12.0231 11.854Z"
-                                    fill="currentColor"></path>
-                                  <path
-                                    d="M20.515 11.126L12 15.856L3.48504 11.126L2.51404 12.874L11.514 17.874C11.6626 17.9565 11.8296 17.9997 11.9995 17.9997C12.1694 17.9997 12.3365 17.9565 12.485 17.874L21.485 12.874L20.515 11.126Z"
-                                    fill="currentColor"></path>
-                                  <path
-                                    d="M20.515 15.126L12 19.856L3.48504 15.126L2.51404 16.874L11.514 21.874C11.6626 21.9565 11.8296 21.9997 11.9995 21.9997C12.1694 21.9997 12.3365 21.9565 12.485 21.874L21.485 16.874L20.515 15.126Z"
-                                    fill="currentColor"></path>
-                                </svg></div>
-                              <div>Captcha Settings</div>
-                            </div>
-                          </a>
-                          <% }%>
-                            <a href="/dashboard/apiKeySection" class="sidebar1_link is-indent w-inline-block">
+                          <% if (role !="readWrite" ) { %>
+                            <a href="/dashboard/captchaSettings" class="sidebar1_link is-indent w-inline-block">
                               <div class="sidebar1_link-wrapper">
-                                <div class="icon-embed-xsmall w-embed"><svg fill="#000000" height="800px" width="800px"
-                                    version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
-                                    xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 485.017 485.017"
-                                    xml:space="preserve">
-                                    <g>
-                                      <path d="M361.205,68.899c-14.663,0-28.447,5.71-38.816,16.078c-21.402,21.403-21.402,56.228,0,77.631
+                                <div class="icon-embed-xsmall w-embed"><svg width="100%" height="100%"
+                                    viewbox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                      d="M22.0001 7.99899C21.9999 7.82052 21.9519 7.64535 21.8612 7.49166C21.7705 7.33798 21.6402 7.21137 21.4841 7.12499L12.4621 2.12499C12.3138 2.04332 12.1473 2.00049 11.9781 2.00049C11.8088 2.00049 11.6423 2.04332 11.4941 2.12499L2.51607 7.08499C2.3601 7.17136 2.23006 7.29785 2.13941 7.45136C2.04876 7.60487 2.0008 7.77983 2.00049 7.95811C2.00018 8.13639 2.04754 8.31151 2.13767 8.46534C2.22779 8.61916 2.3574 8.7461 2.51307 8.83299L11.5351 13.873C11.6836 13.9564 11.8511 14.0004 12.0214 14.0005C12.1918 14.0007 12.3594 13.9571 12.5081 13.874L21.4861 8.87399C21.642 8.78727 21.7719 8.6604 21.8623 8.50654C21.9527 8.35268 22.0002 8.17744 22.0001 7.99899ZM12.0231 11.854L5.06007 7.96499L11.9771 4.14299L18.9411 8.00199L12.0231 11.854Z"
+                                      fill="currentColor"></path>
+                                    <path
+                                      d="M20.515 11.126L12 15.856L3.48504 11.126L2.51404 12.874L11.514 17.874C11.6626 17.9565 11.8296 17.9997 11.9995 17.9997C12.1694 17.9997 12.3365 17.9565 12.485 17.874L21.485 12.874L20.515 11.126Z"
+                                      fill="currentColor"></path>
+                                    <path
+                                      d="M20.515 15.126L12 19.856L3.48504 15.126L2.51404 16.874L11.514 21.874C11.6626 21.9565 11.8296 21.9997 11.9995 21.9997C12.1694 21.9997 12.3365 21.9565 12.485 21.874L21.485 16.874L20.515 15.126Z"
+                                      fill="currentColor"></path>
+                                  </svg></div>
+                                <div>Captcha Settings</div>
+                              </div>
+                            </a>
+                            <% } %>
+                              <% }%>
+                                <% if (role !="readWrite" && role !="read" ) { %>
+
+                                  <a href="/dashboard/apiKeySection" class="sidebar1_link is-indent w-inline-block">
+                                    <div class="sidebar1_link-wrapper">
+                                      <div class="icon-embed-xsmall w-embed"><svg fill="#000000" height="800px"
+                                          width="800px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
+                                          xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 485.017 485.017"
+                                          xml:space="preserve">
+                                          <g>
+                                            <path d="M361.205,68.899c-14.663,0-28.447,5.71-38.816,16.078c-21.402,21.403-21.402,56.228,0,77.631
                                c10.368,10.368,24.153,16.078,38.815,16.078s28.447-5.71,38.816-16.078c21.402-21.403,21.402-56.228,0-77.631
                                C389.652,74.609,375.867,68.899,361.205,68.899z M378.807,141.394c-4.702,4.702-10.953,7.292-17.603,7.292
                                s-12.901-2.59-17.603-7.291c-9.706-9.706-9.706-25.499,0-35.205c4.702-4.702,10.953-7.291,17.603-7.291s12.9,2.589,17.603,7.291
                                C388.513,115.896,388.513,131.688,378.807,141.394z" />
-                                      <path d="M441.961,43.036C414.21,15.284,377.311,0,338.064,0c-39.248,0-76.146,15.284-103.897,43.036
+                                            <path d="M441.961,43.036C414.21,15.284,377.311,0,338.064,0c-39.248,0-76.146,15.284-103.897,43.036
                                c-42.226,42.226-54.491,105.179-32.065,159.698L0.254,404.584l-0.165,80.268l144.562,0.165v-55.722h55.705l0-55.705h55.705v-64.492
                                l26.212-26.212c17.615,7.203,36.698,10.976,55.799,10.976c39.244,0,76.14-15.282,103.889-43.032
                                C499.25,193.541,499.25,100.325,441.961,43.036z M420.748,229.617c-22.083,22.083-51.445,34.245-82.676,34.245
                                c-18.133,0-36.237-4.265-52.353-12.333l-9.672-4.842l-49.986,49.985v46.918h-55.705l0,55.705h-55.705v55.688l-84.5-0.096
                                l0.078-37.85L238.311,208.95l-4.842-9.672c-22.572-45.087-13.767-99.351,21.911-135.029C277.466,42.163,306.83,30,338.064,30
                                c31.234,0,60.598,12.163,82.684,34.249C466.34,109.841,466.34,184.025,420.748,229.617z" />
-                                    </g>
-                                  </svg></div>
-                                <div>Add API Key</div>
-                              </div>
-                            </a>
+                                          </g>
+                                        </svg></div>
+                                      <div>Add API Key</div>
+                                    </div>
+                                  </a>
+                                  <% } %>
+
                       </div>
                     </div>
                     <div class="sidebar1_accordion">
@@ -659,7 +665,7 @@ a,
                             <div>Registered Users</div>
                           </div>
                         </a>
-                        <% if (role !="read" ) { %>
+                        <% if (role !="read" && role !="readWrite" ) { %>
                           <a href="/dashboard/registerKey" class="sidebar1_link is-indent w-inline-block">
                             <div class="sidebar1_link-wrapper">
                               <div class="icon-embed-xsmall w-embed">
@@ -859,7 +865,7 @@ a,
             <div class="section_shell2-layout">
               <div class="padding-horizontal padding-medium">
                 <div class="container-large">
-                  <div class="padding-vertical padding-large">
+                  <div class="padding-vertical">
                     <div id="w-node-_1a30a1e4-8a69-abdf-86cf-348aa176e587-0240322d"
                       class="w-layout-grid shell2-layout_component">
                       <div class="stacked-list1_component currentItems">
@@ -892,7 +898,7 @@ a,
                                     </g>
                                   </svg>
                                 </button>
-                                <% if (role !="read" ) { %>
+                                <% if (appAdmin) { %>
                                   <button onclick="addCompany()">
                                     <!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools -->
                                     <svg fill="#ffffff" height="800px" width="800px" version="1.1" id="Layer_1"
@@ -988,6 +994,7 @@ a,
   <script src="/js/webAppUI.js" type="text/javascript"></script>
   <script src="/js/company.js"></script>
   <script src="js/mailTo.js"></script>
+  <script src="/js/addSyncShells.js"></script>
 
 </body>
 

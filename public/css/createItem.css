@@ -171,7 +171,7 @@ hr {
     align-items: center;
     flex-direction: column;
     color: rgb(0, 0, 0);
-    gap: 3em;
+    /* gap: 3em; */
     padding: -1em;
     max-width: 100%;
     text-align: center;
@@ -191,8 +191,25 @@ hr {
 
 .itemWrapperCreateItem {
     max-width: 100%;
+    height: fit-content;
+    min-height: 50vh;
+    padding: 5em !important;
 }
 
+.captcha-list-wrapper{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.create-item-subWrapper {
+    width: 54vw;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    height: fit-content;
+    gap: 3em;
+}
 input {
     border-radius: 8px;
     background-color: white;
@@ -452,6 +469,7 @@ button .close-button:hover {
 .apiWrapper {
     display: flex;
     justify-content: space-between;
+    max-width: 39em !important;
 }
 
 .apiWrapper p {
@@ -507,6 +525,7 @@ button .close-button:hover {
 
 .company-logo {
     width: 6em;
+    height: 6em;
     border-radius: 100%;
     border: 1px solid black;
     object-fit: cover;

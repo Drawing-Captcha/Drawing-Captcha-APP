@@ -27,8 +27,12 @@ const userSchema = new Schema ({
         type: Boolean,
         required: false
     },
-    companies:{
-        type: Array,
+    company:{
+        type: String,
+        required: false
+    },
+    appAdmin:{
+        type: Boolean,
         required: false
     }
     

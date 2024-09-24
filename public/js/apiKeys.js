@@ -22,12 +22,15 @@ let apiName
 
 document.addEventListener("DOMContentLoaded", initialize);
 
-async function initialize(){
+async function initialize() {
+    await buildOriginsShells();
     await getKeys();
     await getOrigins();
+    await buildDropdown()
+
 }
 
-async function getKeys(){
+async function getKeys() {
     try {
         const response = await fetch("/dashboard/apiKey", {
             method: 'GET',
@@ -39,12 +42,32 @@ async function getKeys(){
 
         if (response.ok) {
             const data = await response.json();
-            Keys = data.apiKeys;
+            let keys = data.apiKeys;
             let userRole = data.userRole
+            let appAdmin = data.appAdmin
+            const shells = document.querySelectorAll(".stacked-list1_component.apiKey")
+            let wrapper
+            if (keys.length > 0) {
+                console.log(keys.length)
+                keys.forEach(elementData => {
+                    console.log(elementData)
+                    if (elementData.companies.length != 0) {
+                        shells.forEach(shell => {
+                            if (shell.classList.contains("apiKey") && elementData.companies.includes(shell.getAttribute("companyId"))) {
+                                wrapper = shell.querySelector(".stacked-list1_list-wrapper");
 
-            if (Keys.length != 0) {
+                            }
+                            else {
+                                wrapper = document.querySelector(".defaultApiKeys").querySelector(".stacked-list1_list-wrapper");
+                            }
+                        })
+                    }
+                    else {
+                        if (appAdmin) {
+                            wrapper = document.querySelector(".defaultApiKeys").querySelector(".stacked-list1_list-wrapper");
+                        }
 
-                Keys.forEach(elementData => {
+                    }
                     const item = document.createElement("div");
                     item.classList.add("stacked-list1_item");
 
@@ -106,7 +129,7 @@ async function getKeys(){
                     deleteButton.addEventListener("click", () => deleteApiKey(elementData));
 
                     droppDownToggle.appendChild(copyButton);
-                    if(userRole != "read"){
+                    if (userRole != "read") {
                         droppDownToggle.appendChild(deleteButton);
                     }
                     dropdownComponent.appendChild(droppDownToggle);
@@ -117,22 +140,8 @@ async function getKeys(){
                 });
 
             }
-            else {
-                const syncWrapper = document.createElement("div")
-                syncWrapper.classList.add("syncWrapper")
 
-                syncWrapper.addEventListener("click", () => window.location.reload())
-                syncWrapper.style.cursor = "pointer"
-
-
-                const syncMessage = document.createElement("h3")
-                syncMessage.innerHTML = "No Keys currently, sync here.. 🤔🔄"
-
-                wrapper.appendChild(syncWrapper)
-                syncWrapper.appendChild(syncMessage)
-
-            }
-
+            await addSyncMessage(shells, "apiKeys")
 
         } else {
             throw new Error('Error server while trying to request the server');
@@ -143,8 +152,8 @@ async function getKeys(){
 
 }
 
-function copyApiKey(e){
-    navigator.clipboard.writeText(e.apiKey)
+async function copyApiKey(e) {
+    await navigator.clipboard.writeText(e.apiKey)
     alert(`Api key ${e.name} copied!`)
 }
 
@@ -152,6 +161,7 @@ function deleteApiKey(e) {
     let tmpKey = e.apiKey
     let isDelete = true
     pushToServer(tmpKey, isDelete, e)
+    console.log(tmpKey)
 }
 
 function pushToServer(key, isDelete, element) {
@@ -178,7 +188,6 @@ function pushToServer(key, isDelete, element) {
             else {
                 alert(`API Key ${element.name} failed to delete!`)
                 location.reload()
-
             }
 
         })
@@ -189,45 +198,14 @@ function pushToServer(key, isDelete, element) {
 
 }
 
-function deleteAllKeys() {
-    if (confirm("Are you sure you want to delete all of your keys?") === true) {
-        fetch("/dashboard/apiKey/deleteAll", {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                throw new Error('Error server while trying to request the server');
-            }
-        })
-        .then(data => {
-            if (data.deleteAll) {
-                alert(data.deleteAll);
-                location.reload();
-            } else {
-                alert(data.deleteAll);
-                location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again later.');
-        });
-    } else {
-        return;
-    }
-}
-
-async function addApiKey(){
-    companyAccessParagraph.innerHTML = "Please select the company from which the Captchas should be used, you can choose multiple. (If no company is selected the 'not categorized' will be used as default)"
-    await getCompanies()
+async function addApiKey() {
     companyAccessSection.forEach(item => {
         item.style.display = "block"
     })
+    let noCompaniesShell = document.querySelector(".not-categorized")
+    if(noCompaniesShell){
+        noCompaniesShell.style.display = "none";
+    }
     toDo.innerHTML = "Add API Key 🔑"
     toDoLabel.innerHTML = "Key Name:"
     submitButton.innerHTML = "Add Key"
@@ -237,9 +215,9 @@ async function addApiKey(){
     createForm.setAttribute("onsubmit", "submitApi(event); return false;")
     addFrom()
 
-    
+
 }
-function addFrom(){
+function addFrom() {
 
     itemPageWrapper.style.display = "flex";
     ItemWrapper.style.display = "flex";
@@ -249,120 +227,124 @@ function addFrom(){
 
 }
 
-function closeForm(){
+function closeForm() {
+    let noCompaniesShell = document.querySelector(".not-categorized")
+    if(noCompaniesShell){
+        noCompaniesShell.style.display = "block";
+    }
     shellLayout.style.display = "block"
     sectionHeader.style.display = "block"
     itemPageWrapper.style.opacity = '0';
     setTimeout(() => {
         itemPageWrapper.style.display = "none";
-    }, 300); 
+    }, 300);
     formName.value = "";
 
 }
-function submitApi(event){
-    event.preventDefault()
+function submitApi(event) {
     let companiesList = document.querySelectorAll(".item")
     let selectedCompanies = []
     companiesList.forEach(company => {
-        if(company.classList.contains("checked")){
+        if (company.classList.contains("checked")) {
             selectedCompanies.push(company.getAttribute("obj-id"))
         }
     })
+    if (selectedCompanies.length >= 1) {
+        let apiName = formName.value;
 
-   let apiName = formName.value;
-    
-    fetch("/dashboard/apiKey", {
-        method: "POST",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({apiKeyName: apiName, selectedCompanies})
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        } else {
-            throw new Error('Error server while trying to request the server');
-        }
-    })
-    .then(data => {
-        if (data.successfully) {
-            alert(data.message)
-            location.reload();
-        } else {
-            alert(data.message)
-            location.reload();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again later.');
-    });
+        fetch("/dashboard/apiKey", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ apiKeyName: apiName, selectedCompanies })
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Error server while trying to request the server');
+                }
+            })
+            .then(data => {
+                if (data.successfully) {
+                    alert(data.message)
+                    location.reload();
+                } else {
+                    alert(data.message)
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            });
+    }
+    else {
+        alert("Please select a company!")
+        return
+    }
 }
 
-async function getCompanies() {
-    try {
-        const response = await fetch("/company", {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+
+async function buildDropdown() {
+    const data = await fetchCompanies();
+    const allCompanies = data.allCompanies;
+
+    if (allCompanies.length !== 0) {
+        var list = document.querySelector('.list-items');
+
+        allCompanies.forEach(function (company) {
+            const existingEl = list.querySelector(`[obj-id="${company.companyId}"]`);
+            if (!existingEl) {
+                var li = document.createElement('li');
+                li.classList.add('item');
+                li.setAttribute("obj-id", company.companyId)
+
+                var checkboxSpan = document.createElement('span');
+                checkboxSpan.classList.add('checkbox');
+                var checkboxIcon = document.createElement('i');
+                checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
+                checkboxSpan.appendChild(checkboxIcon);
+                li.appendChild(checkboxSpan);
+
+                var textSpan = document.createElement('span');
+                textSpan.classList.add('item-text');
+                textSpan.textContent = company.name;
+                li.appendChild(textSpan);
+
+                list.appendChild(li);
+            }
         });
-        if (response.ok) {
-            const data = await response.json();
-            const allCompanies = data.allCompanies;
+        let items = document.querySelectorAll(".item");
+        let btnText = document.querySelector(".btn-text")
+        let checked
+        items.forEach(item => {
+            item.addEventListener("click", () => {
+                if (item.classList.contains("checked")) {
+                    removeCheck(item)
+                    checked = "";
+                }
+                else {
+                    removeCheck()
+                    checked = item.querySelector(".item-text").innerText
+                    item.classList.toggle("checked");
+                }
 
-            if (allCompanies.length !== 0) {
-                var list = document.querySelector('.list-items');
-                allCompanies.forEach(function (company) {
-                    var li = document.createElement('li');
-                    li.classList.add('item');
-                    li.setAttribute("obj-id", company.companyId)
+                if (checked && checked.length > 0) {
+                    btnText.innerText = `${checked} selected`;
+                } else {
+                    btnText.innerText = "No company selected";
+                }
+            })
+        })
+    }
+    else {
+        const checked = document.querySelectorAll(".checked");
+        const btnText = document.querySelector(".btn-text");
+        const listItems = document.querySelector(".list-items")
 
-                    var checkboxSpan = document.createElement('span');
-                    checkboxSpan.classList.add('checkbox');
-                    var checkboxIcon = document.createElement('i');
-                    checkboxIcon.classList.add('fa-solid', 'fa-check', 'check-icon');
-                    checkboxSpan.appendChild(checkboxIcon);
-                    li.appendChild(checkboxSpan);
-
-                    var textSpan = document.createElement('span');
-                    textSpan.classList.add('item-text');
-                    textSpan.textContent = company.name;
-                    li.appendChild(textSpan);
-
-                    list.appendChild(li);
-                });
-                let items = document.querySelectorAll(".item");
-
-                items.forEach(item => {
-                    item.addEventListener("click", () => {
-                        item.classList.toggle("checked");
-
-                        let checked = document.querySelectorAll(".checked"),
-                            btnText = document.querySelector(".btn-text");
-
-                        if (checked && checked.length > 0) {
-                            btnText.innerText = `${checked.length} Selected`;
-                        } else {
-                            btnText.innerText = "Select Company";
-                        }
-                    });
-                })
-            }
-            else{
-                const checked = document.querySelectorAll(".checked");
-                const btnText = document.querySelector(".btn-text");
-                const listItems = document.querySelector(".list-items")
-                
-                btnText.innerText = "No companies to select";
-                listItems.style.display = "none";
-            }
-        } else {
-            throw new Error('Error from server while trying to request the server');
-        }
-    } catch (error) {
-        console.log('Error in getCompanies:', error);
+        btnText.innerText = "No companies to select";
+        listItems.style.display = "none";
     }
 }

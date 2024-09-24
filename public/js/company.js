@@ -37,6 +37,7 @@ async function getAllCompanies() {
             let userRole = data.userRole;
 
             const wrapper = document.querySelector(".stacked-list1_list-wrapper");
+            const shell = document.querySelector(".section_shell2-layout");
 
             if (allCompanies.length !== 0) {
                 allCompanies.forEach(elementData => {
@@ -98,7 +99,7 @@ async function getAllCompanies() {
                     
                     </svg>`;
                     returnButton.addEventListener("click", () => changeDetails(elementData));
-                    if(userRole != "read"){
+                    if (userRole != "read") {
                         droppDownToggle.appendChild(deleteButton);
                         droppDownToggle.appendChild(returnButton);
                     }
@@ -110,17 +111,8 @@ async function getAllCompanies() {
                     wrapper.appendChild(item);
                 });
             } else {
-                const syncWrapper = document.createElement("div");
-                syncWrapper.classList.add("syncWrapper");
+                addSyncMessage(shell, "companies")
 
-                syncWrapper.addEventListener("click", () => window.location.reload());
-                syncWrapper.style.cursor = "pointer";
-
-                const syncMessage = document.createElement("h3");
-                syncMessage.innerHTML = "No companies here currently, sync here.. 🤔🔄";
-
-                wrapper.appendChild(syncWrapper);
-                syncWrapper.appendChild(syncMessage);
             }
         } else {
             throw new Error('Error server while trying to request the server');
@@ -148,11 +140,13 @@ imageUploadEdit.addEventListener('change', function () {
     reader.readAsDataURL(this.files[0]);
 });
 function addCompany() {
+    console.log("show")
     addDialog.showModal();
+
 
 }
 
-function changeDetails(e){
+function changeDetails(e) {
     editDialog.showModal()
 
     profileImageEdit.src = e.ppURL ? e.ppURL : "/images/6191a88a1c0e39463c2bf022_placeholder-image.svg";
@@ -164,7 +158,7 @@ function changeDetails(e){
 
 }
 
-async function submitChanges(event){
+async function submitChanges(event) {
     event.preventDefault();
     let changes = {
         companyId: currentElementId,
@@ -194,7 +188,7 @@ async function submitChanges(event){
             console.error('Error:', error);
             alert(`An error ssoccurred: ${error.message}`);
         });
-    
+
 }
 
 function proofRegex(originName) {
@@ -210,133 +204,57 @@ function proofRegex(originName) {
     const regex = new RegExp(expression);
 
     if (regex.test(originName)) {
-        submitOrigin(originName);
-        return true;
+        return { test: true, value: originName };
     } else {
         alert("Regex error: please define your origin like this schema: https://yourdomain.com");
-        return false;
+        return { test: false, value: "" };
     }
 }
 
-function submitOrigin(originName) {
-    fetch("/dashboard/allowedOrigins", {
+
+async function submitCompany() {
+    let submittedData
+    let regexResult
+    regexResult = await proofRegex(orginInput.value)
+
+    if(!regexResult.test){
+        return
+    }
+    console.log("regexResult: ", regexResult)
+    
+
+    submittedData = {
+        name: nameInputAdd.value,
+        ppURL,
+        originName: regexResult.value
+    }
+    console.log(submittedData)
+    await postCompany(submittedData)
+}
+
+async function postCompany(submittedData) {
+    fetch("/company", {
         method: "POST",
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ originName })
+        body: JSON.stringify(submittedData)
     })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                throw new Error('Error server while trying to request the server');
-            }
-        })
+        .then(response => response.json())
         .then(data => {
             if (data.message) {
-                alert(data.message)
+                alert(data.message);
+            }
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            } else {
                 location.reload();
             }
-
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred. Please try again later.');
+            alert(`An error occurred: ${error.message}`);
         });
-}
-
-async function submitCompany(event) {
-    event.preventDefault();
-    if (orginInput.value) {
-        console.log(orginInput.value)
-        if(orginInput.value){
-            const regexResult = proofRegex(orginInput.value)
-            if (regexResult) {
-                let submittedData = {
-                    name: nameInputAdd.value,
-                    ppURL
-                }
-    
-                fetch("/company", {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(submittedData)
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.message) {
-                            alert(data.message);
-                        }
-                        if (data.redirect) {
-                            window.location.href = data.redirect;
-                        } else {
-                            location.reload();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert(`An error occurred: ${error.message}`);
-                    });
-            }
-        }
-        else{
-            fetch("/company", {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(submittedData)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        alert(data.message);
-                    }
-                    if (data.redirect) {
-                        window.location.href = data.redirect;
-                    } else {
-                        location.reload();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert(`An error occurred: ${error.message}`);
-                });
-        }
-        
-    }
-    else {
-        let submittedData = {
-            name: nameInputAdd.value,
-            ppURL
-        }
-
-        fetch("/company", {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(submittedData)
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    alert(data.message);
-                }
-                if (data.redirect) {
-                    window.location.href = data.redirect;
-                } else {
-                    location.reload();
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert(`An error occurred: ${error.message}`);
-            });
-    }
 }
 
 function confirmAndDeleteCompany(companyId) {
@@ -372,5 +290,5 @@ function deleteCompany(companyId) {
 }
 
 
-addDialogForm.addEventListener('submit', submitCompany)
-editDialogForm.addEventListener('submit', submitChanges)
+addDialogForm.addEventListener('submit', event => submitCompany(event))
+editDialogForm.addEventListener('submit', event => submitChanges(event))

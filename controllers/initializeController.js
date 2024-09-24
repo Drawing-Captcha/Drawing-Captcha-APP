@@ -62,23 +62,32 @@ async function initializeBin() {
 }
 
 async function initializeRegisterKey() {
-    let message;
-    const existingRegisterKey = await registerKeyModel.findOne();
+    try {
+        let message;
+        const existingRegisterKey = await registerKeyModel.findOne({AppKey: true});
 
-    if (!existingRegisterKey) {
-        const newRegisterKey = new registerKeyModel({
-            RegisterKey: crypto.randomUUID()
-        });
+        if (!existingRegisterKey) {
+            const newRegisterKey = new registerKeyModel({
+                RegisterKey: crypto.randomUUID(),
+                AppKey: true
+            });
 
-        await newRegisterKey.save();
-        message = "New register key successfully generated";
-        return message;
-    } else {
-        existingRegisterKey.RegisterKey = crypto.randomUUID();
-        await existingRegisterKey.save();
-        message = "Register key successfully updated";
-        return message;
+            await newRegisterKey.save();
+            message = "New register key successfully generated";
+            console.log(message);
+            console.log("New register key:", newRegisterKey);
+            return message;
+        } else {
+            existingRegisterKey.RegisterKey = crypto.randomUUID();
+            await existingRegisterKey.save();
+            message = "Register key successfully updated";
+            console.log(message);
+            console.log("Updated register key:", existingRegisterKey);
+            return message;
 
+        }
+    } catch (error) {
+        console.error("Error initializing register key:", error);
     }
 }
 

@@ -191,16 +191,15 @@ function continueBeforeValid() {
             selectedCompanies.push(company.getAttribute("obj-id"))
         }
     })
-
     if (selectedCompanies.length < 1) {
-        alert("You haven't chosen any specific company, so this captcha will not be categorized under any company.")
+        alert("You haven't chosen any specific company, please select a company!")
+    }else{
+        todoTitle = todoTextArea.value
+        innerBox.style.display = "none"
+        todoTitleWrapper.style.display = "none"
+        toDo.innerHTML = "Please draw the cubes on the canvas that you want to count as valid. These cubes will be considered as 'True'.✏️"
+        submitButton.setAttribute("onclick", "continueValid()")
     }
-
-    todoTitle = todoTextArea.value
-    innerBox.style.display = "none"
-    todoTitleWrapper.style.display = "none"
-    toDo.innerHTML = "Please draw the cubes on the canvas that you want to count as valid. These cubes will be considered as 'True'.✏️"
-    submitButton.setAttribute("onclick", "continueValid()")
 }
 
 function continueValid() {
@@ -349,20 +348,26 @@ async function getCompanies() {
                     list.appendChild(li);
                 });
                 let items = document.querySelectorAll(".item");
-
+                let btnText = document.querySelector(".btn-text")
+                let checked
                 items.forEach(item => {
                     item.addEventListener("click", () => {
-                        item.classList.toggle("checked");
-
-                        let checked = document.querySelectorAll(".checked"),
-                            btnText = document.querySelector(".btn-text");
-
-                        if (checked && checked.length > 0) {
-                            btnText.innerText = `${checked.length} Selected`;
-                        } else {
-                            btnText.innerText = "Select Company";
+                        if (item.classList.contains("checked")) {
+                            removeCheck(item)
+                            checked = "";
                         }
-                    });
+                        else {
+                            removeCheck()
+                            checked = item.querySelector(".item-text").innerText
+                            item.classList.toggle("checked");
+                        }
+                        
+                    if (checked && checked.length > 0) {
+                        btnText.innerText = `${checked} selected`;
+                    } else {
+                        btnText.innerText = "No company selected";
+                    }
+                    })
                 })
             }
             else {

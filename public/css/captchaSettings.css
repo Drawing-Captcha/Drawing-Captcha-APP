@@ -1,8 +1,6 @@
-.captcha-settings-wrapper{
-    width: -webkit-fill-available;
+.captcha-settings-wrapper {
     height: fit-content;
     display: flex;
-    justify-content: center;
     justify-content: space-between;
     flex-direction: column;
     gap: 2em;
