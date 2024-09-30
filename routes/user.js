@@ -41,7 +41,10 @@ router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async 
 
         let ownUser = {
             role: req.session.user.role,
-            _id: req.session.user._id
+            _id: req.session.user._id,
+            initialUser: req.session.user.initialUser,
+            appAdmin: req.session.user.appAdmin,
+            company: req.session.user.company
         }
 
         console.log("Returning users:", returnedUsers);
@@ -117,7 +120,14 @@ router.delete('/deleteUser', authMiddleware, isAuthorizedDeleting, csrfMiddlewar
             return res.status(400).json({ message: 'User information is required' });
         }
 
-        const result = await User.deleteOne({ _id: user._id });
+        if(user.appAdmin && !user.initialUser && !req.session.user.appAdmin){
+            return res.status(403).json({ message: 'You are not allowed to delete this user' });
+
+        }
+
+        if(user.company === req.session.user.company && !user.initialUser || req.session.user.appAdmin && !user.initialUser){
+            const result = await User.deleteOne({ _id: user._id });
+        }
 
         if (result.deletedCount === 1) {
             if (req.session.user.role != "admin") {

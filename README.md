@@ -87,6 +87,50 @@ Please note to change these variables:
 
 <p>If you haven't changed the default port, it should be working on http://localhost:9091.</p>
 
+## Docker Compose with Dockerhub Image
+```yml
+version: "3.8"
+
+services:
+  dc_node:
+    container_name: dc_node
+    image: williamspesic/drawing-captcha-app:latest
+    ports:
+      - "9091:9091"
+    networks:
+      - dc_network
+    depends_on:
+      - dc_mongo
+    restart: always
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - PORT=${PORT}
+      - SERVER_DOMAIN=${SERVER_DOMAIN}
+      - Register_Key=${Register_Key}
+      - DC_ADMIN_EMAIL=${DC_ADMIN_EMAIL}
+      - DC_ADMIN_PASSWORD=${DC_ADMIN_PASSWORD}
+  dc_mongo:
+    container_name: dc_mongo
+    image: mongo:latest
+    expose:
+      - "27017"
+    volumes:
+      - drawing-captcha:/data/db
+    networks:
+      - dc_network
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+
+networks:
+  dc_network:
+
+volumes:
+  drawing-captcha:
+```
+
 ## Tutorials and implementation Frontend (Connection with API will be comming soon :) )
 You will find the docs here soon : https://docs.captcha.wpesic.dev
 
