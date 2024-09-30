@@ -151,12 +151,57 @@ async function getAllUser() {
                     
                     </svg>`;
                     returnButton.addEventListener("click", () => changeDetails(elementData));
-                    if (ownUser.role === "admin" || ownUser._id === elementData._id) {
-                        if (!elementData.initialUser && !elementData.appAdmin) {
+                    if (elementData.initialUser && ownUser._id === elementData._id) {
+                        droppDownToggle.appendChild(returnButton);
+                    }
+                    else if (ownUser.appAdmin) {
+                        if (ownUser._id !== elementData._id || elementData.appAdmin) {
+                            if (elementData.appAdmin && elementData._id == elementData._id && !elementData.initialUser) {
+                                droppDownToggle.appendChild(returnButton);
+                                droppDownToggle.appendChild(deleteButton);
+                            }
+                            else {
+                                if(ownUser.appAdmin && !elementData.initialUser && !elementData.appAdmin){
+                                    droppDownToggle.appendChild(returnButton);
+                                    droppDownToggle.appendChild(deleteButton);
+                                }
+                            
+                            }
+                        }
+                        else {
+                            droppDownToggle.appendChild(returnButton);
+                        }
+                    }
+                    else if (ownUser.role === "admin") {
+                        console.log("admin")
+                        console.log(ownUser)
+                        console.log(elementData)
+                        if (ownUser.company === elementData.company) {
+                            console.log(elementData)
+                            droppDownToggle.appendChild(returnButton);
                             droppDownToggle.appendChild(deleteButton);
                         }
-                        if (!elementData.initialUser && !elementData.appAdmin) {
+                        else if (ownUser._id === elementData._id) {
                             droppDownToggle.appendChild(returnButton);
+                            droppDownToggle.appendChild(deleteButton);
+                        }
+                    }
+                    else if (ownUser.role === "readWrite") {
+                        console.log("readWrite")
+                        console.log(ownUser)
+                        console.log(elementData)
+                        if (ownUser._id === elementData._id) {
+                            droppDownToggle.appendChild(returnButton);
+                            droppDownToggle.appendChild(deleteButton);
+                        }
+                    }
+                    else if (ownUser.role === "read") {
+                        console.log("read")
+                        console.log(ownUser)
+                        console.log(elementData)
+                        if (ownUser._id === elementData._id) {
+                            droppDownToggle.appendChild(returnButton);
+                            droppDownToggle.appendChild(deleteButton);
                         }
                     }
                     dropdownComponent.appendChild(droppDownToggle);
