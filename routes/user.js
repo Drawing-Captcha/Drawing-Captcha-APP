@@ -126,7 +126,7 @@ router.delete('/deleteUser', authMiddleware, isAuthorizedDeleting, csrfMiddlewar
         }
 
         if(user.company === req.session.user.company && !user.initialUser || req.session.user.appAdmin && !user.initialUser){
-            const result = await User.deleteOne({ _id: user._id });
+            const result = await User.deleteOne({ _id: { $eq: user._id } });
         }
 
         if (result.deletedCount === 1) {
