@@ -712,7 +712,7 @@ router.put("/allowedOrigins", authMiddleware, csrfMiddleware.validateCSRFToken, 
         let origin = req.body.allowedOrigin;
         let isOriginDeleted = false;
         try {
-            let originExists = await AllowedOriginModel.findOne({ allowedOrigin: origin });
+            let originExists = await AllowedOriginModel.findOne({ allowedOrigin: { $eq: origin } });
             let companyId = originExists.companies[0];
             if (!isRelatedToCompany(req, companyId)) {
                 return res.status(401).json({ message: "Unauthorized" });
