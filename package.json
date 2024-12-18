@@ -10,7 +10,7 @@
     "express": "^4.19.2",
     "express-rate-limit": "^7.4.0",
     "express-session": "^1.18.0",
-    "mongoose": "^8.3.1",
+    "mongoose": "^8.8.3",
     "path": "^0.12.7",
     "uuid": "^9.0.1"
   }
