@@ -10,7 +10,11 @@ const deleteApiKeyRelation = require("../services/deleteApiKeyRelation.js")
 async function deleteEverythingFromCompany(companyId) {
     try {
         console.log(`Deleting all company relations with company ID: ${companyId}`)
-        const company = await CompanyModel.findOne({ companyId: companyId })
+        if (typeof companyId !== "string") {
+            console.log("Invalid company ID")
+            return { success: false, message: "Invalid company ID" }
+        }
+        const company = await CompanyModel.findOne({ companyId: { $eq: companyId } })
         console.log(`Found company: ${company ? company.name : "not found"}`)
         if (!company) {
             console.log("Company not found")
@@ -49,7 +53,7 @@ async function deleteEverythingFromCompany(companyId) {
         console.log(`Finished deleting api key relations for company ID: ${company.companyId}`)
 
         console.log(`Deleting company: ${company.name}`)
-        await CompanyModel.deleteOne({ companyId: companyId })
+        await CompanyModel.deleteOne({ companyId: { $eq: companyId } })
         console.log(`Finished deleting company: ${company.name}`)
 
     } catch (error) {
