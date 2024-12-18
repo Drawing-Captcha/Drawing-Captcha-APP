@@ -12,7 +12,7 @@ async function generateRegisterKey(req, res){
     }
     else{
         console.log("Checking if company register key exists...");
-        existingRegisterKey = await registerKeyModel.findOne({Company: req.body.companyId});
+        existingRegisterKey = await registerKeyModel.findOne({Company: { $eq: req.body.companyId }});
         console.log("Company register key exists:", existingRegisterKey != null);
     }
 
