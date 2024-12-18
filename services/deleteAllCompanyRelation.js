@@ -49,7 +49,7 @@ async function deleteEverythingFromCompany(companyId) {
         console.log(`Finished deleting api key relations for company ID: ${company.companyId}`)
 
         console.log(`Deleting company: ${company.name}`)
-        await CompanyModel.deleteOne({ companyId: companyId })
+        await CompanyModel.deleteOne({ companyId: { $eq: companyId } })
         console.log(`Finished deleting company: ${company.name}`)
 
     } catch (error) {
