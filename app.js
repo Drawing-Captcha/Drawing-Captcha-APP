@@ -78,7 +78,6 @@ app.use(session({
     }
 }));
 
-
 const indexRoutes = require("./routes/index.js")
 const authRoutes = require("./routes/auth.js")
 const captchaRoutes = require("./routes/captcha.js")
@@ -92,6 +91,12 @@ app.use('/captcha', captchaRoutes)
 app.use('/dashboard', dashboardRoutes)
 app.use('/user', userRoutes)
 app.use('/company', companyRoutes)
+
+app.use((req, res, next) => {
+    if (!res.headersSent) {
+        res.redirect('/404');
+    }
+});
 
 app.listen(port, async () => {
     console.log(`Server Running on port: ${port}`);

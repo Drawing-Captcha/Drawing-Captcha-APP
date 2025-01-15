@@ -15,5 +15,9 @@ router.get('/register', csrfMiddleware.generateCSRFToken, (req, res) => {
     res.render('sign-up', {RegisterMessage: req.session.RegisterMessage, csrfToken: req.session.csrfToken});
 });
 
+router.get('/404', (req, res) => {
+    res.status(404).render('404');
+});
+
 
 module.exports = router
