@@ -142,8 +142,6 @@ imageUploadEdit.addEventListener('change', function () {
 function addCompany() {
     console.log("show")
     addDialog.showModal();
-
-
 }
 
 function changeDetails(e) {
@@ -192,9 +190,11 @@ async function submitChanges(event) {
 }
 
 function proofRegex(originName) {
-    console.log(originName)
+    if (!originName) {
+        alert("Please enter a origin, you can still change it afterwarts in the settings");
+        return;
+    }
     originName = orginInput.value.trim();
-    console.log(originName)
 
     if (originName.endsWith("/")) {
         originName = originName.slice(0, -1)
@@ -216,19 +216,14 @@ async function submitCompany() {
     let submittedData
     let regexResult
     regexResult = await proofRegex(orginInput.value)
-
-    if(!regexResult.test){
+    if (!regexResult.test) {
         return
     }
-    console.log("regexResult: ", regexResult)
-    
-
     submittedData = {
         name: nameInputAdd.value,
         ppURL,
         originName: regexResult.value
     }
-    console.log(submittedData)
     await postCompany(submittedData)
 }
 
@@ -240,7 +235,12 @@ async function postCompany(submittedData) {
         },
         body: JSON.stringify(submittedData)
     })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.message) {
                 alert(data.message);
