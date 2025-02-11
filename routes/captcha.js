@@ -229,10 +229,13 @@ router.post('/checkCubes', rateLimit({
     }
 });
 
-router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
+router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 50,
+    message: "You have exceeded the maximum number of requests for this endpoint. Please try again later."
+}), async (req, res) => {
     try {
         const givenSession = req.body.session;
-        console.log("console body: ", req.body);
 
         if (!givenSession || typeof givenSession.clientIdentifier === 'undefined') {
             console.log("left")
