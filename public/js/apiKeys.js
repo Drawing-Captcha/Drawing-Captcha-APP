@@ -212,7 +212,7 @@ async function addApiKey() {
     shellLayout.style.display = "none"
     sectionHeader.style.display = "none"
     inputName.setAttribute("placeholder", "KeyName")
-    createForm.setAttribute("onsubmit", "submitApi(event); return false;")
+    createForm.setAttribute("submit", "submitApi(event); return false;")
     addFrom()
 
 

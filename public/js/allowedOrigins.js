@@ -3,7 +3,6 @@ const submitButton = createForm.querySelector("button")
 const inputName = createForm.querySelector("input")
 const sectionHeader = document.querySelector(".section_page-header3")
 const shellLayout = document.querySelector(".section_shell2-layout")
-
 let originName;
 async function getOrigins() {
     try {
@@ -103,7 +102,7 @@ async function getOrigins() {
 
 async function addOrigin() {
     let noCompaniesShell = document.querySelector(".not-categorized")
-    if(noCompaniesShell){
+    if (noCompaniesShell) {
         noCompaniesShell.style.display = "none";
     }
     toDo.innerHTML = "Add new Origin 🔒";
@@ -112,10 +111,48 @@ async function addOrigin() {
     shellLayout.style.display = "none"
     sectionHeader.style.display = "none"
     inputName.setAttribute("placeholder", "https://yourdomain.com")
-    createForm.setAttribute("onsubmit", "submitOrigin()")
+    createForm.setAttribute("onsubmit", "submitOrigin(event); return false;")
     addFrom();
 }
 
+async function submitOrigin(event) {
+    let companiesList = document.querySelectorAll(".item")
+    let selectedCompanies = []
+    companiesList.forEach(company => {
+        if (company.classList.contains("checked")) {
+            selectedCompanies.push(company.getAttribute("obj-id"))
+        }
+    })
+    let origin = inputName.value;
+    let regexResult = await proofRegex(origin);
+    if (!regexResult.test) {
+        return
+    }
+    fetch("/dashboard/allowedOrigins", {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ originName: regexResult.value, selectedCompanies })
+    })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Error server while trying to request the server');
+            }
+        })
+        .then(data => {
+            if (data) {
+                alert(data.message)
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred, while trying to add Origin. Please try again later.');
+        });
+}
 function addFrom() {
     itemPageWrapper.style.display = "flex";
     ItemWrapper.style.display = "flex";
@@ -125,74 +162,11 @@ function addFrom() {
 
 }
 
-async function proofRegex() {
-    originName = inputName.value.trim();
-
-    if (originName.endsWith("/")) {
-        originName = originName.slice(0, -1)
-    }
-    const expression = /^(https?:\/\/)(localhost|\b(?:[0-9a-zA-Z.-]+\.[a-zA-Z]{2,}))(?::\d{1,5})?(\/.*)?$/;
-    const regex = new RegExp(expression);
-
-    if (regex.test(originName)) {
-        return originName;
-    } else {
-        alert("Regex error: please define your origin like this schema: https://yourdomain.com");
-        return "";
-    }
-}
-
-
 function deleteOrigin(elementData) {
     let isDeleted = true;
     let origin = elementData.allowedOrigin;
     putOrigin(origin, isDeleted)
 }
-async function submitOrigin() {
-    let originName = await proofRegex();
-    let companiesList = document.querySelectorAll(".item")
-    let selectedCompanies = []
-    companiesList.forEach(company => {
-        if (company.classList.contains("checked")) {
-            selectedCompanies.push(company.getAttribute("obj-id"))
-        }
-    })
-    if (selectedCompanies.length >= 1) {
-        if (originName) {
-            fetch("/dashboard/allowedOrigins", {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ originName, selectedCompanies })
-            })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        throw new Error('Error server while trying to request the server');
-                    }
-                })
-                .then(data => {
-                    if (data.message) {
-                        alert(data.message)
-                        location.reload();
-                    }
-
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred. Please try again later.');
-                });
-        }
-    }
-    else {
-        alert("Please select a company!")
-        return
-    }
-
-}
-
 
 function putOrigin(origin, isDelete) {
 

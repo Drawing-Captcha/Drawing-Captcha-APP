@@ -677,7 +677,7 @@ router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken,
         let message;
         let originName = req.body.originName;
         let selectedCompanies = req.body.selectedCompanies
-        let doesOriginExist = await AllowedOriginModel.findOne({ allowedOrigin: originName });
+        let doesOriginExist = await AllowedOriginModel.findOne({ allowedOrigin: originName, companies: { $in: selectedCompanies } });
 
         let companyId = selectedCompanies[0];
         if (!isRelatedToCompany(req, companyId)) {
