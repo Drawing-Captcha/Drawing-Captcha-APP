@@ -1,4 +1,5 @@
 const ApiKeyModel = require("../models/ApiKey.js")
+const OriginModel = require("../models/AllowedOrigins.js")
 const crypto = require("crypto");
 
 const generateCSRFToken = (req, res, next) => {
@@ -37,6 +38,12 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
         let doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
 
         if (doesExist) {
+            let originRelation = await OriginModel.find({ companies: { $in: doesExist.companies }, allowedOrigin: req.headers.origin });
+            if (originRelation.length === 0) {
+                failed = true;
+                res.status(403).json({ error: "Origin not allowed, with this apiKey" });
+                return;
+            }
             req.session.authMethod = "apiKey";
             req.session.apiKey = apiKey;
 

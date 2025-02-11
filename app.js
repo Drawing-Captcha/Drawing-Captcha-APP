@@ -84,6 +84,7 @@ const captchaRoutes = require("./routes/captcha.js")
 const dashboardRoutes = require("./routes/dashboard.js");
 const userRoutes = require("./routes/user.js")
 const companyRoutes = require("./routes/company.js")
+const testConnectionRoutes = require("./routes/testConnection.js")
 
 app.use('/', indexRoutes);
 app.use('/auth', authRoutes)
@@ -91,6 +92,7 @@ app.use('/captcha', captchaRoutes)
 app.use('/dashboard', dashboardRoutes)
 app.use('/user', userRoutes)
 app.use('/company', companyRoutes)
+app.use('/test', testConnectionRoutes)
 
 app.use((req, res, next) => {
     if (!res.headersSent) {

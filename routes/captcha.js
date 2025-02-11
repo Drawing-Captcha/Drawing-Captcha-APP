@@ -230,34 +230,38 @@ router.post('/checkCubes', rateLimit({
 });
 
 router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
-    console.log("checkcaptcha")
-    const givenSession = req.body.session;
-    if(!req.body.session){
-        res.json({ valid: false });
-    }
-    const existSession = await store.collection.findOne({
-        'session.client.clientIdentifier': givenSession.clientIdentifier
-    })
+    try {
+        const givenSession = req.body.session;
+        console.log("console body: ", req.body);
 
-    if (!existSession) {
-        return res.status(400).json({ error: 'Client data not found' });
-    }
+        if (!givenSession || typeof givenSession.clientIdentifier === 'undefined') {
+            console.log("left")
+            return res.json({ valid: false });
+        }
 
-    const validated = existSession.session.captchaValidated;
-    const validatedTime = existSession.session.captchaValidatedTime;
+        const existSession = await store.collection.findOne({
+            'session.client.clientIdentifier': givenSession.clientIdentifier
+        });
 
-    if (!validated) {
-        res.json({ valid: false });
-        return;
-    }
+        if (!existSession) {
+            return res.status(400).json({ error: 'Client data not found' });
+        }
 
-    const thirtyMinutes = 30 * 60 * 1000;
-    const currentTime = Date.now();
+        const { captchaValidated, captchaValidatedTime } = existSession.session;
 
-    if ((currentTime - validatedTime) < thirtyMinutes) {
-        res.json({ valid: true });
-    } else {
-        res.json({ valid: false });
+        if (!captchaValidated) {
+            return res.json({ valid: false });
+        }
+
+        const thirtyMinutes = 30 * 60 * 1000;
+        const currentTime = Date.now();
+
+        const isValid = (currentTime - captchaValidatedTime) < thirtyMinutes;
+        res.json({ valid: isValid });
+
+    } catch (error) {
+        console.error("Error while checking captcha:", error);
+        return res.status(500).json({ error: 'Error while checking captcha.' });
     }
 });
 
