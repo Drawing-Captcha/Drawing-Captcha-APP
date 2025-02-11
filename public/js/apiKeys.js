@@ -55,10 +55,6 @@ async function getKeys() {
                         shells.forEach(shell => {
                             if (shell.classList.contains("apiKey") && elementData.companies.includes(shell.getAttribute("companyId"))) {
                                 wrapper = shell.querySelector(".stacked-list1_list-wrapper");
-
-                            }
-                            else {
-                                wrapper = document.querySelector(".defaultApiKeys").querySelector(".stacked-list1_list-wrapper");
                             }
                         })
                     }
@@ -249,6 +245,7 @@ function submitApi(event) {
             selectedCompanies.push(company.getAttribute("obj-id"))
         }
     })
+    console.log( "companies ", selectedCompanies)
     if (selectedCompanies.length >= 1) {
         let apiName = formName.value;
 
