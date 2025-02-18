@@ -12,7 +12,6 @@ const deleteFile = require("../services/deleteFiles.js");
 const { pool, initializePool } = require('../controllers/initializeController.js');
 const store = require('../models/store.js');
 
-
 const defaultColorKit = {
     buttonColorValue: "#007BFF",
     buttonColorHoverValue: "#0056b3",
@@ -74,7 +73,7 @@ router.post('/assets', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
     let globalPool = await initializePool()
     try {
 
-        let captchaIdentifier = uuid.v4();
+        let captchaIdentifier = bcrypt.hash(uuid.v4(), 15);
         let selectedApiKey = await ApiKeyModel.findOne({ apiKey: req.body.apiKey });
         let tmpContent = []
         let uniqueFileName;

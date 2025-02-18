@@ -24,6 +24,7 @@ let returnedColorKit
 let isResetColorKit = false
 let companyid
 let initColorKit
+let memorizeCaptcha
 
 document.addEventListener("DOMContentLoaded", initialize);
 
@@ -70,6 +71,15 @@ function resetColorKit(){
     submitColorKit()
 }
 
+function updateAdvancedSettings(){
+    if(memorizeCaptcha){
+        document.querySelector(".memorize-captcha").checked = true
+    }
+    else{
+        document.querySelector(".memorize-captcha").checked = false
+    }
+}
+
 async function getColorKit() {
     fetch("/dashboard/colorKit", {
         method: 'GET',
@@ -86,9 +96,6 @@ async function getColorKit() {
     })
     .then(data => {
         if (data) {
-            console.log(data)
-            console.log(data.message)
-            console.log(data.returnedColorKit)
             returnedColorKit = data.returnedColorKit
             buttonColorPicker.value = returnedColorKit.buttonColorValue
             buttonOnHoverColorPicker.value = returnedColorKit.buttonColorHoverValue
@@ -97,10 +104,12 @@ async function getColorKit() {
             titleInput.value = returnedColorKit.defaultTitle
             companyid = returnedColorKit.company;
             initColorKit = returnedColorKit.initColorKit;
+            memorizeCaptcha = returnedColorKit.memorizeCaptcha;
             setColors()
             updateButtonColors()
             updateCubeColors()
             updateTitle()
+            updateAdvancedSettings()
         }
         else {
             alert("An error occurred, check the data processing of the CRUD system in the backend")
@@ -209,7 +218,8 @@ async function submitColorKit() {
         defaultTitle: defaultTitle,
         isResetColorKit: isResetColorKit,
         company: companyid,
-        initColorKit: initColorKit
+        initColorKit: initColorKit,
+        memorizeCaptcha: document.querySelector(".memorize-captcha").checked
     };
 
     try {
