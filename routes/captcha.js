@@ -30,9 +30,14 @@ router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
 
     if (req.body.session && req.body.session.uniqueFileName) {
         req.session.uniqueFileName = req.body.session.uniqueFileName;
+        deleteFile.deleteFile(`./tmpimg/${req.session.uniqueFileName}`);
     }
-    deleteFile.deleteFile(`./tmpimg/${req.session.uniqueFileName}`)
-
+    // req.session.destroy((err) => {
+    //     if (err) {
+    //         console.error("Error destroying session:", err);
+    //     }
+    // });
+    // deleteFile.deleteFile(`./tmpimg/${req.session.uniqueFileName}`);
 });
 
 router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
@@ -189,6 +194,7 @@ router.post('/checkCubes', rateLimit({
     let existSession = await store.collection.findOne({
         'session.client.clientIdentifier': givenSession.clientIdentifier
     })
+    console.log("existSession", existSession)
 
     const selectedFields = req.body.selectedIds;
 
@@ -211,20 +217,25 @@ router.post('/checkCubes', rateLimit({
     if (isValid) {
         existSession.session.captchaValidated = true;
         existSession.session.captchaValidatedTime = Date.now();
+    } else {
+        await store.collection.deleteOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier });
     }
 
+
     try {
-        await store.collection.updateOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier}, { $set: { 'session.captchaValidated': existSession.session.captchaValidated, 'session.captchaValidatedTime': existSession.session.captchaValidatedTime } });
+        await store.collection.updateOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier }, { $set: { 'session.captchaValidated': existSession.session.captchaValidated, 'session.captchaValidatedTime': existSession.session.captchaValidatedTime } });
     } catch (error) {
         console.error("Error while updating session:", error);
         return res.status(500).json({ error: 'Error while updating session.' });
     }
 
-    res.json({ isValid });
-
     if (existSession.session.client.uniqueFileName) {
         deleteFile.deleteFile(`./tmpimg/${existSession.session.client.uniqueFileName}`);
     }
+
+    res.json({ isValid });
+
+
 });
 router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -238,7 +249,7 @@ router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, rateLimi
         const companyId = apiKeyDB.companies[0]
         let memorizeCaptcha = false;
         let colorKit = await ColorKit.findOne({ company: companyId });
-        if(colorKit){
+        if (colorKit) {
             memorizeCaptcha = colorKit.memorizeCaptcha;
         }
         if (!givenSession || typeof givenSession.clientIdentifier === 'undefined') {
