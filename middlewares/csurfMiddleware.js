@@ -1,7 +1,6 @@
 const ApiKeyModel = require("../models/ApiKey.js")
 const OriginModel = require("../models/AllowedOrigins.js")
 const crypto = require("crypto");
-const apiRegex = require("./apiRegex.js");
 
 const generateCSRFToken = (req, res, next) => {
     if(!req.session.csrfToken){
