@@ -17,6 +17,7 @@ const configInitDomain = require("./config/configInitDomain.js")
 const createInitColorKit = require("./config/createInitColorKit.js")
 const createDirectory = require("./services/createDirectory.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
+const cleanSessions = require("./crons/cleanSessions.js");
 const store = require("./models/store.js")
 const port = process.env.PORT;
 let origins
@@ -28,6 +29,12 @@ configInitDomain()
 
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
+
+setInterval(() => {
+    console.log('Running session cleanup...');
+    cleanSessions();
+}, 60000)
+
 
 async function initialize() {
     origins = await initializeAllowedOrigins()

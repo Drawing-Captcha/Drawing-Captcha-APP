@@ -3,7 +3,6 @@ const path = require("path");
 const { promises: fsPromises } = require('fs');
 const rateLimit = require("express-rate-limit");
 const fs = require("fs");
-// const bcrypt = require('bcrypt');
 const uuid = require('uuid');
 const router = express.Router();
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
@@ -28,6 +27,7 @@ router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
     max: 50,
     message: "You have exceeded the maximum number of requests for this endpoint. Please try again later."
 }), (req, res) => {
+
     if (req.body.session && req.body.session.uniqueFileName) {
         req.session.uniqueFileName = req.body.session.uniqueFileName;
     }
@@ -44,17 +44,14 @@ router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, rateLi
         let apiKey = req.body.apiKey
         let apiKeyDB = await ApiKeyModel.findOne({ apiKey })
         let companyId = apiKeyDB.companies[0]
-        console.log("captcha settings getting fetched..")
         let returnedColorKit
         let message
         let colorKit = await ColorKit.findOne({ company: companyId });
         if (colorKit) {
             message = "ColorKit found"
-            console.log(message)
             returnedColorKit = colorKit
         } else {
             message = "No ColorKit found returned the default color Kit"
-            console.log(message);
             returnedColorKit = defaultColorKit
         }
 
@@ -229,7 +226,6 @@ router.post('/checkCubes', rateLimit({
         deleteFile.deleteFile(`./tmpimg/${existSession.session.client.uniqueFileName}`);
     }
 });
-
 router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 50,
@@ -246,7 +242,6 @@ router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, rateLimi
             memorizeCaptcha = colorKit.memorizeCaptcha;
         }
         if (!givenSession || typeof givenSession.clientIdentifier === 'undefined') {
-            console.log("left")
             return res.json({ valid: false });
         }
         const existSession = await store.collection.findOne({
@@ -262,6 +257,7 @@ router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, rateLimi
             return res.json({ valid: false });
         }
         if (!memorizeCaptcha) {
+            store.collection.deleteOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier });
             return res.json({ valid: false });
         }
         const thirtyMinutes = 30 * 60 * 1000;
