@@ -1,6 +1,7 @@
 const ApiKeyModel = require("../models/ApiKey.js")
 const OriginModel = require("../models/AllowedOrigins.js")
 const crypto = require("crypto");
+const apiRegex = require("./apiRegex.js");
 
 const generateCSRFToken = (req, res, next) => {
     if(!req.session.csrfToken){
@@ -32,9 +33,12 @@ const validateCSRFToken = (req, res, next) => {
 
 const validateCSRFOrExternalKey = async (req, res, next) => {
     let failed = false;
-
-    const apiKey = req.body.apiKey;
     try {
+        const uuidRegex = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
+        const apiKey = req.body.apiKey;
+        if (!apiKey || !uuidRegex.test(apiKey)) {
+            throw new Error('Missing or invalid API key');
+        }        
         let doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
 
         if (doesExist) {
