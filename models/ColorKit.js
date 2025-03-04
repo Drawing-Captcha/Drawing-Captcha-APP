@@ -31,6 +31,11 @@ const colorKitSchema = new Schema ({
     initColorKit:{
         type: Boolean,
         required: true
+    },
+    memorizeCaptcha: {
+        type: Boolean,
+        required: true,
+        default: false
     }
 })
 

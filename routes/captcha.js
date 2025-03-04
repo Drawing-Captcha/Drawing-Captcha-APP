@@ -3,6 +3,7 @@ const path = require("path");
 const { promises: fsPromises } = require('fs');
 const rateLimit = require("express-rate-limit");
 const fs = require("fs");
+// const bcrypt = require('bcrypt');
 const uuid = require('uuid');
 const router = express.Router();
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
@@ -12,15 +13,15 @@ const deleteFile = require("../services/deleteFiles.js");
 const { pool, initializePool } = require('../controllers/initializeController.js');
 const store = require('../models/store.js');
 
-
 const defaultColorKit = {
     buttonColorValue: "#007BFF",
     buttonColorHoverValue: "#0056b3",
     selectedCubeColorValue: "#ffff00",
     canvasOnHoverColorValue: "#ff0000",
-    defaultTitle: "Please draw the object currently being displayed."
+    defaultTitle: "Please draw the object currently being displayed.",
 }
-const ApiKeyModel = require("../models/ApiKey.js")
+const ApiKeyModel = require("../models/ApiKey.js");
+const Company = require('../models/Company.js');
 
 router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -236,12 +237,18 @@ router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, rateLimi
 }), async (req, res) => {
     try {
         const givenSession = req.body.session;
-
+        const apiKey = req.body.apiKey;
+        const apiKeyDB = await ApiKeyModel.findOne({ apiKey })
+        const companyId = apiKeyDB.companies[0]
+        let memorizeCaptcha = false;
+        let colorKit = await ColorKit.findOne({ company: companyId });
+        if(colorKit){
+            memorizeCaptcha = colorKit.memorizeCaptcha;
+        }
         if (!givenSession || typeof givenSession.clientIdentifier === 'undefined') {
             console.log("left")
             return res.json({ valid: false });
         }
-
         const existSession = await store.collection.findOne({
             'session.client.clientIdentifier': givenSession.clientIdentifier
         });
@@ -249,13 +256,14 @@ router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, rateLimi
         if (!existSession) {
             return res.status(400).json({ error: 'Client data not found' });
         }
-
         const { captchaValidated, captchaValidatedTime } = existSession.session;
 
         if (!captchaValidated) {
             return res.json({ valid: false });
         }
-
+        if (!memorizeCaptcha) {
+            return res.json({ valid: false });
+        }
         const thirtyMinutes = 30 * 60 * 1000;
         const currentTime = Date.now();
 

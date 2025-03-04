@@ -461,7 +461,8 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
             defaultTitle,
             isResetColorKit,
             company,
-            initColorKit
+            initColorKit,
+            memorizeCaptcha
         } = req.body;
 
         let companyId = company;
@@ -485,7 +486,8 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
                 canvasOnHoverColorValue: initColorKit.canvasOnHoverColorValue,
                 defaultTitle: initColorKit.defaultTitle,
                 company: initColorKit.company,
-                initColorKit: false
+                initColorKit: false,
+                memorizeCaptcha: false
             })
             message = "ColorKit has been reseted successfully."
         }
@@ -494,7 +496,6 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
             let doesColorKitAlreadyExist = await ColorKit.findOne({});
 
             if (!doesColorKitAlreadyExist) {
-                console.log("found one colorKit")
                 let newColorKit = new ColorKit({
                     buttonColorValue,
                     buttonColorHoverValue,
@@ -502,7 +503,8 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
                     canvasOnHoverColorValue,
                     defaultTitle,
                     company,
-                    initColorKit
+                    initColorKit,
+                    memorizeCaptcha
                 });
                 await newColorKit.save();
                 message = "ColorKit has been created successfully."
@@ -515,7 +517,8 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
                         selectedCubeColorValue,
                         canvasOnHoverColorValue,
                         defaultTitle,
-                        initColorKit
+                        initColorKit,
+                        memorizeCaptcha
                     });
                 }
                 else {
@@ -526,7 +529,8 @@ router.post("/captchaSettings", authMiddleware, csrfMiddleware.validateCSRFToken
                             selectedCubeColorValue,
                             canvasOnHoverColorValue,
                             defaultTitle,
-                            company
+                            company,
+                            memorizeCaptcha
                         });
                     }
                 }
