@@ -66,13 +66,31 @@ router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.v
         const focusedUser = await User.findById(id);
 
         if(focusedUser.appAdmin){
-            console.log("log1")
             if(!(req.session.user.appAdmin)) return res.status(401).json({ message: 'You are not authorized to perform this action' })
         }
 
         if(focusedUser.company != req.session.user.company && userRole === "admin" && req.session.user.appAdmin != true){
-            console.log("log2")
             if(!req.session.user.appAdmin || req.session.user.email != focusedUser.email) return res.status(401).json({ message: 'You are not authorized to perform this action' })
+        }
+
+        if(focusedUser._id.toString() !== req.session.user._id.toString() && userRole !== "admin" && req.session.user.company !== focusedUser.company && !req.session.user.appAdmin){
+            return res.status(401).json({ message: 'You are not authorized to perform this action' })
+        }
+
+        if (role !== "" && role !== req.session.user.role) {
+            if (req.session.user.role !== "admin" && !req.session.user.appAdmin) {
+                return res.status(401).json({ message: 'You are not authorized to perform this action' });
+            }
+
+            if (req.session.user.role === "admin" && req.session.user.company !== focusedUser.company && !req.session.user.appAdmin) {
+                return res.status(401).json({ message: 'You are not authorized to perform this action' });
+            }
+        }
+
+        if ( req.session.user.appAdmin !== focusedUser.appAdmin) {
+            if (!req.session.user.appAdmin) {
+                return res.status(401).json({ message: 'You are not authorized to perform this action' });
+            }
         }
 
         if (!id || !username || !email) return res.status(400).json({ message: 'Missing required fields' });
@@ -101,7 +119,6 @@ router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.v
 
         if (!updatedUser) return res.status(404).json({ message: 'User not found' });
 
-        console.log("User updated successfully:", updatedUser);
 
         res.status(200).json({ message: 'User updated successfully', user: updatedUser });
     } catch (error) {
