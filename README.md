@@ -12,7 +12,7 @@ With Drawing Captcha, you can easily create, modify, and design your own captcha
 
 ## 🚀 Demo
 
-[Drawing Captcha Demo](https://wpesicdev.github.io/Drawing-Captcha-Demo-Alpha/)
+[Drawing Captcha Demo](https://demo.drawing-captcha.com)
 
 ## Project Screenshots
 
