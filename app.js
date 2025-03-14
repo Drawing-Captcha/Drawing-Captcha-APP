@@ -19,6 +19,7 @@ const createDirectory = require("./services/createDirectory.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 const cleanSessions = require("./crons/cleanSessions.js");
 const store = require("./models/store.js")
+const rateLimit = require("express-rate-limit");
 const port = process.env.PORT;
 createDirectory()
 connectDB()
@@ -54,6 +55,21 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 const csrfProtection = csrf({ cookie: true });
 
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 50, 
+    message: "Too Many Request's try later again"
+});
+const captchaLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 200, 
+    message: "Too Many Request's try later again"
+});
+const testLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 150, 
+    message: "Too Many Request's try later again"
+});
 app.use(cors({
     origin: async function (origin, callback) {
         try {
@@ -76,7 +92,6 @@ app.use(cors({
 
 app.set("view engine", "ejs")
 app.use(express.urlencoded({ extended: true }));
-
 app.use(session({
     secret: crypto.randomUUID(),
     resave: false,
@@ -96,12 +111,12 @@ const companyRoutes = require("./routes/company.js")
 const testConnectionRoutes = require("./routes/testConnection.js")
 
 app.use('/', indexRoutes);
-app.use('/auth', authRoutes)
-app.use('/captcha', captchaRoutes)
+app.use('/auth', authLimiter, authRoutes)
+app.use('/captcha', captchaLimiter, captchaRoutes)
 app.use('/dashboard', dashboardRoutes)
 app.use('/user', userRoutes)
 app.use('/company', companyRoutes)
-app.use('/test', testConnectionRoutes)
+app.use('/test', testLimiter, testConnectionRoutes)
 
 app.use((req, res, next) => {
     if (!res.headersSent) {
@@ -121,3 +136,4 @@ app.listen(port, async () => {
     let message = await initializeRegisterKey();
     console.log(message)
 });
+

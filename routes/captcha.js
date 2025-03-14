@@ -1,7 +1,6 @@
 const express = require('express');
 const path = require("path");
 const { promises: fsPromises } = require('fs');
-const rateLimit = require("express-rate-limit");
 const fs = require("fs");
 const uuid = require('uuid');
 const router = express.Router();
@@ -22,11 +21,7 @@ const defaultColorKit = {
 const ApiKeyModel = require("../models/ApiKey.js");
 const Company = require('../models/Company.js');
 
-router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 50,
-    message: "You have exceeded the maximum number of requests for this endpoint. Please try again later."
-}), (req, res) => {
+router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, (req, res) => {
 
     if (req.body.session && req.body.session.uniqueFileName) {
         req.session.uniqueFileName = req.body.session.uniqueFileName;
@@ -34,11 +29,7 @@ router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
     }
 });
 
-router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 50,
-    message: "You have exceeded the maximum number of requests for this endpoint. Please try again later."
-}), async (req, res) => {
+router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
     try {
         let apiKey = req.body.apiKey
         let apiKeyDB = await ApiKeyModel.findOne({ apiKey })
@@ -62,11 +53,7 @@ router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, rateLi
     }
 });
 
-router.post('/assets', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 50,
-    message: "You have exceeded the maximum number of requests for this endpoint. Please try again later."
-}), async (req, res) => {
+router.post('/assets', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
 
     let globalPool = await initializePool()
     try {
@@ -179,11 +166,7 @@ router.post('/assets', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
     }
 
 });
-router.post('/checkCubes', rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 50,
-    message: "You have exceeded the maximum number of requests for this endpoint. Please try again later."
-}), csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
+router.post('/checkCubes', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
     let givenSession = req.body.session;
     let existSession = await store.collection.findOne({
         'session.client.clientIdentifier': givenSession.clientIdentifier
@@ -231,11 +214,7 @@ router.post('/checkCubes', rateLimit({
 
 
 });
-router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 50,
-    message: "You have exceeded the maximum number of requests for this endpoint. Please try again later."
-}), async (req, res) => {
+router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
     try {
         const givenSession = req.body.session;
         const apiKey = req.body.apiKey;
