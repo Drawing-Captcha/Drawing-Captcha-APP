@@ -32,12 +32,6 @@ router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, rateLimit({
         req.session.uniqueFileName = req.body.session.uniqueFileName;
         deleteFile.deleteFile(`./tmpimg/${req.session.uniqueFileName}`);
     }
-    // req.session.destroy((err) => {
-    //     if (err) {
-    //         console.error("Error destroying session:", err);
-    //     }
-    // });
-    // deleteFile.deleteFile(`./tmpimg/${req.session.uniqueFileName}`);
 });
 
 router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, rateLimit({

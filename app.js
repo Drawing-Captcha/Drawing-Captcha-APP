@@ -20,7 +20,6 @@ require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 const cleanSessions = require("./crons/cleanSessions.js");
 const store = require("./models/store.js")
 const port = process.env.PORT;
-let origins
 createDirectory()
 connectDB()
 createInitCaptcha()
@@ -37,7 +36,6 @@ setInterval(() => {
 
 
 async function initialize() {
-    origins = await initializeAllowedOrigins()
     await pool
     await deletedBin
 }
@@ -57,20 +55,24 @@ app.use(cookieParser());
 const csrfProtection = csrf({ cookie: true });
 
 app.use(cors({
-
-    origin: function (origin, callback) {
-        if (!origin) {
-            return callback(null, true);
-        }
-        if (origins.includes(origin)) {
-            return callback(null, true);
-        } else {
-            return callback(new Error('Not allowed by CORS'));
+    origin: async function (origin, callback) {
+        try {
+            let origins = await initializeAllowedOrigins();
+            if (!origin) {
+                return callback(null, true);
+            }
+            if (origins.includes(origin)) {
+                return callback(null, true);
+            } else {
+                return callback(new Error('Not allowed by CORS'));
+            }
+        } catch (error) {
+            console.error('Error fetching allowed origins:', error);
+            return callback(new Error('Failed to fetch allowed origins'));
         }
     },
     credentials: true
 }));
-
 
 app.set("view engine", "ejs")
 app.use(express.urlencoded({ extended: true }));
