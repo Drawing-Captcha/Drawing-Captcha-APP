@@ -55,7 +55,12 @@ app.use(express.static("public"));
 app.use('/tmpimg', express.static('tmpimg'));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(helmet())
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false
+}))
 const csrfProtection = csrf({ cookie: true });
 
 const authLimiter = rateLimit({
@@ -73,13 +78,11 @@ const testLimiter = rateLimit({
     max: 150, 
     message: "Too Many Request's try later again"
 });
-
 app.use(cors({
     origin: async function (origin, callback) {
         try {
-            console.log("origin", origin)
             let origins = await initializeAllowedOrigins();
-
+            console.log("origin: ", origin);
             if (!origin || origins.includes(origin) || origin === 'null') {
                 return callback(null, true);
             }
@@ -104,7 +107,7 @@ app.use(session({
     saveUninitialized: false,
     store: store,
     cookie: {
-        expires: expiryDate,
+        maxAge: 4 * 60 * 60 * 1000
     }
 }));
 
@@ -142,4 +145,3 @@ app.listen(port, async () => {
     let message = await initializeRegisterKey();
     console.log(message)
 });
-
