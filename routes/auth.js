@@ -8,6 +8,7 @@ const sanitizeInput = require("../services/sanitizeInput.js");
 const isValidEmail = require("../services/isValidEmail.js");
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const registerKeyModel = require("../models/RegisterKey.js")
+const isPasswordStrong = require("../services/isStrongPassword.js");
 
 router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
@@ -48,14 +49,15 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
 
 router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
-        console.log("Registering User...")
-        const { username, email, password, registerKey } = req.body;
-
-        console.log("register Key: ", registerKey)
+        const { username, email, password, registerKey } = {
+            username: sanitizeInput(req.body.username),
+            email: sanitizeInput(req.body.email),
+            password: sanitizeInput(req.body.password),
+            registerKey: sanitizeInput(req.body.registerKey)
+        };
 
         const registerKeyDB = await registerKeyModel.findOne({ RegisterKey: registerKey });
         if (!registerKeyDB) {
-            console.log("registerKeyDB is null")
             req.session.RegisterMessage = "Register Key is wrong, please enter the register key given by your organization";
             return res.redirect('/register');
         }
@@ -63,15 +65,18 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
         const returnedKey = registerKeyDB.RegisterKey;
         const companyKeyId = registerKeyDB.Company;
 
-        console.log("returned Key: ", returnedKey)
 
         req.session.RegisterMessage = "";
+
+        if (!isPasswordStrong(password)) {
+            req.session.RegisterMessage = "Password is not strong enough. Please enter a password with at least 8 characters, 1 uppercase letter, 1 lowercase letter and 1 special character.";
+            return res.redirect('/register');
+        }
 
         if (registerKey === returnedKey) {
             const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
 
             if (existingUser) {
-                console.log("existingUser exists")
                 req.session.RegisterMessage = "User with this email or username already exists";
                 return res.redirect('/register');
             }
@@ -87,12 +92,9 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
             });
 
             await newUser.save();
-            console.log("registering user successfull...")
-
             return res.redirect('/login');
         }
 
-        console.log("registering user unsuccessfull...")
         req.session.RegisterMessage = "Register Key is wrong, please enter the register key given by your organization";
         return res.redirect('/register');
 

@@ -22,7 +22,7 @@ const CaptchaModel = require("../models/Captcha.js")
 const DeletedCaptchaModel = require("../models/DeletedCaptchaModel.js")
 const CompanyModel = require("../models/Company.js")
 const isRelatedToCompany = require("../services/companyRelationMiddleware.js")
-const proofRegexOrigins = require("../public/js/proofRegexOrigins.js")
+const proofRegexOrigins = require("../services/proofRegexOrigins.js")
 
 router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
