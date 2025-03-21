@@ -21,4 +21,4 @@ function proofRegexOrigins(originName) {
     }
 }
 
-router.exports = proofRegexOrigins;
+module.exports = proofRegexOrigins;

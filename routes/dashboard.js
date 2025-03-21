@@ -681,8 +681,10 @@ router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken,
         let message;
         let originName = req.body.originName;
         let selectedCompanies = req.body.selectedCompanies;
-        let regexResult = await proofRegexOrigins(origin);
-        console.log("regexResult: ", regexResult)
+        let regexResult = await proofRegexOrigins(originName);
+        if(!regexResult.test){
+            return res.status(401).json({ message: "Regex error: please define your origin like this schema: https://yourdomain.com" });
+        }
         let doesOriginExist = await AllowedOriginModel.findOne({ allowedOrigin: originName, companies: { $in: selectedCompanies } });
 
         let companyId = selectedCompanies[0];
@@ -700,10 +702,8 @@ router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken,
             await origin.save();
             initializeAllowedOrigins();
             message = "Allowed origin successfully created";
-            console.log(message);
         } else {
             message = `${originName} is undefined or already exists`;
-            console.log(message);
         }
 
         res.json({ message });
