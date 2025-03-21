@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const UserModel = require("../models/User.js");
+const SmtpConfig = require('./models/SmtpConfig');
+const nodemailer = require('nodemailer');
 const bcrypt = require("bcryptjs")
 const path = require('path');
 const sanitizeInput = require("../services/sanitizeInput.js");
@@ -92,6 +94,37 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
             });
 
             await newUser.save();
+
+            if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    
+                const token = generateEmailConfirmationToken(newUser._id); 
+                const confirmationLink = `http://${req.headers.host}/confirm-email?token=${token}`;
+
+                
+                const transporter = nodemailer.createTransport({
+                    service: 'gmail', 
+                    auth: {
+                        user: process.env.EMAIL_USER, 
+                        pass: process.env.EMAIL_PASS  
+                    }
+                });
+
+                const mailOptions = {
+                    from: process.env.EMAIL_USER,
+                    to: email,
+                    subject: 'Please confirm your email address',
+                    text: `Please click the following link to confirm your email address: ${confirmationLink}`,
+                    html: `<p>Please click the following link to confirm your email address: <a href="${confirmationLink}">Confirm Email</a></p>`,
+                };
+
+                await transporter.sendMail(mailOptions);
+
+                req.session.RegisterMessage = "Registration successful! Please check your email to confirm your address.";
+            } else {
+                newUser.isEmailConfirmed = true;
+                await newUser.save();
+                req.session.RegisterMessage = "Registration successful!";
+            }
             return res.redirect('/login');
         }
 
