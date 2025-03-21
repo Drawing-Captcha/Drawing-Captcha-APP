@@ -82,7 +82,6 @@ app.use(cors({
     origin: async function (origin, callback) {
         try {
             let origins = await initializeAllowedOrigins();
-            console.log("origin: ", origin);
             if (!origin || origins.includes(origin) || origin === 'null') {
                 return callback(null, true);
             }
