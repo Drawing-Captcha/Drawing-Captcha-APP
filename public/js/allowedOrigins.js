@@ -124,7 +124,7 @@ async function submitOrigin(event) {
         }
     })
     let origin = inputName.value;
-    let regexResult = await proofRegex(origin);
+    let regexResult = await proofRegexOrigins(origin);
     if (!regexResult.test) {
         return
     }

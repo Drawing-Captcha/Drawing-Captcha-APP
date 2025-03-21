@@ -193,7 +193,7 @@ async function submitChanges(event) {
 async function submitCompany() {
     let submittedData
     let regexResult
-    regexResult = await proofRegex(orginInput.value)
+    regexResult = await proofRegexOrigins(orginInput.value)
     if (!regexResult.test) {
         return
     }

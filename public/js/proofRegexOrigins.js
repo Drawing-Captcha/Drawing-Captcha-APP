@@ -1,4 +1,6 @@
-function proofRegex(originName) {
+const router = require("express/lib/router");
+
+function proofRegexOrigins(originName) {
     if (!originName) {
         alert("Please enter a origin, you can still change it afterwarts in the settings");
         return;
@@ -18,3 +20,5 @@ function proofRegex(originName) {
         return { test: false, value: "" };
     }
 }
+
+router.exports = proofRegexOrigins;

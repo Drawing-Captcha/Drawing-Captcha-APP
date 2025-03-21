@@ -22,6 +22,7 @@ const CaptchaModel = require("../models/Captcha.js")
 const DeletedCaptchaModel = require("../models/DeletedCaptchaModel.js")
 const CompanyModel = require("../models/Company.js")
 const isRelatedToCompany = require("../services/companyRelationMiddleware.js")
+const proofRegexOrigins = require("../public/js/proofRegexOrigins.js")
 
 router.get('/getElements', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
@@ -662,25 +663,26 @@ router.get('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, 
 
         if (appAdmin) {
             returnedOrigins = await AllowedOriginModel.find({ initOrigin: false });
-            message = "Alle erlaubten Urspr nge werden zur ckgegeben, da Sie App-Administrator sind";
+            message = "All allowed origins are returned, as you are an App Administrator";
         } else {
             returnedOrigins = await AllowedOriginModel.find({ companies: { $in: userCompany }, initOrigin: false });
-            message = "Nur die erlaubten Urspr nge, die mit Ihrer Firma in Verbindung stehen, werden zur ckgegeben, da Sie kein App-Administrator sind";
+            message = "Only the allowed origins related to your company are returned, as you are not an App Administrator";
         }
-
         console.log(returnedOrigins)
 
         res.json({ allowedOrigins: returnedOrigins, userRole, message, appAdmin: req.session.user.appAdmin });
     } catch (err) {
-        console.error("Fehler beim Abrufen der erlaubten Urspr nge", err);
-        return res.status(500).json({ error: "Ein Fehler ist aufgetreten, whrend versucht wurde, die erlaubten Urspr nge abzurufen" });
+        console.error("Error while retrieving allowed origins", err);
+        return res.status(500).json({ error: "An error occurred while attempting to retrieve the allowed origins" });
     }
 })
 router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
         let message;
         let originName = req.body.originName;
-        let selectedCompanies = req.body.selectedCompanies
+        let selectedCompanies = req.body.selectedCompanies;
+        let regexResult = await proofRegexOrigins(origin);
+        console.log("regexResult: ", regexResult)
         let doesOriginExist = await AllowedOriginModel.findOne({ allowedOrigin: originName, companies: { $in: selectedCompanies } });
 
         let companyId = selectedCompanies[0];
@@ -688,7 +690,7 @@ router.post('/allowedOrigins', authMiddleware, csrfMiddleware.validateCSRFToken,
             return res.status(401).json({ message: "Unauthorized" });
         }
 
-        if (originName && !doesOriginExist) {
+        if (originName && !doesOriginExist && selectedCompanies.length > 0) {
             let origin = new AllowedOriginModel({
                 allowedOrigin: originName,
                 companies: selectedCompanies,
