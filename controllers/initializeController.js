@@ -35,16 +35,17 @@ async function initializeAllowedOrigins() {
             allowedOrigins.forEach(origin => {
                 defaultOrigin.push(origin.allowedOrigin);
             });
+            defaultOrigin = [...new Set(defaultOrigin)];
             return defaultOrigin;
-            console.log("Allowed origins: ", defaultOrigin);
         } else {
-            return defaultOrigin;
             console.log("Allowed origins are currently empty. Added localhost as default.");
+            return defaultOrigin;
         }
     } catch (err) {
         console.log("Error parsing JSON data while initializing allowedOrigins:", err);
     }
 }
+
 
 async function initializeBin() {
     try {
@@ -64,7 +65,7 @@ async function initializeBin() {
 async function initializeRegisterKey() {
     try {
         let message;
-        const existingRegisterKey = await registerKeyModel.findOne({AppKey: true});
+        const existingRegisterKey = await registerKeyModel.findOne({ AppKey: true });
 
         if (!existingRegisterKey) {
             const newRegisterKey = new registerKeyModel({

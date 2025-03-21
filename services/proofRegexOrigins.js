@@ -20,3 +20,4 @@ function proofRegexOrigins(originName) {
     }
 }
 
+module.exports = proofRegexOrigins;

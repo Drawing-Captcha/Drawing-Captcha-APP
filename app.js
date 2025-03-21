@@ -1,4 +1,5 @@
 const express = require("express");
+const helmet = require('helmet')
 const session = require("express-session");
 const MongoDBSession = require("connect-mongodb-session")(session);
 const bodyParser = require('body-parser');
@@ -21,6 +22,7 @@ const cleanSessions = require("./crons/cleanSessions.js");
 const store = require("./models/store.js")
 const rateLimit = require("express-rate-limit");
 const port = process.env.PORT;
+const expiryDate = new Date(Date.now() + 60 * 60 * 1000)
 createDirectory()
 connectDB()
 createInitCaptcha()
@@ -53,6 +55,7 @@ app.use(express.static("public"));
 app.use('/tmpimg', express.static('tmpimg'));
 app.use(bodyParser.json());
 app.use(cookieParser());
+app.use(helmet())
 const csrfProtection = csrf({ cookie: true });
 
 const authLimiter = rateLimit({
@@ -70,11 +73,14 @@ const testLimiter = rateLimit({
     max: 150, 
     message: "Too Many Request's try later again"
 });
+
 app.use(cors({
     origin: async function (origin, callback) {
         try {
+            console.log("origin", origin)
             let origins = await initializeAllowedOrigins();
-            if (!origin) {
+
+            if (!origin || origins.includes(origin) || origin === 'null') {
                 return callback(null, true);
             }
             if (origins.includes(origin)) {
@@ -98,7 +104,7 @@ app.use(session({
     saveUninitialized: false,
     store: store,
     cookie: {
-        maxAge: 4 * 60 * 60 * 1000
+        expires: expiryDate,
     }
 }));
 
