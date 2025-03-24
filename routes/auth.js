@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const UserModel = require("../models/User.js");
-const SmtpConfig = require('./models/SmtpConfig');
 const nodemailer = require('nodemailer');
 const bcrypt = require("bcryptjs")
 const path = require('path');
@@ -11,6 +10,9 @@ const isValidEmail = require("../services/isValidEmail.js");
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const registerKeyModel = require("../models/RegisterKey.js")
 const isPasswordStrong = require("../services/isStrongPassword.js");
+const generateEmailConfirmationToken = require("../services/generateEmailConfirmationToken.js");
+const emailUser = process.env.DEFAULT_EMAIL_USER;
+const emailPass = process.env.DEFAULT_EMAIL_PASS;
 
 router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
@@ -24,7 +26,10 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
             req.session.message = "Incorrect username or password.";
             return res.redirect("/login");
         }
-
+        if (!user.isEmailConfirmed && emailUser && emailPass && !user.initialUser) {
+            req.session.message = "Please confirm your email address before logging in.";
+            return res.redirect("/login");
+        }
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
@@ -85,32 +90,27 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
 
             const hashedPassword = await bcrypt.hash(password, 12);
 
-            const newUser = new UserModel({
-                username,
-                email,
-                password: hashedPassword,
-                role: "read",
-                company: companyKeyId
-            });
+            let newUser; 
 
-            await newUser.save();
-
-            if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            if (emailUser && emailPass) {
+                console.log("Sending email confirmation link to:", email);
     
-                const token = generateEmailConfirmationToken(newUser._id); 
+                const token = generateEmailConfirmationToken(); 
                 const confirmationLink = `http://${req.headers.host}/confirm-email?token=${token}`;
+                let emailConfirmationToken = token;
 
-                
                 const transporter = nodemailer.createTransport({
-                    service: 'gmail', 
+                    host: process.env.DEFAULT_EMAIL_HOST,
+                    port: process.env.DEFAULT_EMAIL_PORT,
+                    secure: process.env.DEFAULT_EMAIL_PORT === '465', // true for 465, false for other ports
                     auth: {
-                        user: process.env.EMAIL_USER, 
-                        pass: process.env.EMAIL_PASS  
+                        user: emailUser,
+                        pass: emailPass
                     }
                 });
 
                 const mailOptions = {
-                    from: process.env.EMAIL_USER,
+                    from: emailUser,
                     to: email,
                     subject: 'Please confirm your email address',
                     text: `Please click the following link to confirm your email address: ${confirmationLink}`,
@@ -120,11 +120,29 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
                 await transporter.sendMail(mailOptions);
 
                 req.session.RegisterMessage = "Registration successful! Please check your email to confirm your address.";
+                newUser = new UserModel({
+                    username,
+                    email,
+                    password: hashedPassword,
+                    role: "read",
+                    company: companyKeyId,
+                    isEmailConfirmed: false,
+                    emailConfirmationToken
+                });
+                req.session.RegisterMessage = "Registration successful!";
+  
             } else {
-                newUser.isEmailConfirmed = true;
-                await newUser.save();
+                newUser = new UserModel({
+                    username,
+                    email,
+                    password: hashedPassword,
+                    role: "read",
+                    company: companyKeyId
+                });
                 req.session.RegisterMessage = "Registration successful!";
             }
+
+            await newUser.save();
             return res.redirect('/login');
         }
 
@@ -140,3 +158,4 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
 
 
 module.exports = router
+

@@ -21,7 +21,6 @@ require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 const cleanSessions = require("./crons/cleanSessions.js");
 const store = require("./models/store.js")
 const rateLimit = require("express-rate-limit");
-const saveSmtpConfigFromEnv = require("./config/smtpConfig.js");
 const port = process.env.PORT;
 const expiryDate = new Date(Date.now() + 60 * 60 * 1000)
 createDirectory()
@@ -29,7 +28,6 @@ connectDB()
 createInitCaptcha()
 createInitColorKit()
 configInitDomain()
-saveSmtpConfigFromEnv(); 
 
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
@@ -119,6 +117,7 @@ const dashboardRoutes = require("./routes/dashboard.js");
 const userRoutes = require("./routes/user.js")
 const companyRoutes = require("./routes/company.js")
 const testConnectionRoutes = require("./routes/testConnection.js")
+const confirmEmail = require("./routes/confirm-email.js")
 
 app.use('/', indexRoutes);
 app.use('/auth', authLimiter, authRoutes)
@@ -127,6 +126,7 @@ app.use('/dashboard', dashboardRoutes)
 app.use('/user', userRoutes)
 app.use('/company', companyRoutes)
 app.use('/test', testLimiter, testConnectionRoutes)
+app.use("/confirm-email", confirmEmail)
 
 app.use((req, res, next) => {
     if (!res.headersSent) {

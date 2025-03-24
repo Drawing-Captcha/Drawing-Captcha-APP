@@ -34,6 +34,14 @@ const userSchema = new Schema ({
     appAdmin:{
         type: Boolean,
         required: false
+    },
+    isEmailConfirmed:{
+        type: Boolean,
+        required: false
+    },
+    emailConfirmationToken: {
+        type: String,
+        required: false
     }
     
 })

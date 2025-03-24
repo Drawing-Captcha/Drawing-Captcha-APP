@@ -1,22 +1,25 @@
-router.get('/confirm-email', async (req, res) => {
+const express = require('express');
+const router = express.Router();
+const User = require('../models/User.js');
+
+router.get('/', async (req, res) => {
+    const { token } = req.query;
+
     try {
-        const { token } = req.query;
-        
-        const userId = decoded.userId;
-
-        const user = await UserModel.findById(userId);
-        if (!user) {
-            return res.status(400).send('Invalid confirmation link.');
+        const user = await User.findOne({ emailConfirmationToken: token });
+        if (user && !user.isEmailConfirmed) {
+            user.isEmailConfirmed = true;
+            user.emailConfirmationToken = undefined;
+            await user.save();
+            res.render("emailVerified", { verified: "Email successfully verified! You will be redirected to the login page in 5 seconds." });
+        } else {
+            res.render("emailVerified", { verified: "Invalid or expired confirmation link. You will be redirected to the login page in 5 seconds." });
         }
-
-        user.isEmailConfirmed = true;
-        await user.save();
-
-        res.status(200).send('Email confirmed successfully!');
     } catch (error) {
-        console.error('Error confirming email:', error);
-        res.status(500).send('An error occurred while confirming your email. Please try again.');
+        console.error(error);
+        res.send("An error occurred while verifying your email. Please try again later.");
     }
 });
 
 module.exports = router;
+
