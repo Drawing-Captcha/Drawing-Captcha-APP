@@ -35,7 +35,7 @@ setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
 setInterval(() => {
     console.log('Running session cleanup...');
     cleanSessions();
-}, 60000)
+}, 1000 * 60 * 60)
 
 
 async function initialize() {
