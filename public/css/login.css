@@ -324,8 +324,8 @@ p {
 }
 
 .success-message {
-  background-color: var(--bg-color-custom);
-  border-radius: 2em;
+  background-color: rgba(144, 238, 144, 0.61);
+  padding: 1rem;
 }
 
 @media screen and (max-width: 991px) {

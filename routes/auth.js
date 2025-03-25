@@ -9,6 +9,10 @@ const isValidEmail = require("../services/isValidEmail.js");
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const registerKeyModel = require("../models/RegisterKey.js")
 const isPasswordStrong = require("../services/isStrongPassword.js");
+const sendEmail = require('../services/sendEmail.js');
+const generateEmailConfirmationToken = require("../services/generateEmailConfirmationToken.js");
+const { send } = require('process');
+const emailService = process.env.EMAIL_SERVICE;
 
 router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
@@ -20,13 +24,19 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
         }
         if (!user) {
             req.session.message = "Incorrect username or password.";
+            req.session.resendConfirmEmail = false;
             return res.redirect("/login");
         }
-
+        if (!user.isEmailConfirmed && emailService && !user.initialUser) {
+            req.session.message = "Please confirm your email address before logging in.";
+            req.session.resendConfirmEmail = true;
+            return res.redirect("/login");
+        }
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
             req.session.message = "Incorrect username or password.";
+            req.session.resendConfirmEmail = false;
             return res.redirect("/login");
         }
 
@@ -83,20 +93,51 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
 
             const hashedPassword = await bcrypt.hash(password, 12);
 
-            const newUser = new UserModel({
-                username,
-                email,
-                password: hashedPassword,
-                role: "read",
-                company: companyKeyId
-            });
+            let newUser; 
+
+            if (emailService) {    
+                const token = generateEmailConfirmationToken();
+                const confirmationLink = `http://${req.headers.host}/confirm-email?token=${token}`;
+                let emailConfirmationToken = token;
+
+                let subject = 'Drawing-Captcha | Email Confirmation';
+                let text = `Please click the following link to confirm your email address: ${confirmationLink}`;
+                let html = `<div style="width: 100%; height: fit-content; display: flex; align-items: center; justify-content: center;"><img src="https://docs.drawing-captcha.com/media/3yih32u5/drawing-captcha_small.png?width=240&v=1db77deb55dccb0" styles="width: 100px; height: 100px;"></div><h1>Confirm your Email for ${req.headers.host} Drawing Captcha App</h1><p>Please click the following link to confirm your email address: <a href="${confirmationLink}">Confirm Email here</a></p>`;
+
+                await sendEmail(subject, text, html, email);
+
+                req.session.RegisterMessage = "Registration successful! Please check your email to confirm your address.";
+                newUser = new UserModel({
+                    username,
+                    email,
+                    password: hashedPassword,
+                    role: "read",
+                    company: companyKeyId,
+                    isEmailConfirmed: false,
+                    emailConfirmationToken
+                });
+  
+            } else {
+                newUser = new UserModel({
+                    username,
+                    email,
+                    password: hashedPassword,
+                    role: "read",
+                    company: companyKeyId
+                });
+                req.session.RegisterMessage = "Registration successful!";
+            }
+
+            req.session.message = req.session.RegisterMessage;
+            req.session.isSuccessfull = true;
 
             await newUser.save();
-            return res.redirect('/login');
+            return res.redirect("/login");
         }
-
-        req.session.RegisterMessage = "Register Key is wrong, please enter the register key given by your organization";
-        return res.redirect('/register');
+        else {
+            req.session.RegisterMessage = "Register Key is wrong, please enter the register key given by your organization";
+            return res.redirect('/register');
+        }
 
     } catch (error) {
         console.error("Error occurred during registration:", error);
@@ -107,3 +148,4 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
 
 
 module.exports = router
+

@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
 
-
 router.post("/", csrfMiddleware.validateCSRFOrExternalKey, (req, res) => {
     try{
         console.log("Test connection with client from:", req.headers.origin, "was successful");
