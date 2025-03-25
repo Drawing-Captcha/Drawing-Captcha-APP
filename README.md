@@ -70,6 +70,19 @@ Here are some of the project's best features:
 
    # Change this password!!!
    DC_ADMIN_PASSWORD="admin"
+
+   #Email settings
+   EMAIL_SERVICE= #smtpAuth || postmark 
+   EMAIL_FROM=noreply@drawing-captcha.com
+   
+   SMTPAUTH_EMAIL_HOST=
+   SMTPAUTH_EMAIL_PORT=
+   SMTPAUTH_EMAIL_USER=
+   SMTPAUTH_EMAIL_PASS=
+   
+   POSTMARK_SERVER_CLIENT=
+   POSTMARK_MESSAGE_STREAM=
+
    ```
 
 Please note to change these variables:
