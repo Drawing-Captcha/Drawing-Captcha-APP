@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const isAuthRedirect = require("../middlewares/isAlreadyAuthRedirectMiddleware")
-
+const emailService = process.env.EMAIL_SERVICE;
 router.get("/", (req, res) => {
     res.redirect("/login");
 });
@@ -16,7 +16,9 @@ router.get('/register', csrfMiddleware.generateCSRFToken, (req, res) => {
 });
 
 router.get('/resendEmailVerification', csrfMiddleware.generateCSRFToken, (req, res) => {
-    res.render('resendEmailVerification', {ResendMailMessage: req.session.ResendMailMessage, csrfToken: req.session.csrfToken, isSuccessfullResending: req.session.isSuccessfullResending});
+    if(emailService){
+        res.render('resendEmailVerification', {ResendMailMessage: req.session.ResendMailMessage, csrfToken: req.session.csrfToken, isSuccessfullResending: req.session.isSuccessfullResending});
+    }
 });
 
 router.get('/404', (req, res) => {
