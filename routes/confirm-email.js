@@ -6,9 +6,11 @@ const generateEmailConfirmationToken = require("../services/generateEmailConfirm
 const emailUser = process.env.DEFAULT_EMAIL_USER;
 const emailPass = process.env.DEFAULT_EMAIL_PASS;
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
+const sanitizeInput = require('../services/sanitizeInput.js');
+const isValidEmail = require('../services/isValidEmail.js');
 router.get('/', async (req, res) => {
-    const { token } = req.query;
-
+    let { token } = req.query;
+    token = sanitizeInput(token);
     try {
         const user = await User.findOne({ emailConfirmationToken: token });
         if (user && !user.isEmailConfirmed) {
@@ -26,8 +28,15 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', csrfMiddleware.validateCSRFToken, async (req, res) => {
-    const { email } = req.body;
+
+    let { email } = req.body;
+    email = sanitizeInput(email);
     try {
+        if(isValidEmail(email) === false){
+            req.session.ResendMailMessage = "Invalid email address.";
+            req.session.isSuccessfullResending = false;
+            return res.status(400).redirect("/resendEmailVerification");
+        }
         const user = await User.findOne({ email });
         if (!user) {
             req.session.ResendMailMessage = "No user with this email address found.";

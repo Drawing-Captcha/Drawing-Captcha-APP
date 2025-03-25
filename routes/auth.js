@@ -26,6 +26,7 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
         }
         if (!user) {
             req.session.message = "Incorrect username or password.";
+            req.session.resendConfirmEmail = false;
             return res.redirect("/login");
         }
         if (!user.isEmailConfirmed && emailUser && emailPass && !user.initialUser) {
@@ -37,6 +38,7 @@ router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
 
         if (!isMatch) {
             req.session.message = "Incorrect username or password.";
+            req.session.resendConfirmEmail = false;
             return res.redirect("/login");
         }
 
