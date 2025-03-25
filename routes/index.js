@@ -8,11 +8,15 @@ router.get("/", (req, res) => {
 });
 
 router.get('/login',isAuthRedirect ,csrfMiddleware.generateCSRFToken, (req, res) => {
-    res.render('login', { message: req.session.message, csrfToken: req.session.csrfToken });
+    res.render('login', { message: req.session.message, csrfToken: req.session.csrfToken, isSuccessfull: req.session.isSuccessfull, resendConfirmEmail: req.session.resendConfirmEmail });
 });
 
 router.get('/register', csrfMiddleware.generateCSRFToken, (req, res) => {
-    res.render('sign-up', {RegisterMessage: req.session.RegisterMessage, csrfToken: req.session.csrfToken});
+    res.render('sign-up', {RegisterMessage: req.session.RegisterMessage, csrfToken: req.session.csrfToken, isSuccessfull: req.session.isSuccessfull});
+});
+
+router.get('/resendEmailVerification', csrfMiddleware.generateCSRFToken, (req, res) => {
+    res.render('resendEmailVerification', {ResendMailMessage: req.session.ResendMailMessage, csrfToken: req.session.csrfToken, isSuccessfullResending: req.session.isSuccessfullResending});
 });
 
 router.get('/404', (req, res) => {

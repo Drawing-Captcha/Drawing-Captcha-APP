@@ -52,14 +52,15 @@
               </p>
             </div>
           </form>
-          <div class="success-message w-form-done">
-            <div>Thank you! Your submission has been received!</div>
+          <% if (RegisterMessage && isSuccessfull) { %>
+          <div class="success-message">
+            <div><%= RegisterMessage %>!</div>
           </div>
-          <% if (RegisterMessage) { %>
+          <% } else if (RegisterMessage) { %>
             <div class="w-form-fail">
               <div><%= RegisterMessage %></div>
             </div>
-            <% } %>
+          <% } %>
         </div>
       </div>
     </div>
