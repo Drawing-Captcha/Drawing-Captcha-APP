@@ -18,6 +18,9 @@ With Drawing Captcha, you can easily create, modify, and design your own captcha
 
 <img src="https://wpesicdev.github.io/Drawing-Captcha-Demo-Alpha/assets/Demo1.png" alt="project-screenshot" width="100%">
 
+<p align="center">
+<img src="https://github.com/user-attachments/assets/4c193831-5307-4438-8f06-5b08367ed1e4" alt="project-screenshot" width="100%">
+</p>
 
 ## 🧐 Features
 
