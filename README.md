@@ -1,7 +1,7 @@
 <h1 align="center" id="title">Drawing Captcha App (Alpha)🛡️</h1>
 
 <p align="center">
-![image](https://github.com/user-attachments/assets/c5972a65-0a30-4908-9e98-d1d19ee06685)
+<img src="https://github.com/user-attachments/assets/cc1ef188-2cd6-4d73-94fe-8ac191a52926" alt="project-screenshot" width="100%">
 </p>
 
 ## Description
