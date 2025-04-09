@@ -81,7 +81,6 @@ router.post('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAppAdmin, a
     }
 });
 
-
 router.put('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
         const { companyId, name, ppURL } = req.body;
@@ -112,7 +111,6 @@ router.put('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async
         res.status(500).json({ message: "An error occurred while updating the company." });
     }
 });
-
 
 router.delete('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
     try {
