@@ -69,6 +69,12 @@ router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.v
             if(!(req.session.user.appAdmin)) return res.status(401).json({ message: 'You are not authorized to perform this action' })
         }
 
+        if (focusedUser.authType === "google" || focusedUser.authType === "microsoft") {
+            if (shouldChangePassword) {
+                return res.status(400).json({ message: 'Cannot change password for Google or Microsoft authentication' });
+            }
+        }
+
         if(focusedUser.company != req.session.user.company && userRole === "admin" && req.session.user.appAdmin != true){
             if(!req.session.user.appAdmin || req.session.user.email != focusedUser.email) return res.status(401).json({ message: 'You are not authorized to perform this action' })
         }
