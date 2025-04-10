@@ -8,7 +8,20 @@ router.get("/", (req, res) => {
 });
 
 router.get('/login',isAuthRedirect ,csrfMiddleware.generateCSRFToken, (req, res) => {
-    res.render('login', { message: req.session.message, csrfToken: req.session.csrfToken, isSuccessfull: req.session.isSuccessfull, resendConfirmEmail: req.session.resendConfirmEmail });
+    let basicAuth = process.env.BASIC_AUTH === 'true';
+    let divider = false;
+    let msSignUp = false;
+    let googleSignUp = false;
+    if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
+        msSignUp = true;
+    }
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+        googleSignUp = true;
+    }
+    if (msSignUp && basicAuth || googleSignUp && basicAuth) {
+        divider = true;
+    }
+    res.render('login', { message: req.session.message, csrfToken: req.session.csrfToken, isSuccessfull: req.session.isSuccessfull, resendConfirmEmail: req.session.resendConfirmEmail, basicAuth, divider, msSignUp, googleSignUp });
 });
 
 router.get('/register', csrfMiddleware.generateCSRFToken, (req, res) => {
