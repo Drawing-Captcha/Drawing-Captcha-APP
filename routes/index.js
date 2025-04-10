@@ -25,7 +25,20 @@ router.get('/login',isAuthRedirect ,csrfMiddleware.generateCSRFToken, (req, res)
 });
 
 router.get('/register', csrfMiddleware.generateCSRFToken, (req, res) => {
-    res.render('sign-up', {RegisterMessage: req.session.RegisterMessage, csrfToken: req.session.csrfToken, isSuccessfull: req.session.isSuccessfull});
+    let basicAuth = process.env.BASIC_AUTH === 'true';
+    let divider = false;
+    let msSignUp = false;
+    let googleSignUp = false;
+    if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
+        msSignUp = true;
+    }
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+        googleSignUp = true;
+    }
+    if (msSignUp && basicAuth || googleSignUp && basicAuth) {
+        divider = true;
+    }
+    res.render('sign-up', {RegisterMessage: req.session.RegisterMessage, csrfToken: req.session.csrfToken, isSuccessfull: req.session.isSuccessfull, basicAuth, divider, msSignUp, googleSignUp});
 });
 
 router.get('/resendEmailVerification', csrfMiddleware.generateCSRFToken, (req, res) => {
