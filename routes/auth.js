@@ -13,8 +13,10 @@ const sendEmail = require('../services/sendEmail.js');
 const generateEmailConfirmationToken = require("../services/generateEmailConfirmationToken.js");
 const { send } = require('process');
 const emailService = process.env.EMAIL_SERVICE;
+let basicAuth = process.env.BASIC_AUTH === 'true';
 
-if (process.env.BASIC_AUTH === true || process.env.BASIC_AUTH === null) {
+
+if (basicAuth) {
     router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
         try {
             const { email, password } = req.body;

@@ -15,6 +15,14 @@ if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
   },
     async function (accessToken, refreshToken, profile, done) {
       try {
+        const email = profile.emails[0].value;
+
+        let existingUser = await UserModel.findOne({ email });
+
+        if (existingUser && existingUser.authType !== "microsoft") {
+          return done(null, false, { message: 'Email is already registered with a different sign-in method.' });
+        }
+
         let user = await UserModel.findOne({ oAuthId: profile.id, authType: "microsoft" });
 
         if (!user) {
@@ -54,7 +62,7 @@ if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
   );
 
   router.get('/callback',
-    passport.authenticate('microsoft', { failureRedirect: '/login' }), csrfMiddleware.generateCSRFToken,
+    passport.authenticate('microsoft', { failureRedirect: '/login?error=auth_conflict' }), csrfMiddleware.generateCSRFToken,
     function (req, res) {
       req.session.user = req.user;
       req.session.isAuth = true;

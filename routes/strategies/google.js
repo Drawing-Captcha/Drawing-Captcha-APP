@@ -14,7 +14,15 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   },
     async function (accessToken, refreshToken, profile, done) {
       try {
-        let user = await UserModel.findOne({ oAuthId: profile.id, authType: "google" });
+        const email = profile.emails[0].value;
+
+        let existingUser = await UserModel.findOne({ email });
+    
+        if (existingUser && existingUser.authType !== "google") {
+          return done(null, false, { message: 'Email is already registered with a different sign-in method.' });
+        }
+
+        let user = await UserModel.findOne({ oAuthId: profile.id, authType: "google" });  
         if (!user) {
           user = await UserModel.create({
             oAuthId: profile.id,
@@ -50,7 +58,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   );
 
   router.get('/callback',
-    passport.authenticate('google', { failureRedirect: '/login' }), csrfMiddleware.generateCSRFToken,
+    passport.authenticate('google', { failureRedirect: '/login?error=auth_conflict' }), csrfMiddleware.generateCSRFToken,
     async function (req, res) {
       req.session.user = req.user;
       req.session.isAuth = true;

@@ -21,7 +21,8 @@ router.get('/login',isAuthRedirect ,csrfMiddleware.generateCSRFToken, (req, res)
     if (msSignUp && basicAuth || googleSignUp && basicAuth) {
         divider = true;
     }
-    res.render('login', { message: req.session.message, csrfToken: req.session.csrfToken, isSuccessfull: req.session.isSuccessfull, resendConfirmEmail: req.session.resendConfirmEmail, basicAuth, divider, msSignUp, googleSignUp });
+    const error = req.query.error;
+    res.render('login', { message: req.session.message, csrfToken: req.session.csrfToken, isSuccessfull: req.session.isSuccessfull, resendConfirmEmail: req.session.resendConfirmEmail, basicAuth, divider, msSignUp, googleSignUp, error });
 });
 
 router.get('/register', csrfMiddleware.generateCSRFToken, (req, res) => {

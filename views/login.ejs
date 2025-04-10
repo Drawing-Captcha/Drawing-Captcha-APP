@@ -116,6 +116,11 @@
                       <% } %>
                   </div>
                   <% } %>
+                  <% if (error === 'auth_conflict') { %>
+                    <div class="w-form-fail">
+                      This email is already registered with a different sign-in method. Please use that to log in.
+                    </div>
+                  <% } %>
         </div>
       </div>
     </div>
