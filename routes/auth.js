@@ -13,49 +13,53 @@ const sendEmail = require('../services/sendEmail.js');
 const generateEmailConfirmationToken = require("../services/generateEmailConfirmationToken.js");
 const { send } = require('process');
 const emailService = process.env.EMAIL_SERVICE;
+let basicAuth = process.env.BASIC_AUTH === 'true';
 
-router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const cleanedMail = sanitizeInput(email);
-        let user = null;
-        if (isValidEmail(cleanedMail)) {
-            user = await UserModel.findOne({ email: cleanedMail });
-        }
-        if (!user) {
-            req.session.message = "Incorrect username or password.";
-            req.session.resendConfirmEmail = false;
-            return res.redirect("/login");
-        }
-        if (!user.isEmailConfirmed && emailService && !user.initialUser) {
-            req.session.message = "Please confirm your email address before logging in.";
-            req.session.resendConfirmEmail = true;
-            return res.redirect("/login");
-        }
-        const isMatch = await bcrypt.compare(password, user.password);
 
-        if (!isMatch) {
-            req.session.message = "Incorrect username or password.";
-            req.session.resendConfirmEmail = false;
-            return res.redirect("/login");
-        }
-
-        req.session.user = user;
-        req.session.message = "";
-        req.session.isAuth = true;
-
-        req.session.save((err) => {
-            if (err) {
-                console.error("Error saving session:", err);
-                return res.status(500).json({ message: 'An error occurred while saving the session' });
+if (basicAuth) {
+    router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
+        try {
+            const { email, password } = req.body;
+            const cleanedMail = sanitizeInput(email);
+            let user = null;
+            if (isValidEmail(cleanedMail)) {
+                user = await UserModel.findOne({ email: cleanedMail });
             }
-            res.redirect('/dashboard');
-        });
-    } catch (error) {
-        console.error("Error during login process:", error);
-        res.status(500).json({ message: 'An internal server error occurred.' });
-    }
-})
+            if (!user) {
+                req.session.message = "Incorrect username or password.";
+                req.session.resendConfirmEmail = false;
+                return res.redirect("/login");
+            }
+            if (!user.isEmailConfirmed && emailService && !user.initialUser) {
+                req.session.message = "Please confirm your email address before logging in.";
+                req.session.resendConfirmEmail = true;
+                return res.redirect("/login");
+            }
+            const isMatch = await bcrypt.compare(password, user.password);
+    
+            if (!isMatch) {
+                req.session.message = "Incorrect username or password.";
+                req.session.resendConfirmEmail = false;
+                return res.redirect("/login");
+            }
+    
+            req.session.user = user;
+            req.session.message = "";
+            req.session.isAuth = true;
+    
+            req.session.save((err) => {
+                if (err) {
+                    console.error("Error saving session:", err);
+                    return res.status(500).json({ message: 'An error occurred while saving the session' });
+                }
+                res.redirect('/dashboard');
+            });
+        } catch (error) {
+            console.error("Error during login process:", error);
+            res.status(500).json({ message: 'An internal server error occurred.' });
+        }
+    })
+}
 
 router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {

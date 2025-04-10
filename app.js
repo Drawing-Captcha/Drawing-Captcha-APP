@@ -7,6 +7,7 @@ const cors = require('cors');
 const crypto = require("crypto");
 const path = require("path");
 const csrf = require('csurf');
+const passport = require('passport');
 const cookieParser = require('cookie-parser');
 const connectDB = require("./config/db.js")
 const deleteAndLog = require("./services/deleteAndLog.js")
@@ -109,7 +110,8 @@ app.use(session({
         maxAge: 4 * 60 * 60 * 1000
     }
 }));
-
+app.use(passport.initialize())
+app.use(passport.session())
 const indexRoutes = require("./routes/index.js")
 const authRoutes = require("./routes/auth.js")
 const captchaRoutes = require("./routes/captcha.js")
@@ -118,9 +120,13 @@ const userRoutes = require("./routes/user.js")
 const companyRoutes = require("./routes/company.js")
 const testConnectionRoutes = require("./routes/testConnection.js")
 const confirmEmail = require("./routes/confirm-email.js")
+const MicrosoftStrategy = require("./routes/strategies/microsoft.js")
+const GoogleStrategy = require("./routes/strategies/google.js")
 
 app.use('/', indexRoutes);
 app.use('/auth', authLimiter, authRoutes)
+app.use('/api/auth/microsoft', MicrosoftStrategy)
+app.use('/api/auth/google', GoogleStrategy)
 app.use('/captcha', captchaLimiter, captchaRoutes)
 app.use('/dashboard', dashboardRoutes)
 app.use('/user', userRoutes)
@@ -134,15 +140,27 @@ app.use((req, res, next) => {
     }
 });
 
-app.listen(port, async () => {
-    console.log(`Server Running on port: ${port}`);
-    store.collection.deleteMany({}, (err) => {
-        if (err) {
-            console.error('Error while trying to delete Sessions:', err);
-        } else {
-            console.log('All Sessions successfully.');
-        }
-    });
-    let message = await initializeRegisterKey();
-    console.log(message)
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).send('Internal Server Error');
 });
+
+app.listen(port, async () => {
+    try{
+        console.log(`Server Running on port: ${port}`);
+        store.collection.deleteMany({}, (err) => {
+            if (err) {
+                console.error('Error while trying to delete Sessions:', err);
+            } else {
+                console.log('All Sessions successfully.');
+            }
+        });
+        let message = await initializeRegisterKey();
+        console.log(message)
+    }
+    catch (err) {
+        console.error('Error clearing session store:', err);
+    }
+
+});
+
