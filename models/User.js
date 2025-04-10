@@ -13,7 +13,7 @@ const userSchema = new Schema ({
     },
     password:{
         type: String,
-        required: true
+        required: false
     },
     role:{
         type: String,
@@ -40,6 +40,14 @@ const userSchema = new Schema ({
         required: false
     },
     emailConfirmationToken: {
+        type: String,
+        required: false
+    },
+    authType: {
+        type: String,
+        required: false
+    },
+    oAuthId: {
         type: String,
         required: false
     }

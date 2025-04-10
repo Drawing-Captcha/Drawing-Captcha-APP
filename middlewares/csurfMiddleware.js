@@ -4,7 +4,7 @@ const crypto = require("crypto");
 
 const generateCSRFToken = (req, res, next) => {
     if(!req.session.csrfToken){
-        if (req.path === '/login' || req.path === '/register') {
+        if (req.path === '/login' || req.path === '/register' || req.path === '/callback' || req.path === '/callback'){
             if (!req.session) {
                 req.session = {};
             }
