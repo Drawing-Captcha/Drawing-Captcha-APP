@@ -12,7 +12,7 @@ const cookieParser = require('cookie-parser');
 const connectDB = require("./config/db.js")
 const deleteAndLog = require("./services/deleteAndLog.js")
 const deleteAllFilesInDir = require("./services/deleteAllFilesInDir.js");
-const { pool, deletedBin, allowedOrigins, defaultOrigin, initializeAllowedOrigins, initializeBin, initializePool, initializeRegisterKey} = require("./controllers/initializeController.js")
+const { pool, deletedBin, allowedOrigins, defaultOrigin, initializeAllowedOrigins, initializeBin, initializePool, initializeRegisterKey } = require("./controllers/initializeController.js")
 const createInitCaptcha = require("./config/createInitCaptcha.js")
 const generateNewRegisterKey = require("./services/generateRegisterKey.js")
 const configInitDomain = require("./config/configInitDomain.js")
@@ -66,17 +66,17 @@ const csrfProtection = csrf({ cookie: true });
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 50, 
+    max: 50,
     message: "Too Many Request's try later again"
 });
 const captchaLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 200, 
+    max: 200,
     message: "Too Many Request's try later again"
 });
 const testLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 150, 
+    max: 150,
     message: "Too Many Request's try later again"
 });
 app.use(cors({
@@ -120,13 +120,19 @@ const userRoutes = require("./routes/user.js")
 const companyRoutes = require("./routes/company.js")
 const testConnectionRoutes = require("./routes/testConnection.js")
 const confirmEmail = require("./routes/confirm-email.js")
-const MicrosoftStrategy = require("./routes/strategies/microsoft.js")
-const GoogleStrategy = require("./routes/strategies/google.js")
+
+if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
+    const MicrosoftStrategy = require("./routes/strategies/microsoft.js")
+    app.use('/api/auth/microsoft', MicrosoftStrategy)
+}
+
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    const GoogleStrategy = require("./routes/strategies/google.js")
+    app.use('/api/auth/google', GoogleStrategy)
+}
 
 app.use('/', indexRoutes);
 app.use('/auth', authLimiter, authRoutes)
-app.use('/api/auth/microsoft', MicrosoftStrategy)
-app.use('/api/auth/google', GoogleStrategy)
 app.use('/captcha', captchaLimiter, captchaRoutes)
 app.use('/dashboard', dashboardRoutes)
 app.use('/user', userRoutes)
@@ -142,11 +148,14 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
-    res.status(500).send('Internal Server Error');
-});
+    res.status(500).render('error', {
+        message: 'Internal Server Error',
+        error: err
+    });
+})
 
 app.listen(port, async () => {
-    try{
+    try {
         console.log(`Server Running on port: ${port}`);
         store.collection.deleteMany({}, (err) => {
             if (err) {
@@ -162,5 +171,4 @@ app.listen(port, async () => {
         console.error('Error clearing session store:', err);
     }
 
-});
-
+})
