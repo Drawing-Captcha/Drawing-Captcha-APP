@@ -10,7 +10,7 @@ if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
   passport.use(new MicrosoftStrategy({
     clientID: process.env.MICROSOFT_CLIENT_ID,
     clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
-    callbackURL: "/api/auth/microsoft/callback",
+    callbackURL: `${process.env.SERVER_DOMAIN}/api/auth/microsoft/callback`,
     scope: ['user.read'],
   },
     async function (accessToken, refreshToken, profile, done) {
