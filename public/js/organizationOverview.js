@@ -14,6 +14,7 @@ const roleSelect = document.getElementById('role');
 const changeForm = document.querySelector("#changeDetailsForm")
 const selectBtn = document.querySelector(".select-btn")
 const companyAccessField = document.querySelector(".companyAccess")
+const verifyButton = document.querySelector(".verifyButton")
 let items;
 selectBtn.addEventListener("click", () => {
     selectBtn.classList.toggle("open");
@@ -138,6 +139,11 @@ async function getAllUser() {
                     deleteButton.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V19C19 19.5304 18.7893 20.0391 18.4142 20.4142C18.0391 20.7893 17.5304 21 17 21H7C6.46957 21 5.96086 20.7893 5.58579 20.4142C5.21071 20.0391 5 19.5304 5 19V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
                     deleteButton.addEventListener("click", () => deleteUser(elementData));
 
+                    const verifyUserButton = document.createElement("button");
+                    verifyUserButton.classList.add("iconButton", "is-icon-only", "verifyButton");
+                    verifyUserButton.innerHTML = "Verify User";
+                    verifyUserButton.addEventListener("click", () => verifyUser(elementData));
+
                     const returnButton = document.createElement("button");
                     returnButton.classList.add("iconButton", "is-icon-only");
                     returnButton.innerHTML = `<!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools -->
@@ -170,6 +176,10 @@ async function getAllUser() {
                         }
                         else {
                             droppDownToggle.appendChild(returnButton);
+                        }
+
+                        if(!elementData.usedRegisterKey && !elementData.company){
+                            droppDownToggle.appendChild(verifyUserButton);
                         }
                     }
                     else if (ownUser.role === "admin") {
@@ -242,6 +252,34 @@ async function getCompanies() {
     }
 }
 
+async function verifyUser(elementData) {
+    try {
+        const response = await fetch("/registerKey/verify", {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: elementData._id })
+        });
+        if (response.ok) {
+            const data = await response.json();
+            alert(data.message);
+            location.reload();
+        } else if (response.status === 404) {
+            const data = await response.json();
+            alert(data.error);
+            location.reload();
+        } else {
+            const data = await response.json();
+            alert(data.message || 'Internal server error');
+            location.reload();
+        }
+    } catch (error) {
+        console.log('Error in verifyUser:', error);
+        alert('Error occurred during verification of a user through the app admin.');
+    }
+}
 async function buildEditCompanies() {
     let data = await getCompanies();
     const allCompanies = data.allCompanies;

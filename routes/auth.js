@@ -118,7 +118,8 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
                     role: "read",
                     company: companyKeyId,
                     isEmailConfirmed: false,
-                    emailConfirmationToken
+                    emailConfirmationToken,
+                    usedRegisterKey: true
                 });
   
             } else {

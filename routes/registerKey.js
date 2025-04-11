@@ -20,8 +20,8 @@ router.post('/', hasAlreadyEnteredRegisterKeyRedirect, async (req, res) => {
     try {
         const findedRegisterKey = await registerKeyModel.findOne({ RegisterKey: registerKey });
         if (!findedRegisterKey) {
-            return res.redirect("/registerKey?error=invalidKey");
-        }
+            return res.status(401).redirect("/registerKey?error=Wrong+Register+Key+Please+try+again");
+            }
         const user = await userModel.findById(req.session.user._id);
         user.usedRegisterKey = true;
         await user.save();
@@ -32,19 +32,24 @@ router.post('/', hasAlreadyEnteredRegisterKeyRedirect, async (req, res) => {
     }
 });
 
-router.post('/verify', isAppAdmin, hasAlreadyEnteredRegisterKeyRedirect, async (req, res) => {
+router.post('/verify', isAppAdmin, async (req, res) => {
     const { userId } = req.body;
     try {
         const user = await userModel.findById(userId);
         if (!user) {
-            return res.sendStatus(404).json({ error: "User not found" });
+            return res.status(404).json({ message: "User not found" });
+        }
+        if (user.usedRegisterKey) {
+            return res.status(400).json({ message: "User already verified" });
         }
         user.usedRegisterKey = true;
         await user.save();
-        return res.sendStatus(200).json({ message: "User verified successfully" });
+        return res.status(200).json({ message: `Successfully verified user` });
     } catch (error) {
         console.error("Error occurred during verification of a user through the app admin:", error);
-        return res.sendStatus(500).json({ error: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error" });
+    } finally {
+        res.end();
     }
 });
 
