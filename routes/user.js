@@ -10,25 +10,21 @@ const mongoose = require('mongoose');
 
 console.log("user.js loaded");
 
-router.get('/ownUser', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.get('/ownUser', async (req, res) => {
     console.log("ownUser endpoint hit, user:", req.session.user);
     res.json({ user: req.session.user });
 })
 
-router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.get('/allUsers', async (req, res) => {
     console.log("allUsers endpoint hit");
     try {
-        console.log("User company:", req.session.user.company);
-        console.log("User role:", req.session.user.role);
-        console.log("User id:", req.session.user._id);
-
         const userCompany = req.session.user.company
         const isAppAdmin = req.session.user.appAdmin
         let returnedUsers
 
         if (isAppAdmin) {
             console.log("Fetching all users since user is app admin");
-            returnedUsers = await User.find().select('username email role company ppURL _id initialUser appAdmin');
+            returnedUsers = await User.find().select('username email role company ppURL _id initialUser appAdmin usedRegisterKey');
         } else {
             console.log("Fetching users with companies since user is not app admin");
             returnedUsers = await User.find({
@@ -57,7 +53,7 @@ router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async 
     }
 })
 
-router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.put('/updateUser', isAuthorizedUpdating, async (req, res) => {
     console.log("updateUser endpoint hit");
     try {
         const { id, username, email, ppURL, shouldChangePassword, password, role, company, appAdmin } = req.body.submittedData;
@@ -133,7 +129,7 @@ router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.v
     }
 });
 
-router.delete('/deleteUser', authMiddleware, isAuthorizedDeleting, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.delete('/deleteUser', isAuthorizedDeleting,  async (req, res) => {
     console.log("deleteUser endpoint hit");
     try {
         const user = req.body.user;
