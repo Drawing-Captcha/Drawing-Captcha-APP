@@ -83,6 +83,16 @@ Here are some of the project's best features:
    POSTMARK_SERVER_CLIENT=
    POSTMARK_MESSAGE_STREAM=
 
+   #OAUTH2 Setup & Login
+   # You can set this to false if you want to use the basic login with username and password (and for example just use oAuth2 for registration / logins) this is per default set to true
+   BASIC_AUTH=true
+   # For Google OAuth2
+   GOOGLE_CLIENT_ID=
+   GOOGLE_CLIENT_SECRET=
+   # For Microsoft OAuth2
+   MICROSOFT_CLIENT_ID=
+   MICROSOFT_CLIENT_SECRET=
+
    ```
 
 Please note to change these variables:
@@ -102,32 +112,46 @@ Please note to change these variables:
 ## Docker Compose with Dockerhub Image
 ```yml
 version: "3.8"
-
 services:
   dc_node:
     container_name: dc_node
     image: williamspesic/drawing-captcha-app:latest
     ports:
-      - "9091:9091"
+      - 9091:9091
     networks:
       - dc_network
+      - nginx_default
     depends_on:
       - dc_mongo
     restart: always
     environment:
-      - MONGO_URI=${MONGO_URI}
-      - PORT=${PORT}
-      - SERVER_DOMAIN=${SERVER_DOMAIN}
-      - Register_Key=${Register_Key}
-      - DC_ADMIN_EMAIL=${DC_ADMIN_EMAIL}
-      - DC_ADMIN_PASSWORD=${DC_ADMIN_PASSWORD}
+      MONGO_URI: ${MONGO_URI}
+      PORT: ${PORT}
+      SERVER_DOMAIN: ${SERVER_DOMAIN}
+      REGISTER_KEY: ${REGISTER_KEY}
+      DC_ADMIN_EMAIL: ${DC_ADMIN_EMAIL}
+      DC_ADMIN_PASSWORD: ${DC_ADMIN_PASSWORD}
+      EMAIL_SERVICE: ${EMAIL_SERVICE}
+      EMAIL_FROM: ${EMAIL_FROM}
+      SMTPAUTH_EMAIL_HOST: ${SMTPAUTH_EMAIL_HOST}
+      SMTPAUTH_EMAIL_PORT: ${SMTPAUTH_EMAIL_PORT}
+      SMTPAUTH_EMAIL_USER: ${SMTPAUTH_EMAIL_USER}
+      SMTPAUTH_EMAIL_PASS: ${SMTPAUTH_EMAIL_PASS}
+      POSTMARK_SERVER_CLIENT: ${POSTMARK_SERVER_CLIENT}
+      POSTMARK_MESSAGE_STREAM: ${POSTMARK_MESSAGE_STREAM}
+      BASIC_AUTH: ${BASIC_AUTH}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET}
+
   dc_mongo:
     container_name: dc_mongo
     image: mongo:latest
     expose:
       - "27017"
     volumes:
-      - drawing-captcha:/data/db
+      - drawing-captcha23:/data/db
     networks:
       - dc_network
     restart: always
@@ -138,9 +162,11 @@ services:
 
 networks:
   dc_network:
+  nginx_default:
+    external: true
 
 volumes:
-  drawing-captcha:
+  drawing-captcha23:
 ```
 
 ## Tutorials and implementation Frontend (Connection with API will be comming soon :) )
