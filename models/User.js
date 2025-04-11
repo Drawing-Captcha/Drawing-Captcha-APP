@@ -50,6 +50,10 @@ const userSchema = new Schema ({
     oAuthId: {
         type: String,
         required: false
+    },
+    usedRegisterKey:{
+        type: Boolean,
+        required: false
     }
     
 })

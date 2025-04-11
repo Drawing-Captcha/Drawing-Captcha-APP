@@ -10,12 +10,12 @@ const mongoose = require('mongoose');
 
 console.log("user.js loaded");
 
-router.get('/ownUser', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.get('/ownUser', async (req, res) => {
     console.log("ownUser endpoint hit, user:", req.session.user);
     res.json({ user: req.session.user });
 })
 
-router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.get('/allUsers', async (req, res) => {
     console.log("allUsers endpoint hit");
     try {
         console.log("User company:", req.session.user.company);
@@ -57,7 +57,7 @@ router.get('/allUsers', authMiddleware, csrfMiddleware.validateCSRFToken, async 
     }
 })
 
-router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.put('/updateUser', isAuthorizedUpdating, async (req, res) => {
     console.log("updateUser endpoint hit");
     try {
         const { id, username, email, ppURL, shouldChangePassword, password, role, company, appAdmin } = req.body.submittedData;
@@ -133,7 +133,7 @@ router.put('/updateUser', isAuthorizedUpdating, authMiddleware, csrfMiddleware.v
     }
 });
 
-router.delete('/deleteUser', authMiddleware, isAuthorizedDeleting, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.delete('/deleteUser', isAuthorizedDeleting,  async (req, res) => {
     console.log("deleteUser endpoint hit");
     try {
         const user = req.body.user;

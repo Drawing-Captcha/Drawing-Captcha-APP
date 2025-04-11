@@ -15,7 +15,7 @@ const isAdmin = require("../middlewares/adminMiddleware.js")
 const isCompanyRelation = require("../services/companyRelationMiddleware.js");
 const isRelatedToCompany = require('../services/companyRelationMiddleware.js');
 
-router.get('/', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const allCompanies = await CompanyModel.find();
         let returnedCompanies = []
@@ -46,7 +46,7 @@ router.get('/', authMiddleware, csrfMiddleware.validateCSRFToken, async (req, re
     }
 })
 
-router.post('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAppAdmin, async (req, res) => {
+router.post('/', isAppAdmin, async (req, res) => {
     try {
         let companyExists = await CompanyModel.findOne({ name: req.body.name });
         if (companyExists) {
@@ -81,7 +81,7 @@ router.post('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAppAdmin, a
     }
 });
 
-router.put('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
+router.put('/', isAdmin, async (req, res) => {
     try {
         const { companyId, name, ppURL } = req.body;
 
@@ -112,7 +112,7 @@ router.put('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async
     }
 });
 
-router.delete('/', authMiddleware, csrfMiddleware.validateCSRFToken, isAdmin, async (req, res) => {
+router.delete('/', isAdmin, async (req, res) => {
     try {
         const { companyId } = req.body;
 

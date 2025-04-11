@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const crypto = require("crypto");
 const path = require("path");
+const authMiddleware = require("./middlewares/authMiddleware.js")
 const csrf = require('csurf');
 const passport = require('passport');
 const cookieParser = require('cookie-parser');
@@ -21,9 +22,11 @@ const createDirectory = require("./services/createDirectory.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 const cleanSessions = require("./crons/cleanSessions.js");
 const store = require("./models/store.js")
+const csrfMiddleware = require("./middlewares/csurfMiddleware.js")
 const rateLimit = require("express-rate-limit");
 const port = process.env.PORT;
 const expiryDate = new Date(Date.now() + 60 * 60 * 1000)
+const hasEnteredRegisterKey = require("./middlewares/hasEnteredRegisterKey.js");
 createDirectory()
 connectDB()
 createInitCaptcha()
@@ -119,8 +122,8 @@ const dashboardRoutes = require("./routes/dashboard.js");
 const userRoutes = require("./routes/user.js")
 const companyRoutes = require("./routes/company.js")
 const testConnectionRoutes = require("./routes/testConnection.js")
-const confirmEmail = require("./routes/confirm-email.js")
-
+const confirmEmail = require("./routes/confirm-email.js");
+const registerKeyRoutes = require("./routes/registerKey.js")
 if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
     const MicrosoftStrategy = require("./routes/strategies/microsoft.js")
     app.use('/api/auth/microsoft', MicrosoftStrategy)
@@ -134,9 +137,10 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 app.use('/', indexRoutes);
 app.use('/auth', authLimiter, authRoutes)
 app.use('/captcha', captchaLimiter, captchaRoutes)
-app.use('/dashboard', dashboardRoutes)
-app.use('/user', userRoutes)
-app.use('/company', companyRoutes)
+app.use('/dashboard', authMiddleware, csrfMiddleware.validateCSRFToken ,hasEnteredRegisterKey, dashboardRoutes)
+app.use('/user', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, userRoutes)
+app.use('/company', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey,companyRoutes)
+app.use('/registerKey', authMiddleware, csrfMiddleware.validateCSRFToken, registerKeyRoutes)
 app.use('/test', testLimiter, testConnectionRoutes)
 app.use("/confirm-email", confirmEmail)
 
