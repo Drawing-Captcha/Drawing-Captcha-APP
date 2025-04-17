@@ -124,6 +124,7 @@ const companyRoutes = require("./routes/company.js")
 const testConnectionRoutes = require("./routes/testConnection.js")
 const confirmEmail = require("./routes/confirm-email.js");
 const registerKeyRoutes = require("./routes/registerKey.js")
+const downloadRoutes = require("./routes/donwload.js")
 if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
     const MicrosoftStrategy = require("./routes/strategies/microsoft.js")
     app.use('/api/auth/microsoft', MicrosoftStrategy)
@@ -143,6 +144,7 @@ app.use('/company', authMiddleware, csrfMiddleware.validateCSRFToken, hasEntered
 app.use('/registerKey', authMiddleware, csrfMiddleware.validateCSRFToken, registerKeyRoutes)
 app.use('/test', testLimiter, testConnectionRoutes)
 app.use("/confirm-email", confirmEmail)
+app.use('/download', downloadRoutes)
 
 app.use((req, res, next) => {
     if (!res.headersSent) {
