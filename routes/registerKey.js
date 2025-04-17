@@ -24,6 +24,7 @@ router.post('/', hasAlreadyEnteredRegisterKeyRedirect, async (req, res) => {
             }
         const user = await userModel.findById(req.session.user._id);
         user.usedRegisterKey = true;
+        user.company = findedRegisterKey.Company;
         await user.save();
         res.redirect("/dashboard");
     } catch (error) {

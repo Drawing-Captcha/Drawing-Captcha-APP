@@ -99,9 +99,7 @@ router.put('/updateUser', isAuthorizedUpdating, async (req, res) => {
 
         let updateData = { username, email, ppURL };
 
-        if(!focusedUser.initialUser){
-            updateData.appAdmin = appAdmin;
-        }
+        let focusedUserRole = focusedUser.role;
 
         if(shouldChangePassword){
             if (!password || password.length < 5) return res.status(400).json({ message: 'Password must be at least 8 characters long' });
@@ -109,7 +107,6 @@ router.put('/updateUser', isAuthorizedUpdating, async (req, res) => {
             updateData.password = hashedPassword;
         }
 
-        if(role !== undefined) updateData.role = role;
         if(company !== undefined){
             updateData.company = company;
         } 
@@ -117,6 +114,16 @@ router.put('/updateUser', isAuthorizedUpdating, async (req, res) => {
             updateData.company = null;
         }
 
+        if(!focusedUser.initialUser && req.session.user.appAdmin){
+            updateData.appAdmin = appAdmin;
+            if(appAdmin){
+                focusedUserRole = "admin"
+                updateData.role = focusedUserRole;
+            }
+            else if (!appAdmin){
+                if(role !== undefined) updateData.role = role;
+            }
+        }
         const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true }).exec();
 
         if (!updatedUser) return res.status(404).json({ message: 'User not found' });

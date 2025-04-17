@@ -15,7 +15,7 @@ const isAuthorizedUpdateUser = (req, res, next) => {
     console.log("Session User: ", sessionUserId);
     console.log("Submitted User: ", submittedUserId);
 
-    if (req.session.user.role === "admin" || sessionUserId === submittedUserId) {
+    if (req.session.user.role === "admin" || sessionUserId === submittedUserId || req.session.user.appAdmin) {
         console.log("req Session successful");
         next();
     } else {
