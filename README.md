@@ -92,6 +92,8 @@ Here are some of the project's best features:
    # For Microsoft OAuth2
    MICROSOFT_CLIENT_ID=
    MICROSOFT_CLIENT_SECRET=
+   #if none is given the default is "common"
+   MICROSOFT_TENANT_ID=
 
    ```
 
