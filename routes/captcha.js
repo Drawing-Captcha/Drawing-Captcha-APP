@@ -10,6 +10,7 @@ const generateUniqueName = require("../services/generateUniqueName.js")
 const deleteFile = require("../services/deleteFiles.js");
 const { pool, initializePool } = require('../controllers/initializeController.js');
 const store = require('../models/store.js');
+const generateJWTToken = require("../services/generateJWTToken.js");
 
 const defaultColorKit = {
     buttonColorValue: "#007BFF",
@@ -197,8 +198,7 @@ router.post('/checkCubes', csrfMiddleware.validateCSRFOrExternalKey, async (req,
     } else {
         await store.collection.deleteOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier });
     }
-
-
+    
     try {
         await store.collection.updateOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier }, { $set: { 'session.captchaValidated': existSession.session.captchaValidated, 'session.captchaValidatedTime': existSession.session.captchaValidatedTime } });
     } catch (error) {
@@ -209,10 +209,13 @@ router.post('/checkCubes', csrfMiddleware.validateCSRFOrExternalKey, async (req,
     if (existSession.session.client.uniqueFileName) {
         deleteFile.deleteFile(`./tmpimg/${existSession.session.client.uniqueFileName}`);
     }
-
-    res.json({ isValid });
-
-
+    if(isValid){
+        const JWTToken = await generateJWTToken();
+        res.json({ isValid, token: JWTToken });
+    }
+    else{
+        res.json({ isValid });
+    }
 });
 router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
     try {
@@ -249,7 +252,6 @@ router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, async (r
 
         const isValid = (currentTime - captchaValidatedTime) < thirtyMinutes;
         res.json({ valid: isValid });
-
     } catch (error) {
         console.error("Error while checking captcha:", error);
         return res.status(500).json({ error: 'Error while checking captcha.' });

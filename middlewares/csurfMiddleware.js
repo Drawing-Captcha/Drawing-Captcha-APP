@@ -44,7 +44,8 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
             let originRelation = await OriginModel.find({ companies: { $in: doesExist.companies }, allowedOrigin: req.headers.origin });
             if (originRelation.length === 0) {
                 failed = true;
-                res.status(403).json({ error: "Origin not allowed, with this apiKey" });
+                console.info( "Origin header validateCSRFOrExternalKey: ", req.headers.origin)
+                res.status(403).json({ error: "Origin not allowed" });
                 return;
             }
             req.session.authMethod = "apiKey";

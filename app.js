@@ -1,7 +1,6 @@
 const express = require("express");
 const helmet = require('helmet')
 const session = require("express-session");
-const MongoDBSession = require("connect-mongodb-session")(session);
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const crypto = require("crypto");
@@ -19,6 +18,7 @@ const generateNewRegisterKey = require("./services/generateRegisterKey.js")
 const configInitDomain = require("./config/configInitDomain.js")
 const createInitColorKit = require("./config/createInitColorKit.js")
 const createDirectory = require("./services/createDirectory.js")
+const configureJWTSecret = require("./config/configJWTSecret.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 const cleanSessions = require("./crons/cleanSessions.js");
 const store = require("./models/store.js")
@@ -32,6 +32,7 @@ connectDB()
 createInitCaptcha()
 createInitColorKit()
 configInitDomain()
+configureJWTSecret()
 
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
@@ -124,6 +125,7 @@ const companyRoutes = require("./routes/company.js")
 const testConnectionRoutes = require("./routes/testConnection.js")
 const confirmEmail = require("./routes/confirm-email.js");
 const registerKeyRoutes = require("./routes/registerKey.js")
+const siteVerifyCallback = require("./routes/siteVerifyCallback.js")
 if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
     const MicrosoftStrategy = require("./routes/strategies/microsoft.js")
     app.use('/api/auth/microsoft', MicrosoftStrategy)
@@ -143,6 +145,7 @@ app.use('/company', authMiddleware, csrfMiddleware.validateCSRFToken, hasEntered
 app.use('/registerKey', authMiddleware, csrfMiddleware.validateCSRFToken, registerKeyRoutes)
 app.use('/test', testLimiter, testConnectionRoutes)
 app.use("/confirm-email", confirmEmail)
+app.use("/siteVerify", csrfMiddleware.validateCSRFOrExternalKey ,siteVerifyCallback)
 
 app.use((req, res, next) => {
     if (!res.headersSent) {
