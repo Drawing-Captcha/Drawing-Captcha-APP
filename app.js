@@ -138,7 +138,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 
 app.use('/', indexRoutes);
 app.use('/auth', authLimiter, authRoutes)
-app.use('/captcha', captchaLimiter, captchaRoutes)
+app.use('/captcha', captchaLimiter, csrfMiddleware.validateCSRFOrExternalKey, captchaRoutes)
 app.use('/dashboard', authMiddleware, csrfMiddleware.validateCSRFToken ,hasEnteredRegisterKey, dashboardRoutes)
 app.use('/user', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, userRoutes)
 app.use('/company', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey,companyRoutes)

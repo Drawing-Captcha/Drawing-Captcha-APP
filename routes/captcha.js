@@ -22,7 +22,7 @@ const defaultColorKit = {
 const ApiKeyModel = require("../models/ApiKey.js");
 const Company = require('../models/Company.js');
 
-router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, (req, res) => {
+router.post('/reload', (req, res) => {
 
     if (req.body.session && req.body.session.uniqueFileName) {
         req.session.uniqueFileName = req.body.session.uniqueFileName;
@@ -30,7 +30,7 @@ router.post('/reload', csrfMiddleware.validateCSRFOrExternalKey, (req, res) => {
     }
 });
 
-router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
+router.post("/captchaSettings", async (req, res) => {
     try {
         let apiKey = req.body.apiKey
         let apiKeyDB = await ApiKeyModel.findOne({ apiKey })
@@ -54,7 +54,7 @@ router.post("/captchaSettings", csrfMiddleware.validateCSRFOrExternalKey, async 
     }
 });
 
-router.post('/assets', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
+router.post('/assets', async (req, res) => {
 
     let globalPool = await initializePool()
     try {
@@ -167,7 +167,7 @@ router.post('/assets', csrfMiddleware.validateCSRFOrExternalKey, async (req, res
     }
 
 });
-router.post('/checkCubes', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
+router.post('/checkCubes', async (req, res) => {
     let givenSession = req.body.session;
     let existSession = await store.collection.findOne({
         'session.client.clientIdentifier': givenSession.clientIdentifier
@@ -217,7 +217,7 @@ router.post('/checkCubes', csrfMiddleware.validateCSRFOrExternalKey, async (req,
         res.json({ isValid });
     }
 });
-router.post('/check-captcha', csrfMiddleware.validateCSRFOrExternalKey, async (req, res) => {
+router.post('/check-captcha', async (req, res) => {
     try {
         const givenSession = req.body.session;
         const apiKey = req.body.apiKey;
