@@ -12,7 +12,7 @@ const cookieParser = require('cookie-parser');
 const connectDB = require("./config/db.js")
 const deleteAndLog = require("./services/deleteAndLog.js")
 const deleteAllFilesInDir = require("./services/deleteAllFilesInDir.js");
-const { pool, deletedBin, allowedOrigins, defaultOrigin, initializeAllowedOrigins, initializeBin, initializePool, initializeRegisterKey } = require("./controllers/initializeController.js")
+const { pool, deletedBin, initializeAllowedOrigins, initializeRegisterKey } = require("./controllers/initializeController.js")
 const createInitCaptcha = require("./config/createInitCaptcha.js")
 const generateNewRegisterKey = require("./services/generateRegisterKey.js")
 const configInitDomain = require("./config/configInitDomain.js")
@@ -25,8 +25,8 @@ const store = require("./models/store.js")
 const csrfMiddleware = require("./middlewares/csurfMiddleware.js")
 const rateLimit = require("express-rate-limit");
 const port = process.env.PORT;
-const expiryDate = new Date(Date.now() + 60 * 60 * 1000)
 const hasEnteredRegisterKey = require("./middlewares/hasEnteredRegisterKey.js");
+const cleanTokens = require("./crons/cleanTokens.js");
 createDirectory()
 connectDB()
 createInitCaptcha()
@@ -36,11 +36,14 @@ configureJWTSecret()
 
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
-
 setInterval(() => {
     console.log('Running session cleanup...');
     cleanSessions();
 }, 1000 * 60 * 60)
+setInterval(() => {
+    console.log('Running token cleanup...');
+    cleanTokens();
+}, 1000 * 60 * 5);
 
 
 async function initialize() {
@@ -71,6 +74,11 @@ const csrfProtection = csrf({ cookie: true });
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 50,
+    message: "Too Many Request's try later again"
+});
+const tokenLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 200,
     message: "Too Many Request's try later again"
 });
 const captchaLimiter = rateLimit({
@@ -125,7 +133,8 @@ const companyRoutes = require("./routes/company.js")
 const testConnectionRoutes = require("./routes/testConnection.js")
 const confirmEmail = require("./routes/confirm-email.js");
 const registerKeyRoutes = require("./routes/registerKey.js")
-const siteVerifyCallback = require("./routes/siteVerifyCallback.js")
+const siteVerifyCallback = require("./routes/siteVerifyCallback.js");
+const { error } = require("console");
 if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
     const MicrosoftStrategy = require("./routes/strategies/microsoft.js")
     app.use('/api/auth/microsoft', MicrosoftStrategy)
@@ -145,7 +154,7 @@ app.use('/company', authMiddleware, csrfMiddleware.validateCSRFToken, hasEntered
 app.use('/registerKey', authMiddleware, csrfMiddleware.validateCSRFToken, registerKeyRoutes)
 app.use('/test', testLimiter, testConnectionRoutes)
 app.use("/confirm-email", confirmEmail)
-app.use("/siteVerify", csrfMiddleware.validateCSRFOrExternalKey ,siteVerifyCallback)
+app.use("/siteVerify", tokenLimiter, csrfMiddleware.validateCSRFOrExternalKey ,siteVerifyCallback)
 
 app.use((req, res, next) => {
     if (!res.headersSent) {
@@ -154,10 +163,10 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
-    res.status(500).render('error', {
+    console.error(new Date().toLocaleString(), 'Unhandled error:', err, "in", req.originalUrl, "from", req.ip, "with method", req.method);
+    res.status(500).json({
         message: 'Internal Server Error',
-        error: err
+        error: 'An unexpected error occurred'
     });
 })
 
