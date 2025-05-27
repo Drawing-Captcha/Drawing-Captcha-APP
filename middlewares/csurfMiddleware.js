@@ -3,8 +3,8 @@ const OriginModel = require("../models/AllowedOrigins.js")
 const crypto = require("crypto");
 
 const generateCSRFToken = (req, res, next) => {
-    if(!req.session.csrfToken){
-        if (req.path === '/login' || req.path === '/register' || req.path === '/callback' || req.path === '/callback'){
+    if (!req.session.csrfToken) {
+        if (req.path === '/login' || req.path === '/register' || req.path === '/callback' || req.path === '/callback') {
             if (!req.session) {
                 req.session = {};
             }
@@ -12,7 +12,7 @@ const generateCSRFToken = (req, res, next) => {
             res.cookie('mycsrfToken', csrfToken);
             req.session.csrfToken = csrfToken;
             console.log("given token: ", csrfToken);
-    
+
         }
         next();
     }
@@ -36,15 +36,17 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
         const uuidRegex = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
         const apiKey = req.body.apiKey;
         if (!apiKey || !uuidRegex.test(apiKey)) {
-            throw new Error('Missing or invalid API key');
-        }        
+            res.status(405).json({ error: "Not allowed" });
+            return;
+        }
         let doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
 
         if (doesExist) {
             let originRelation = await OriginModel.find({ companies: { $in: doesExist.companies }, allowedOrigin: req.headers.origin });
             if (originRelation.length === 0) {
                 failed = true;
-                res.status(403).json({ error: "Origin not allowed, with this apiKey" });
+                console.info("Origin header validateCSRFOrExternalKey: ", req.headers.origin)
+                res.status(403).json({ error: "Origin not allowed" });
                 return;
             }
             req.session.authMethod = "apiKey";
