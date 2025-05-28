@@ -73,12 +73,12 @@ const csrfProtection = csrf({ cookie: true });
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 50,
+    max: 40,
     message: "Too Many Request's try later again"
 });
 const tokenLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 200,
+    max: 50,
     message: "Too Many Request's try later again"
 });
 const captchaLimiter = rateLimit({
