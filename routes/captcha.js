@@ -211,6 +211,7 @@ router.post('/checkCubes', async (req, res) => {
     }
     if(isValid){
         const JWTToken = await generateJWTToken();
+        console.log("Generated JWT token:", JWTToken, "for clientIdentifier:", givenSession.clientIdentifier, "origin", req.headers.origin);
         res.json({ isValid, token: JWTToken });
     }
     else{

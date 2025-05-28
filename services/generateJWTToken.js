@@ -1,6 +1,9 @@
 const appSettingsModel = require("../models/AppSettings.js");
 const jwt = require("jsonwebtoken");
 const generatePassCode = require("../services/generatePassCode.js");
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const JWTExpiration = process.env.JWT_TOKEN_EXPIRATION ?? 5;
 
 async function generateJWTToken() {
     try {
@@ -15,7 +18,7 @@ async function generateJWTToken() {
                 issuedAt: Date.now(),
             },
             AppSettings.JWTSecret,
-            { expiresIn: '5m' }
+            { expiresIn: `${JWTExpiration}m` }
         );
 
         return token;
