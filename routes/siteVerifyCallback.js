@@ -5,6 +5,7 @@ const { sanitizeFilter } = require("mongoose");
 const callbackTokenModel = require("../models/CallbackToken.js");
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const JWTExpiration = process.env.JWT_TOKEN_EXPIRATION ?? 5;
 
 router.post("/callback", async (req, res) => {
     try {
@@ -20,7 +21,7 @@ router.post("/callback", async (req, res) => {
             console.warn("SiteVerifyCallback: Invalid token");
             return res.status(401).json({ isValid: false, message: "Invalid token" });
         }
-        if (Date.now() - decodedToken.issuedAt > process.env.JWT_TOKEN_EXPIRATION * 60 * 1000) {
+        if (Date.now() - decodedToken.issuedAt > JWTExpiration * 60 * 1000) {
             console.warn("SiteVerifyCallback: Token deprecated");
             return res.status(400).json({ isValid: false, message: 'Invalid token' });
         }
