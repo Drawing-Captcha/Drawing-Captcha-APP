@@ -38,7 +38,7 @@
       <div class="right-wrap">
         <h2>Welcome back👋 Log in</h2>
         <div class="form-block w-form">
-          <% if (basicAuth) { %>
+          <% if (basicAuth === true) { %>
           <form id="email-form" name="email-form" data-name="Email Form" action="/auth/login" method="post"
             data-ms-form="login" class="form" data-wf-page-id="6659b8e5d8d82b64170d269f"
             data-wf-element-id="bba2c9ab-7750-79cf-2e09-2f56d815d61d">
@@ -61,11 +61,11 @@
             </div>
           </form>
           <% } %>
-          <% if (divider) { %>
+          <% if (divider === true) { %>
             <div class="divider">or</div>
             <% } %>
               <div class="oauth-buttons">
-                <% if (googleSignUp) { %>
+                <% if (googleSignUp === true) { %>
                 <button onclick="window.location.href='/api/auth/google'" class="gsi-material-button" style="width:400">
                   <div class="gsi-material-button-state"></div>
                   <div class="gsi-material-button-content-wrapper">
@@ -92,7 +92,7 @@
                   </div>
                 </button>
                 <% } %>
-                <% if (msSignUp) { %>
+                <% if (msSignUp === true) { %>
                 <a href="/api/auth/microsoft" class="ms-btn">
                   <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
                     alt="Microsoft Logo">

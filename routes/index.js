@@ -8,7 +8,7 @@ router.get("/", (req, res) => {
 });
 
 router.get('/login',isAuthRedirect ,csrfMiddleware.generateCSRFToken, (req, res) => {
-    let basicAuth =  process.env.BASIC_AUTH === undefined || process.env.BASIC_AUTH === null ? true : process.env.BASIC_AUTH;
+    let basicAuth =  process.env.BASIC_AUTH === undefined || process.env.BASIC_AUTH === null ? true : process.env.BASIC_AUTH == 'true' ?? true;
     let divider = false;
     let msSignUp = false;
     let googleSignUp = false;
@@ -18,7 +18,7 @@ router.get('/login',isAuthRedirect ,csrfMiddleware.generateCSRFToken, (req, res)
     if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         googleSignUp = true;
     }
-    if (msSignUp && basicAuth || googleSignUp && basicAuth) {
+    if (msSignUp && basicAuth === true || googleSignUp && basicAuth === true) {
         divider = true;
     }
     const error = req.query.error;
