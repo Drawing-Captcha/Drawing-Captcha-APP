@@ -13,7 +13,7 @@ const sendEmail = require('../services/sendEmail.js');
 const generateEmailConfirmationToken = require("../services/generateEmailConfirmationToken.js");
 const { send } = require('process');
 const emailService = process.env.EMAIL_SERVICE;
-    let basicAuth =  process.env.BASIC_AUTH === undefined || process.env.BASIC_AUTH === null ? true : process.env.BASIC_AUTH == 'true' ?? true;
+let basicAuth = process.env.BASIC_AUTH === undefined || process.env.BASIC_AUTH === null ? true : process.env.BASIC_AUTH == 'true' ?? true;
 
 
 if (basicAuth) {
@@ -36,17 +36,17 @@ if (basicAuth) {
                 return res.redirect("/login");
             }
             const isMatch = await bcrypt.compare(password, user.password);
-    
+
             if (!isMatch) {
                 req.session.message = "Incorrect username or password.";
                 req.session.resendConfirmEmail = false;
                 return res.redirect("/login");
             }
-    
+
             req.session.user = user;
             req.session.message = "";
             req.session.isAuth = true;
-    
+
             req.session.save((err) => {
                 if (err) {
                     console.error("Error saving session:", err);
@@ -97,9 +97,9 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
 
             const hashedPassword = await bcrypt.hash(password, 12);
 
-            let newUser; 
+            let newUser;
 
-            if (emailService) {    
+            if (emailService) {
                 const token = generateEmailConfirmationToken();
                 const confirmationLink = `http://${req.headers.host}/confirm-email?token=${token}`;
                 let emailConfirmationToken = token;
@@ -121,7 +121,7 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
                     emailConfirmationToken,
                     usedRegisterKey: true
                 });
-  
+
             } else {
                 newUser = new UserModel({
                     username,
