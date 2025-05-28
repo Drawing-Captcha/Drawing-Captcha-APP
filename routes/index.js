@@ -8,7 +8,7 @@ router.get("/", (req, res) => {
 });
 
 router.get('/login',isAuthRedirect ,csrfMiddleware.generateCSRFToken, (req, res) => {
-    let basicAuth = process.env.BASIC_AUTH === 'true';
+    let basicAuth =  process.env.BASIC_AUTH === undefined || process.env.BASIC_AUTH === null ? true : process.env.BASIC_AUTH;
     let divider = false;
     let msSignUp = false;
     let googleSignUp = false;

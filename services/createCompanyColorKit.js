@@ -15,8 +15,8 @@ async function createCompanyColorKit(companyId) {
                 buttonColorValue: "#007BFF",
                 company: companyId,
                 buttonColorHoverValue: "#0056b3",
-                selectedCubeColorValue: "#ffff00", // yellow
-                canvasOnHoverColorValue: "#ff0000", // red
+                selectedCubeColorValue: "#ffff00", 
+                canvasOnHoverColorValue: "#ff0000", 
                 defaultTitle: "Please draw the object currently being displayed.",
                 initColorKit: false
     
