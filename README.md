@@ -71,6 +71,9 @@ Here are some of the project's best features:
    # Change this password!!!
    DC_ADMIN_PASSWORD="admin"
 
+   # Defines how long a solved Session can be called back to verify
+   JWT_TOKEN_EXPIRATION=5
+
    #Email settings
    EMAIL_SERVICE= #smtpAuth || postmark 
    EMAIL_FROM=noreply@drawing-captcha.com
