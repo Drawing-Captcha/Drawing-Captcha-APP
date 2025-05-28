@@ -16,7 +16,7 @@ async function generateJWTToken() {
                 issuedAt: Date.now(),
             },
             AppSettings.JWTSecret,
-            { expiresIn: $`${process.env.JWT_TOKEN_EXPIRATION}m` }
+            { expiresIn: `${process.env.JWT_TOKEN_EXPIRATION}m` }
         );
 
         return token;
