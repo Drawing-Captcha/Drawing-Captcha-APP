@@ -11,6 +11,8 @@ const deleteFile = require("../services/deleteFiles.js");
 const { pool, initializePool } = require('../controllers/initializeController.js');
 const store = require('../models/store.js');
 const generateJWTToken = require("../services/generateJWTToken.js");
+const xss = require('xss');
+const sanitize = require('mongo-sanitize');
 
 const defaultColorKit = {
     buttonColorValue: "#007BFF",
@@ -23,27 +25,27 @@ const ApiKeyModel = require("../models/ApiKey.js");
 const Company = require('../models/Company.js');
 
 router.post('/reload', (req, res) => {
-
-    if (req.body.session && req.body.session.uniqueFileName) {
-        req.session.uniqueFileName = req.body.session.uniqueFileName;
+    const session = sanitize(req.body.session);
+    if (session && session.uniqueFileName) {
+        req.session.uniqueFileName = xss(session.uniqueFileName);
         deleteFile.deleteFile(`./tmpimg/${req.session.uniqueFileName}`);
     }
 });
 
 router.post("/captchaSettings", async (req, res) => {
     try {
-        let apiKey = req.body.apiKey
-        let apiKeyDB = await ApiKeyModel.findOne({ apiKey })
-        let companyId = apiKeyDB.companies[0]
-        let returnedColorKit
-        let message
+        const apiKey = xss(sanitize(req.body.apiKey));
+        const apiKeyDB = await ApiKeyModel.findOne({ apiKey });
+        const companyId = apiKeyDB.companies[0];
+        let returnedColorKit;
+        let message;
         let colorKit = await ColorKit.findOne({ company: companyId });
         if (colorKit) {
-            message = "ColorKit found"
-            returnedColorKit = colorKit
+            message = "ColorKit found";
+            returnedColorKit = colorKit;
         } else {
-            message = "No ColorKit found returned the default color Kit"
-            returnedColorKit = defaultColorKit
+            message = "No ColorKit found returned the default color Kit";
+            returnedColorKit = defaultColorKit;
         }
 
         res.status(200).json({ returnedColorKit, message });
@@ -55,28 +57,24 @@ router.post("/captchaSettings", async (req, res) => {
 });
 
 router.post('/assets', async (req, res) => {
-
-    let globalPool = await initializePool()
+    let globalPool = await initializePool();
     try {
-
         let captchaIdentifier = uuid.v4();
-        let selectedApiKey = await ApiKeyModel.findOne({ apiKey: req.body.apiKey });
-        let tmpContent = []
+        let selectedApiKey = await ApiKeyModel.findOne({ apiKey: xss(sanitize(req.body.apiKey)) });
+        let tmpContent = [];
         let uniqueFileName;
         let savePath;
         let finishedURL;
 
-        if (req.body.session) {
-            if (req.body.session) {
-                req.session.client = {
-                    clientIdentifier: req.body.session.clientIdentifier,
-                    authMethod: req.body.session.authMethod,
-                    clientSpecificData: req.body.session.clientSpecificData,
-                    uniqueFileName: req.body.session.uniqueFileName
-                };
-            }
-        }
-        else {
+        const session = sanitize(req.body.session);
+        if (session) {
+            req.session.client = {
+                clientIdentifier: xss(session.clientIdentifier),
+                authMethod: xss(session.authMethod),
+                clientSpecificData: xss(session.clientSpecificData),
+                uniqueFileName: xss(session.uniqueFileName)
+            };
+        } else {
             req.session.client = {
                 clientIdentifier: captchaIdentifier,
                 authMethod: "drawing-captcha",
@@ -93,23 +91,22 @@ router.post('/assets', async (req, res) => {
         if (selectedApiKey && selectedApiKey.companies != null && selectedApiKey.companies != "") {
             globalPool.forEach(item => {
                 if (item.companies.some(company => selectedApiKey.companies.includes(company))) {
-                    tmpContent.push(item)
+                    tmpContent.push(item);
                 }
-            })
+            });
             if (tmpContent.length === 0 || tmpContent === null) {
-                setNotCategorized()
+                setNotCategorized();
             }
-        }
-        else {
-            setNotCategorized()
+        } else {
+            setNotCategorized();
         }
 
         function setNotCategorized() {
             globalPool.forEach(item => {
                 if (item.companies === null || item.companies.length === 0) {
-                    tmpContent.push(item)
+                    tmpContent.push(item);
                 }
-            })
+            });
         }
 
         const randomIndex = Math.floor(Math.random() * tmpContent.length);
@@ -154,76 +151,84 @@ router.post('/assets', async (req, res) => {
             itemTitle: selectedContent.todoTitle,
             backgroundSize: selectedContent.backgroundSize,
             finishedURL: finishedURL
-        }
+        };
 
         req.session.client.uniqueFileName = uniqueFileName;
 
         res.json({ client: req.session.client });
 
-
     } catch (err) {
         console.error("Error:", err);
         return res.status(500).json({ error: 'Server request error.' });
     }
-
 });
+
 router.post('/checkCubes', async (req, res) => {
-    let givenSession = req.body.session;
-    let existSession = await store.collection.findOne({
-        'session.client.clientIdentifier': givenSession.clientIdentifier
-    })
-    console.log("existSession", existSession)
-
-    const selectedFields = req.body.selectedIds;
-
-    if (!existSession) {
-        return res.status(400).json({ error: 'Client data not found' });
-    }
-
-    const client = existSession.session.captchaSession;
-    if (!client) {
-        return res.status(400).json({ error: 'Client data not found' });
-    }
-
-    const expectedFieldsMinTolerance = Math.ceil(Number(client.minToleranceOfPool) * client.expectedFields.length);
-    const selectedFieldsMaxTolerance = Math.ceil(Number(client.maxToleranceOfPool) * client.expectedFields.length);
-
-    const successfullySelectedFields = selectedFields.filter(selectedField => client.expectedFields.includes(selectedField)).length;
-
-    const isValid = successfullySelectedFields >= expectedFieldsMinTolerance && selectedFields.length <= selectedFieldsMaxTolerance;
-
-    if (isValid) {
-        existSession.session.captchaValidated = true;
-        existSession.session.captchaValidatedTime = Date.now();
-    } else {
-        await store.collection.deleteOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier });
-    }
-    
     try {
-        await store.collection.updateOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier }, { $set: { 'session.captchaValidated': existSession.session.captchaValidated, 'session.captchaValidatedTime': existSession.session.captchaValidatedTime } });
-    } catch (error) {
-        console.error("Error while updating session:", error);
-        return res.status(500).json({ error: 'Error while updating session.' });
-    }
+        const givenSession = sanitize(req.body.session);
+        const existSession = await store.collection.findOne({
+            'session.client.clientIdentifier': givenSession.clientIdentifier
+        });
+        console.log("existSession", existSession);
 
-    if (existSession.session.client.uniqueFileName) {
-        deleteFile.deleteFile(`./tmpimg/${existSession.session.client.uniqueFileName}`);
-    }
-    if(isValid){
-        const JWTToken = await generateJWTToken();
-        console.log("Generated JWT token:", JWTToken, "for clientIdentifier:", givenSession.clientIdentifier, "origin", req.headers.origin);
-        res.json({ isValid, token: JWTToken });
-    }
-    else{
-        res.json({ isValid });
+        const selectedFields = sanitize(req.body.selectedIds);
+
+        if (!existSession) {
+            console.info('Client data not found', givenSession.clientIdentifier);
+            return res.status(400).json({ isValid: false });
+        }
+
+        const client = existSession.session.captchaSession;
+        if (!client) {
+            console.info('Client data not found', givenSession.clientIdentifier);
+            return res.status(400).json({ isValid: false });
+        }
+
+        const expectedFieldsMinTolerance = Math.ceil(Number(client.minToleranceOfPool) * client.expectedFields.length);
+        const selectedFieldsMaxTolerance = Math.ceil(Number(client.maxToleranceOfPool) * client.expectedFields.length);
+
+        const successfullySelectedFields = selectedFields.filter(selectedField => client.expectedFields.includes(selectedField)).length;
+
+        const isValid = successfullySelectedFields >= expectedFieldsMinTolerance && selectedFields.length <= selectedFieldsMaxTolerance;
+
+        if (isValid) {
+            if (existSession.session.captchaValidated) {
+                console.log("Captcha already validated for clientIdentifier:", givenSession.clientIdentifier);
+                return res.status(400).json({ isValid: false });
+            }
+            else {
+                existSession.session.captchaValidated = true;
+                console.log("Captcha solved successfully for clientIdentifier:", givenSession.clientIdentifier, "origin", req.headers.origin);
+                existSession.session.captchaValidatedTime = Date.now();
+            }
+        } else {
+            await store.collection.deleteOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier });
+        }
+        //leaved in for future feature remember client that solved the captcha
+        await store.collection.updateOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier }, { $set: { 'session.captchaValidated': existSession.session.captchaValidated, 'session.captchaValidatedTime': existSession.session.captchaValidatedTime } });
+
+        if (existSession.session.client.uniqueFileName) {
+            deleteFile.deleteFile(`./tmpimg/${existSession.session.client.uniqueFileName}`);
+        }
+        if (isValid) {
+            const JWTToken = await generateJWTToken();
+            console.log("Generated JWT token:", JWTToken, "for clientIdentifier:", givenSession.clientIdentifier, "origin", req.headers.origin);
+            res.json({ isValid, token: JWTToken });
+        } else {
+            res.json({ isValid });
+        }
+    } catch (error) {
+        console.error("Error while validating captcha:", error);
+        return res.status(500).json({ error: 'Error while validating captcha.' });
     }
 });
+
 router.post('/check-captcha', async (req, res) => {
     try {
-        const givenSession = req.body.session;
-        const apiKey = req.body.apiKey;
-        const apiKeyDB = await ApiKeyModel.findOne({ apiKey })
-        const companyId = apiKeyDB.companies[0]
+        const givenSession = sanitize(req.body.session);
+        const apiKey = xss(sanitize(req.body.apiKey));
+        const apiKeyDB = await ApiKeyModel.findOne({ apiKey });
+        const companyId = apiKeyDB.companies[0];
         let memorizeCaptcha = false;
         let colorKit = await ColorKit.findOne({ company: companyId });
         if (colorKit) {
@@ -259,4 +264,4 @@ router.post('/check-captcha', async (req, res) => {
     }
 });
 
-module.exports = router
+module.exports = router;
