@@ -10,8 +10,7 @@ const deleteFile = require("../services/deleteFiles.js");
 const { pool, initializePool } = require('../controllers/initializeController.js');
 const store = require('../models/store.js');
 const generateJWTToken = require("../services/generateJWTToken.js");
-const xss = require('xss');
-const sanitize = require('mongo-sanitize');
+const sanitizeInput = require("../services/sanitizeInput.js");
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
 
@@ -26,7 +25,7 @@ const ApiKeyModel = require("../models/ApiKey.js");
 const Company = require('../models/Company.js');
 
 router.post('/reload', (req, res) => {
-    const session = sanitize(req.body.session);
+    const session = sanitizeInput(req.body.session);
     if (session && session.uniqueFileName) {
         const resolvedPath = path.resolve(`./tmpimg/${session.uniqueFileName}`);
         if (resolvedPath.startsWith(__dirname + '/tmpimg')) {
@@ -39,7 +38,7 @@ router.post('/reload', (req, res) => {
 
 router.post("/captchaSettings", async (req, res) => {
     try {
-        const apiKey = xss(sanitize(req.body.apiKey));
+        const apiKey = sanitizeInput(req.body.apiKey);
         const apiKeyDB = await ApiKeyModel.findOne({ apiKey });
         const companyId = apiKeyDB.companies[0];
         let returnedColorKit;
@@ -71,19 +70,19 @@ router.post('/assets', async (req, res) => {
     let globalPool = await initializePool();
     try {
         let captchaIdentifier = uuid.v4();
-        let selectedApiKey = await ApiKeyModel.findOne({ apiKey: xss(sanitize(req.body.apiKey)) });
+        let selectedApiKey = await ApiKeyModel.findOne({ apiKey: sanitizeInput(req.body.apiKey) });
         let tmpContent = [];
         let uniqueFileName;
         let savePath;
         let finishedURL;
 
-        const session = sanitize(req.body.session);
+        const session = sanitizeInput(req.body.session);
         if (session) {
             req.session.client = {
-                clientIdentifier: xss(session.clientIdentifier),
-                authMethod: xss(session.authMethod),
-                clientSpecificData: xss(session.clientSpecificData),
-                uniqueFileName: xss(session.uniqueFileName)
+                clientIdentifier: session.clientIdentifier,
+                authMethod: session.authMethod,
+                clientSpecificData: session.clientSpecificData,
+                uniqueFileName: session.uniqueFileName
             };
         } else {
             req.session.client = {
@@ -188,7 +187,7 @@ router.post('/assets', async (req, res) => {
         logger.error("Error getting captcha assets", err, {
             operation: 'get_captcha_assets',
             clientIdentifier: req.session.client?.clientIdentifier || captchaIdentifier,
-            apiKey: req.body.apiKey ? '[PRESENT]' : '[MISSING]'
+            apiKey: sanitizeInput(req.body.apiKey) ? '[PRESENT]' : '[MISSING]'
         });
         return res.status(500).json({ error: 'Server request error.' });
     }
@@ -196,7 +195,7 @@ router.post('/assets', async (req, res) => {
 
 router.post('/checkCubes', async (req, res) => {
     try {
-        const givenSession = xss(sanitize(req.body.session));
+        const givenSession = sanitizeInput(req.body.session);
         const existSession = await store.collection.findOne({
             'session.client.clientIdentifier': givenSession.clientIdentifier
         });
@@ -206,7 +205,7 @@ router.post('/checkCubes', async (req, res) => {
             sessionExists: !!existSession
         });
 
-        const selectedFields = sanitize(req.body.selectedIds);
+        const selectedFields = sanitizeInput(req.body.selectedIds);
 
         if (!existSession) {
             logger.warn('Client data not found', {
@@ -289,8 +288,8 @@ router.post('/checkCubes', async (req, res) => {
 
 router.post('/check-captcha', async (req, res) => {
     try {
-        const givenSession = sanitize(req.body.session);
-        const apiKey = xss(sanitize(req.body.apiKey));
+        const givenSession = sanitizeInput(req.body.session);
+        const apiKey = sanitizeInput(req.body.apiKey);
         const apiKeyDB = await ApiKeyModel.findOne({ apiKey });
         const companyId = apiKeyDB.companies[0];
         let memorizeCaptcha = false;
