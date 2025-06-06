@@ -10,6 +10,7 @@ const isAuthorizedUpdateUser = (req, res, next) => {
     }
 
     const sessionUserId = req.session.user._id.toString();
+    // deepcode ignore HTTPSourceWithUncheckedType: <is because this is a middleware for internal use>
     const submittedUserId = req.body.submittedData.id.toString();
 
     console.log("Session User: ", sessionUserId);

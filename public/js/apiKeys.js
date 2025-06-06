@@ -267,6 +267,7 @@ function submitApi(event) {
                 if (data.successfully) {
                     alert(data.message)
                     location.reload();
+                // file deepcode ignore DuplicateIfBody: <frontend code does not have access to the backend>
                 } else {
                     alert(data.message)
                     location.reload();

@@ -45,7 +45,7 @@ rangeInput.addEventListener('change', updateBackgroundSize);
 
 function updateBackgroundSize() {
     backgroundSize = rangeInput.value + "%";
-    imageResizeValue.innerHTML = backgroundSize
+    imageResizeValue.textContent = backgroundSize
 
     canvas.forEach(canvas => {
         var existingStyles = canvas.getAttribute('style')

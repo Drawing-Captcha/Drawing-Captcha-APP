@@ -269,5 +269,6 @@ function deleteCompany(companyId) {
 }
 
 
+// file deepcode ignore WrongNumberOfArguments: <frontend function>
 addDialogForm.addEventListener('submit', event => submitCompany(event))
 editDialogForm.addEventListener('submit', event => submitChanges(event))

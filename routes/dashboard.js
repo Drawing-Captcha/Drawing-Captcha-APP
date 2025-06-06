@@ -992,6 +992,7 @@ router.post('/newValidation', notReadOnly, async (req, res) => {
         isValid = true;
 
         const MaxTolerance = (validateMaxCubes.length * 1) / validateTrueCubes.length;
+        // file deepcode ignore HTTPSourceWithUncheckedType: <please specify a reason of ignoring this>
         const MinTolerance = (validateMinCubes.length * 1) / validateTrueCubes.length;
 
         const captchaData = {

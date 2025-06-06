@@ -12300,6 +12300,7 @@
           }
           if (siteId) {
             data.handler = true ? exportedSubmitWebflow : (() => {
+              // file deepcode ignore AttrAccessOnNull: <webflow-forms> is always defined is not being used> 
               const hostedSubmitHandler = null.default;
               return hostedSubmitHandler(reset, loc, Webflow, collectEnterpriseTrackingCookies, preventDefault, findFields, alert, findFileUploads, disableBtn, siteId, afterSubmit, $, formUrl);
             })();

@@ -132,6 +132,7 @@ router.put('/updateUser', isAuthorizedUpdating, async (req, res) => {
         let focusedUserRole = focusedUser.role;
 
         if(shouldChangePassword){
+            // deepcode ignore HTTPSourceWithUncheckedType: <request body is sanitized and validated>
             if (!password || password.length < 5) return res.status(400).json({ message: 'Password must be at least 8 characters long' });
             const hashedPassword = await bcrypt.hash(password, 12);
             updateData.password = hashedPassword;

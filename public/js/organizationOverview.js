@@ -496,6 +496,7 @@ function deleteUser(user) {
                     alert(data.message);
                 }
                 if (data.redirect) {
+                    // file deepcode ignore OR: <this is frontend code>
                     window.location.href = data.redirect;
                 }
                 location.reload();

@@ -4,6 +4,7 @@ const session = require("express-session");
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const crypto = require("crypto");
+const fs = require('fs');
 const path = require("path");
 const authMiddleware = require("./middlewares/authMiddleware.js")
 const csrf = require('csurf');
@@ -54,20 +55,19 @@ async function initialize() {
 
 initialize().then(() => {
     logger.info("src initialized")
+}).catch(err => {
+    logger.error('Error initializing src:', { error: err.message, stack: err.stack });
 })
 
 const app = express();
-deleteAllFilesInDir("./tmpimg").then(() => logger.info("All files deleted in ./tmpimg"))
+deleteAllFilesInDir("./tmpimg").then(() => logger.info("All files deleted in ./tmpimg")).catch(err => logger.error('Error deleting files:', err));
 
-// Create logs directory if it doesn't exist
-const fs = require('fs');
 const logsDir = path.join(__dirname, 'logs');
 if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir);
     logger.info('Created logs directory');
 }
 
-// Add HTTP request logging middleware
 const httpLogger = require('./middlewares/httpLogger');
 app.use(httpLogger);
 
@@ -118,8 +118,13 @@ const socialAuthLimiter = rateLimit({
     max: 30, 
     message: "Too Many Request's try later again"
 });
-const emailVerifyLimiter = rateLimit({
+const emailConfirmationLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: "Too Many Request's try later again"
+});
+const siteVerifyLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
     max: 10,
     message: "Too Many Request's try later again"
 });
@@ -152,7 +157,8 @@ app.use(session({
     saveUninitialized: false,
     store: store,
     cookie: {
-        maxAge: 4 * 60 * 60 * 1000
+        maxAge: 4 * 60 * 60 * 1000,
+        secure: process.env.NODE_ENV !== 'DEVELOPMENT', // Set to true in production
     }
 }));
 app.use(passport.initialize())
@@ -181,13 +187,13 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 app.use('/', indexRoutes);
 app.use('/auth', authLimiter, authRoutes)
 app.use('/captcha', captchaLimiter, csrfMiddleware.validateCSRFOrExternalKey, captchaRoutes)
-app.use('/dashboard', authMiddleware, csrfMiddleware.validateCSRFToken ,hasEnteredRegisterKey, dashboardLimiter, dashboardRoutes)
-app.use('/user', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, dashboardLimiter, userRoutes)
-app.use('/company', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, dashboardLimiter, companyRoutes)
-app.use('/registerKey', authMiddleware, csrfMiddleware.validateCSRFToken, dashboardLimiter ,registerKeyRoutes)
+app.use('/dashboard', authMiddleware, dashboardLimiter, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, dashboardRoutes)
+app.use('/user', authMiddleware, dashboardLimiter, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, userRoutes)
+app.use('/company', authMiddleware, dashboardLimiter, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, companyRoutes)
+app.use('/registerKey', authMiddleware, dashboardLimiter, csrfMiddleware.validateCSRFToken, registerKeyRoutes)
 app.use('/test', testLimiter, testConnectionRoutes)
-app.use("/confirm-email", emailVerifyLimiter, confirmEmail)
-app.use("/siteVerify", tokenLimiter, csrfMiddleware.validateCSRFOrExternalKey ,siteVerifyCallback)
+app.use("/confirm-email", emailConfirmationLimiter, confirmEmail)
+app.use("/siteVerify", tokenLimiter, siteVerifyLimiter, csrfMiddleware.validateCSRFOrExternalKey ,siteVerifyCallback)
 
 app.use((req, res, next) => {
     if (!res.headersSent) {

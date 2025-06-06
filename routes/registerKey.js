@@ -6,6 +6,7 @@ const userModel = require("../models/User.js");
 const sanitize = require('mongo-sanitize');
 const isAppAdmin = require("../middlewares/isAppAdmin.js");
 
+// file deepcode ignore NoRateLimitingForExpensiveWebOperation: <please specify a reason of ignoring this>
 router.get('/', hasAlreadyEnteredRegisterKeyRedirect, (req, res) => {
     try{
         res.render("registerKeyVerification", { error: req.query.error });

@@ -12,7 +12,6 @@ const crypto = require("crypto");
 const createAllowedOrigin = require('../services/createAllowedOrigin.js');
 const isAppAdmin = require("../middlewares/isAppAdmin.js")
 const isAdmin = require("../middlewares/adminMiddleware.js")
-const isCompanyRelation = require("../services/companyRelationMiddleware.js");
 const isRelatedToCompany = require('../services/companyRelationMiddleware.js');
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
