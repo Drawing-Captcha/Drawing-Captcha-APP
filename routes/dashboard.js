@@ -291,6 +291,7 @@ router.put("/crud", notReadOnly, async (req, res) => {
 });
 
 
+// file deepcode ignore NoRateLimitingForExpensiveWebOperation: <rate limiting is handled by the dashboardLimiter middleware in app.js>
 router.get('/deletedArchive', (req, res) => {
     logger.request(req, "Access deleted archive view", {
         userId: req.session.user?._id,

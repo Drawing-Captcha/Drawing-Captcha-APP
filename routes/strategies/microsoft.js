@@ -57,6 +57,7 @@ if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
   });
 
   router.get('/',
+    // file deepcode ignore NoRateLimitingForLogin: <is being handled by the socialAuthLimiter middleware in app.js>
     passport.authenticate('microsoft', {
       prompt: 'select_account',
     })

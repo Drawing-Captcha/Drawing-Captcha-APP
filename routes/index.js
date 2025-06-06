@@ -7,6 +7,7 @@ router.get("/", (req, res) => {
     res.redirect("/login");
 });
 
+// file deepcode ignore NoRateLimitingForExpensiveWebOperation: <is being handled by the authLimiter middleware in app.js>
 router.get('/login',isAuthRedirect ,csrfMiddleware.generateCSRFToken, (req, res) => {
     let basicAuth =  process.env.BASIC_AUTH === undefined || process.env.BASIC_AUTH === null ? true : process.env.BASIC_AUTH == 'true' ?? true;
     let divider = false;

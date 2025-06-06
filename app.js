@@ -88,7 +88,8 @@ const csrfProtection = csrf({ cookie: true });
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 40,
-    message: "Too Many Request's try later again"
+    message: "Too Many Request's try later again",
+    delayMs: 1000
 });
 const tokenLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -97,14 +98,27 @@ const tokenLimiter = rateLimit({
 });
 const captchaLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 200,
+    max: 100,
     message: "Too Many Request's try later again"
 });
 const testLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 150,
+    max: 100,
     message: "Too Many Request's try later again"
 });
+const dashboardLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: "Too Many Request's try later again",
+    delayMs: 2000,
+    headers: true
+});
+const socialAuthLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, 
+    max: 30, 
+    message: "Too many Auths Sign-In requests from this IP, please try again after an hour."
+});
+
 app.use(cors({
     origin: async function (origin, callback) {
         try {
@@ -149,23 +163,23 @@ const confirmEmail = require("./routes/confirm-email.js");
 const registerKeyRoutes = require("./routes/registerKey.js")
 const siteVerifyCallback = require("./routes/siteVerifyCallback.js");
 const { error } = require("console");
+
 if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
     const MicrosoftStrategy = require("./routes/strategies/microsoft.js")
-    app.use('/api/auth/microsoft', MicrosoftStrategy)
+    app.use('/api/auth/microsoft', socialAuthLimiter, MicrosoftStrategy)
 }
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     const GoogleStrategy = require("./routes/strategies/google.js")
-    app.use('/api/auth/google', GoogleStrategy)
+    app.use('/api/auth/google', socialAuthLimiter, GoogleStrategy)
 }
-
 app.use('/', indexRoutes);
 app.use('/auth', authLimiter, authRoutes)
 app.use('/captcha', captchaLimiter, csrfMiddleware.validateCSRFOrExternalKey, captchaRoutes)
-app.use('/dashboard', authMiddleware, csrfMiddleware.validateCSRFToken ,hasEnteredRegisterKey, dashboardRoutes)
-app.use('/user', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, userRoutes)
-app.use('/company', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey,companyRoutes)
-app.use('/registerKey', authMiddleware, csrfMiddleware.validateCSRFToken, registerKeyRoutes)
+app.use('/dashboard', authMiddleware, csrfMiddleware.validateCSRFToken ,hasEnteredRegisterKey, dashboardLimiter, dashboardRoutes)
+app.use('/user', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, dashboardLimiter, userRoutes)
+app.use('/company', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, dashboardLimiter, companyRoutes)
+app.use('/registerKey', authMiddleware, csrfMiddleware.validateCSRFToken, dashboardLimiter ,registerKeyRoutes)
 app.use('/test', testLimiter, testConnectionRoutes)
 app.use("/confirm-email", confirmEmail)
 app.use("/siteVerify", tokenLimiter, csrfMiddleware.validateCSRFOrExternalKey ,siteVerifyCallback)

@@ -54,6 +54,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   });
 
   router.get('/',
+    // file deepcode ignore NoRateLimitingForLogin: <is being handled by the socialAuthLimiter middleware in app.js>
     passport.authenticate('google', { scope: ['profile', 'email'] })
   );
 

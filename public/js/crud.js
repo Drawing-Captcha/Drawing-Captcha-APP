@@ -185,17 +185,17 @@ async function getComponent(e) {
 
     let items = document.querySelectorAll(".item")
     let btnText = document.querySelector(".btn-text")
-    btnText.innerHTML = "No company selected"
+    btnText.textContent = "No company selected"
     items.forEach(item => {
         if (e.companies.includes(item.getAttribute("obj-id"))) {
-            btnText.innerHTML = elementCompany.name + " Selected"
+            btnText.textContent = elementCompany.name + " Selected"
             item.classList.add("checked")
         }
     })
 
     const sectionHeader = document.querySelector(".section_page-header3")
     sectionHeader.style.display = "none";
-    toDo.innerHTML = `Edit item: ${e.Name}`;
+    toDo.textContent = `Edit item: ${e.Name}`;
     editItemParent.style.display = "block";
 
     buildCubes();
@@ -225,7 +225,6 @@ async function getComponent(e) {
         let containerCanvas = container.querySelector(".canvas");
 
         containerCanvas.style.backgroundImage = `url(${e.URL})`;
-
 
         switch (container.getAttribute("id")) {
             case "True":

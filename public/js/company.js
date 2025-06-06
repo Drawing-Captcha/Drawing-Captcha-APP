@@ -224,6 +224,7 @@ async function postCompany(submittedData) {
                 alert(data.message);
             }
             if (data.redirect) {
+                // file deepcode ignore OR: <this is a redirect in the frontend>
                 window.location.href = data.redirect;
             } else {
                 location.reload();
