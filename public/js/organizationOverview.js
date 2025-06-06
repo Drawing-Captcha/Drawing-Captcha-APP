@@ -349,7 +349,7 @@ async function changeDetails(e) {
     btnText.innerHTML = "No company selected"
     items.forEach(item => {
         if (e.company === item.getAttribute("obj-id")) {
-            btnText.innerHTML = elementCompany.name + " Selected"
+            btnText.textContent = elementCompany.name + " Selected"
             item.classList.add("checked")
         }
     })
