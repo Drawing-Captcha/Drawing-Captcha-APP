@@ -116,7 +116,12 @@ const dashboardLimiter = rateLimit({
 const socialAuthLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, 
     max: 30, 
-    message: "Too many Auths Sign-In requests from this IP, please try again after an hour."
+    message: "Too Many Request's try later again"
+});
+const emailVerifyLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: "Too Many Request's try later again"
 });
 
 app.use(cors({
@@ -181,7 +186,7 @@ app.use('/user', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredReg
 app.use('/company', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, dashboardLimiter, companyRoutes)
 app.use('/registerKey', authMiddleware, csrfMiddleware.validateCSRFToken, dashboardLimiter ,registerKeyRoutes)
 app.use('/test', testLimiter, testConnectionRoutes)
-app.use("/confirm-email", confirmEmail)
+app.use("/confirm-email", emailVerifyLimiter, confirmEmail)
 app.use("/siteVerify", tokenLimiter, csrfMiddleware.validateCSRFOrExternalKey ,siteVerifyCallback)
 
 app.use((req, res, next) => {

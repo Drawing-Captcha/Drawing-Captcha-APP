@@ -67,6 +67,7 @@ router.post("/captchaSettings", async (req, res) => {
     }
 });
 
+// file deepcode ignore NoRateLimitingForExpensiveWebOperation: <is being handled by the captchaLimiter middleware in app.js>
 router.post('/assets', async (req, res) => {
     let globalPool = await initializePool();
     try {

@@ -179,7 +179,7 @@ function updateCubeColors() {
 }
 
 function updateTitle(){
-    title.innerHTML = defaultTitle
+    title.textContent = defaultTitle
 }
 
 

@@ -9,6 +9,7 @@ const sanitizeInput = require('../services/sanitizeInput.js');
 const isValidEmail = require('../services/isValidEmail.js');
 const xss = require('xss');
 
+// file deepcode ignore NoRateLimitingForExpensiveWebOperation: <is being handled by the emailConfirmationLimiter middleware in app.js>
 router.get('/', async (req, res) => {
     let { token } = req.query;
     token = sanitizeInput(token);
