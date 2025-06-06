@@ -165,7 +165,7 @@ router.post('/assets', async (req, res) => {
 
 router.post('/checkCubes', async (req, res) => {
     try {
-        const givenSession = sanitize(req.body.session);
+        const givenSession = xss(sanitize(req.body.session));
         const existSession = await store.collection.findOne({
             'session.client.clientIdentifier': givenSession.clientIdentifier
         });
@@ -208,7 +208,13 @@ router.post('/checkCubes', async (req, res) => {
         await store.collection.updateOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier }, { $set: { 'session.captchaValidated': existSession.session.captchaValidated, 'session.captchaValidatedTime': existSession.session.captchaValidatedTime } });
 
         if (existSession.session.client.uniqueFileName) {
-            deleteFile.deleteFile(`./tmpimg/${existSession.session.client.uniqueFileName}`);
+            const filePath = `./tmpimg/${existSession.session.client.uniqueFileName}`;
+            const resolvedPath = path.resolve(filePath);
+            if (resolvedPath.startsWith(__dirname + '/tmpimg')) {
+                await deleteFile.deleteFile(resolvedPath);
+            } else {
+                console.error("Path traversal attempt detected:", filePath);
+            }
         }
         if (isValid) {
             const JWTToken = await generateJWTToken();
