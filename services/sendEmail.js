@@ -7,9 +7,10 @@ const fromEmail = process.env.EMAIL_FROM;
 
 async function sendEmail(subject, text, html, toEmail) {
     try {
-        console.log(emailService, "emailservice")
-        if(process.env.ENVIRONMENT === "deveoplment"){
+        logger.info(`Sending email with ${emailService} service`);
+        if(process.env.ENVIRONMENT === "development"){
             console.log("Development environment detected. Setting NODE_TLS_REJECT_UNAUTHORIZED to 0.");
+            // file deepcode ignore InsecureTLSConfig: <this is a development environment, so we disable TLS verification>
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
         }
         
