@@ -5,6 +5,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const UserModel = require("../../models/User.js");
 const csrfMiddleware = require("../../middlewares/csurfMiddleware");
 const path = require('path');
+const sanitizeInput = require("../../services/sanitizeInput.js");
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(new GoogleStrategy({
@@ -61,7 +62,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   router.get('/callback',
     passport.authenticate('google', { failureRedirect: '/login?error=auth_conflict' }), csrfMiddleware.generateCSRFToken,
     async function (req, res) {
-      req.session.user = req.user;
+      req.session.user = sanitizeInput(req.user);
       req.session.isAuth = true;
       res.redirect('/');
     }
