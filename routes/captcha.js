@@ -13,6 +13,8 @@ const store = require('../models/store.js');
 const generateJWTToken = require("../services/generateJWTToken.js");
 const xss = require('xss');
 const sanitize = require('mongo-sanitize');
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 const defaultColorKit = {
     buttonColorValue: "#007BFF",
@@ -55,7 +57,11 @@ router.post("/captchaSettings", async (req, res) => {
         res.status(200).json({ returnedColorKit, message });
 
     } catch (err) {
-        console.error("Error while processing request:", err);
+        logger.error("Error while processing captcha settings request", err, {
+            operation: 'get_captcha_settings',
+            apiKey: apiKey ? '[PRESENT]' : '[MISSING]',
+            companyId: companyId || 'unknown'
+        });
         res.status(500).json({ error: "An internal server error occurred." });
     }
 });
@@ -88,7 +94,10 @@ router.post('/assets', async (req, res) => {
         }
 
         if (!globalPool || globalPool.length === 0) {
-            console.error("Pool is empty or not initialized.");
+            logger.error("Pool is empty or not initialized", null, {
+                operation: 'get_captcha_assets',
+                clientIdentifier: captchaIdentifier
+            });
             return res.status(500).json({ error: 'Pool is empty or not initialized.' });
         }
 
@@ -138,14 +147,27 @@ router.post('/assets', async (req, res) => {
 
             fs.writeFile(savePath, imageBuffer, (err) => {
                 if (err) {
-                    console.error(`Error saving file: ${err}`);
+                    logger.error("Error saving captcha image file", err, {
+                        operation: 'save_captcha_image',
+                        clientIdentifier: captchaIdentifier,
+                        path: savePath
+                    });
                     return res.status(500).json({ error: 'Error saving file.' });
                 } else {
-                    console.log(`File successfully saved at: ${savePath}`);
+                    logger.info("File successfully saved", {
+                        operation: 'save_captcha_image',
+                        clientIdentifier: captchaIdentifier,
+                        path: savePath,
+                        uniqueFileName
+                    });
                 }
             });
         } else {
-            console.error("client.imgURL is undefined");
+            logger.error("client.imgURL is undefined", null, {
+                operation: 'get_captcha_assets',
+                clientIdentifier: captchaIdentifier,
+                selectedContentId: selectedContent?.ID
+            });
             return res.status(500).json({ error: 'client.imgURL is undefined.' });
         }
 
@@ -162,7 +184,11 @@ router.post('/assets', async (req, res) => {
         res.json({ client: req.session.client });
 
     } catch (err) {
-        console.error("Error:", err);
+        logger.error("Error getting captcha assets", err, {
+            operation: 'get_captcha_assets',
+            clientIdentifier: req.session.client?.clientIdentifier || captchaIdentifier,
+            apiKey: req.body.apiKey ? '[PRESENT]' : '[MISSING]'
+        });
         return res.status(500).json({ error: 'Server request error.' });
     }
 });
@@ -173,18 +199,28 @@ router.post('/checkCubes', async (req, res) => {
         const existSession = await store.collection.findOne({
             'session.client.clientIdentifier': givenSession.clientIdentifier
         });
-        console.log("existSession", existSession);
+        logger.info("Found existing session for captcha check", {
+            operation: 'check_captcha_cubes',
+            clientIdentifier: givenSession.clientIdentifier,
+            sessionExists: !!existSession
+        });
 
         const selectedFields = sanitize(req.body.selectedIds);
 
         if (!existSession) {
-            console.info('Client data not found', givenSession.clientIdentifier);
+            logger.warn('Client data not found', {
+                operation: 'check_captcha_cubes',
+                clientIdentifier: givenSession.clientIdentifier
+            });
             return res.status(400).json({ isValid: false });
         }
 
         const client = existSession.session.captchaSession;
         if (!client) {
-            console.info('Client data not found', givenSession.clientIdentifier);
+            logger.warn('Client session data not found', {
+                operation: 'check_captcha_cubes',
+                clientIdentifier: givenSession.clientIdentifier
+            });
             return res.status(400).json({ isValid: false });
         }
 
@@ -197,12 +233,21 @@ router.post('/checkCubes', async (req, res) => {
 
         if (isValid) {
             if (existSession.session.captchaValidated) {
-                console.log("Captcha already validated for clientIdentifier:", givenSession.clientIdentifier);
+                logger.info("Captcha already validated", {
+                    operation: 'check_captcha_cubes',
+                    clientIdentifier: givenSession.clientIdentifier,
+                    status: 'already_validated'
+                });
                 return res.status(400).json({ isValid: false });
             }
             else {
                 existSession.session.captchaValidated = true;
-                console.log("Captcha solved successfully for clientIdentifier:", givenSession.clientIdentifier, "origin", req.headers.origin);
+                logger.info("Captcha solved successfully", {
+                    operation: 'check_captcha_cubes',
+                    clientIdentifier: givenSession.clientIdentifier,
+                    origin: req.headers.origin,
+                    status: 'validated'
+                });
                 existSession.session.captchaValidatedTime = Date.now();
             }
         } else {
@@ -222,13 +267,21 @@ router.post('/checkCubes', async (req, res) => {
         }
         if (isValid) {
             const JWTToken = await generateJWTToken();
-            console.log("Generated JWT token:", JWTToken, "for clientIdentifier:", givenSession.clientIdentifier, "origin", req.headers.origin);
+            logger.info("Generated JWT token for validated captcha", {
+                operation: 'generate_jwt_token',
+                clientIdentifier: givenSession.clientIdentifier,
+                origin: req.headers.origin,
+                tokenGenerated: !!JWTToken
+            });
             res.json({ isValid, token: JWTToken });
         } else {
             res.json({ isValid });
         }
     } catch (error) {
-        console.error("Error while validating captcha:", error);
+        logger.error("Error while validating captcha", error, {
+            operation: 'check_captcha_cubes',
+            clientIdentifier: givenSession?.clientIdentifier
+        });
         return res.status(500).json({ error: 'Error while validating captcha.' });
     }
 });
@@ -269,7 +322,12 @@ router.post('/check-captcha', async (req, res) => {
         const isValid = (currentTime - captchaValidatedTime) < thirtyMinutes;
         res.json({ valid: isValid });
     } catch (error) {
-        console.error("Error while checking captcha:", error);
+        logger.error("Error while checking captcha", error, {
+            operation: 'check_captcha',
+            clientIdentifier: givenSession?.clientIdentifier,
+            apiKey: apiKey ? '[PRESENT]' : '[MISSING]',
+            companyId: companyId || 'unknown'
+        });
         return res.status(500).json({ error: 'Error while checking captcha.' });
     }
 });

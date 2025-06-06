@@ -11,6 +11,7 @@ const passport = require('passport');
 const cookieParser = require('cookie-parser');
 const connectDB = require("./config/db.js")
 const deleteAndLog = require("./services/deleteAndLog.js")
+const logger = require('./utils/logger');
 const deleteAllFilesInDir = require("./services/deleteAllFilesInDir.js");
 const { pool, deletedBin, initializeAllowedOrigins, initializeRegisterKey } = require("./controllers/initializeController.js")
 const createInitCaptcha = require("./config/createInitCaptcha.js")
@@ -37,11 +38,11 @@ configureJWTSecret()
 setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
 setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
 setInterval(() => {
-    console.log('Running session cleanup...');
+    logger.info('Running session cleanup...');
     cleanSessions();
 }, 1000 * 60 * 60)
 setInterval(() => {
-    console.log('Running token cleanup...');
+    logger.info('Running token cleanup...');
     cleanTokens();
 }, 1000 * 60 * 5);
 
@@ -52,11 +53,24 @@ async function initialize() {
 }
 
 initialize().then(() => {
-    console.log("src initialized")
+    logger.info("src initialized")
 })
 
 const app = express();
-deleteAllFilesInDir("./tmpimg").then(console.log("All files deleted in ./tmpimg"))
+deleteAllFilesInDir("./tmpimg").then(() => logger.info("All files deleted in ./tmpimg"))
+
+// Create logs directory if it doesn't exist
+const fs = require('fs');
+const logsDir = path.join(__dirname, 'logs');
+if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir);
+    logger.info('Created logs directory');
+}
+
+// Add HTTP request logging middleware
+const httpLogger = require('./middlewares/httpLogger');
+app.use(httpLogger);
+
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static("public"));
@@ -104,7 +118,7 @@ app.use(cors({
                 return callback(new Error('Not allowed by CORS'));
             }
         } catch (error) {
-            console.error('Error fetching allowed origins:', error);
+            logger.error('Error fetching allowed origins:', { error: error.message, stack: error.stack });
             return callback(new Error('Failed to fetch allowed origins'));
         }
     },
@@ -163,7 +177,14 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-    console.error(new Date().toLocaleString(), 'Unhandled error:', err, "in", req.originalUrl, "from", req.ip, "with method", req.method);
+    logger.error('Unhandled error:', { 
+        error: err.message, 
+        stack: err.stack,
+        path: req.originalUrl,
+        ip: req.ip,
+        method: req.method,
+        requestId: req.id
+    });
     res.status(500).json({
         message: 'Internal Server Error',
         error: 'An unexpected error occurred'
@@ -172,19 +193,19 @@ app.use((err, req, res, next) => {
 
 app.listen(port, async () => {
     try {
-        console.log(`Server Running on port: ${port}`);
+        logger.info(`Server Running on port: ${port}`);
         store.collection.deleteMany({}, (err) => {
             if (err) {
-                console.error('Error while trying to delete Sessions:', err);
+                logger.error('Error while trying to delete Sessions:', { error: err.message, stack: err.stack });
             } else {
-                console.log('All Sessions successfully.');
+                logger.info('All Sessions cleared successfully.');
             }
         });
         let message = await initializeRegisterKey();
-        console.log(message)
+        logger.info(message);
     }
     catch (err) {
-        console.error('Error clearing session store:', err);
+        logger.error('Error clearing session store:', { error: err.message, stack: err.stack });
     }
 
 })

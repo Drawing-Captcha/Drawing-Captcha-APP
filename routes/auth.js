@@ -14,6 +14,8 @@ const generateEmailConfirmationToken = require("../services/generateEmailConfirm
 const { send } = require('process');
 const emailService = process.env.EMAIL_SERVICE;
 let basicAuth = process.env.BASIC_AUTH === undefined || process.env.BASIC_AUTH === null ? true : process.env.BASIC_AUTH == 'true' ?? true;
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 
 if (basicAuth) {
@@ -49,13 +51,19 @@ if (basicAuth) {
 
             req.session.save((err) => {
                 if (err) {
-                    console.error("Error saving session:", err);
+                    logger.error("Error saving session", err, {
+                        userId: email,
+                        operation: 'session.save'
+                    });
                     return res.status(500).json({ message: 'An error occurred while saving the session' });
                 }
                 res.redirect('/dashboard');
             });
         } catch (error) {
-            console.error("Error during login process:", error);
+            logger.error("Error during login process", error, {
+                operation: 'login',
+                email: req.body.email
+            });
             res.status(500).json({ message: 'An internal server error occurred.' });
         }
     })
@@ -145,7 +153,11 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
         }
 
     } catch (error) {
-        console.error("Error occurred during registration:", error);
+        logger.error("Error occurred during registration", error, {
+            operation: 'register',
+            username: req.body.username,
+            email: req.body.email
+        });
         req.session.RegisterMessage = "An error occurred during registration. Please try again.";
         res.status(500).redirect('/register');
     }

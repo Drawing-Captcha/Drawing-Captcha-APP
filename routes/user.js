@@ -7,26 +7,44 @@ const User = require("../models/User.js")
 const isAuthorizedUpdating = require("../middlewares/authorizedUpdateUser.js")
 const isAuthorizedDeleting = require("../middlewares/authorizedDeletingUser.js")
 const mongoose = require('mongoose');
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
-console.log("user.js loaded");
+logger.info("user.js loaded");
 
 router.get('/ownUser', async (req, res) => {
-    console.log("ownUser endpoint hit, user:", req.session.user);
+    logger.request(req, "ownUser endpoint hit", {
+        userId: req.session.user?._id,
+        userRole: req.session.user?.role
+    });
     res.json({ user: req.session.user });
 })
 
 router.get('/allUsers', async (req, res) => {
-    console.log("allUsers endpoint hit");
+    logger.request(req, "allUsers endpoint hit", {
+        userId: req.session.user?._id,
+        userRole: req.session.user?.role,
+        operation: 'get_all_users'
+    });
     try {
         const userCompany = req.session.user.company
         const isAppAdmin = req.session.user.appAdmin
         let returnedUsers
 
         if (isAppAdmin) {
-            console.log("Fetching all users since user is app admin");
+            logger.info("Fetching all users since user is app admin", {
+                userId: req.session.user?._id,
+                userRole: req.session.user?.role,
+                operation: 'fetch_all_users'
+            });
             returnedUsers = await User.find().select('username email role company ppURL _id initialUser appAdmin usedRegisterKey');
         } else {
-            console.log("Fetching users with companies since user is not app admin");
+            logger.info("Fetching users with companies since user is not app admin", {
+                userId: req.session.user?._id,
+                userRole: req.session.user?.role,
+                company: userCompany,
+                operation: 'fetch_company_users'
+            });
             returnedUsers = await User.find({
                 $or: [
                     { company: userCompany },
@@ -43,18 +61,30 @@ router.get('/allUsers', async (req, res) => {
             company: req.session.user.company
         }
 
-        console.log("Returning users:", returnedUsers);
-        console.log("Returning own user:", ownUser);
+        logger.info("Returning users data", {
+            userId: req.session.user?._id,
+            userCount: returnedUsers.length,
+            operation: 'get_all_users'
+        });
 
         res.json({allUsers: returnedUsers, ownUser: ownUser})
     }
     catch (error) {
-        console.error("Error occurred during admin initialization:", error);
+        logger.error("Error occurred during fetching users", error, {
+            userId: req.session.user?._id,
+            operation: 'get_all_users'
+        });
+        res.status(500).json({ message: 'An error occurred while fetching users' });
     }
 })
 
 router.put('/updateUser', isAuthorizedUpdating, async (req, res) => {
-    console.log("updateUser endpoint hit");
+    logger.request(req, "updateUser endpoint hit", {
+        userId: req.session.user?._id,
+        userRole: req.session.user?.role,
+        targetUserId: req.body.submittedData?.id,
+        operation: 'update_user'
+    });
     try {
         const { id, username, email, ppURL, shouldChangePassword, password, role, company, appAdmin } = req.body.submittedData;
         const userRole = req.session.user.role;
@@ -131,16 +161,30 @@ router.put('/updateUser', isAuthorizedUpdating, async (req, res) => {
 
         res.status(200).json({ message: 'User updated successfully', user: updatedUser });
     } catch (error) {
-        console.error("An error occurred while updating the user:", error);
+        logger.error("An error occurred while updating the user", error, {
+            userId: req.session.user?._id,
+            targetUserId: req.body.submittedData?.id,
+            operation: 'update_user'
+        });
         return res.status(500).json({ message: 'An error occurred while updating the user', error: error.message });
     }
 });
 
-router.delete('/deleteUser', isAuthorizedDeleting,  async (req, res) => {
-    console.log("deleteUser endpoint hit");
+router.delete('/deleteUser', isAuthorizedDeleting, async (req, res) => {
+    logger.request(req, "deleteUser endpoint hit", {
+        userId: req.session.user?._id,
+        userRole: req.session.user?.role,
+        targetUserId: req.body.user?._id,
+        operation: 'delete_user'
+    });
     try {
         const user = req.body.user;
-        console.log("User being deleted:", user);
+        logger.info("User being deleted", {
+            userId: req.session.user?._id,
+            targetUserId: user?._id,
+            targetUsername: user?.username,
+            operation: 'delete_user'
+        });
 
         if (!user) {
             return res.status(400).json({ message: 'User information is required' });
@@ -159,21 +203,36 @@ router.delete('/deleteUser', isAuthorizedDeleting,  async (req, res) => {
             if (req.session.user.role != "admin") {
                 req.session.destroy((err) => {
                     if (err) {
-                        console.error("Session destruction error:", err);
+                        logger.error("Session destruction error", err, {
+                            userId: req.session.user?._id,
+                            targetUserId: user?._id,
+                            operation: 'session_destroy'
+                        });
                         return res.status(500).json({ message: 'Failed to destroy session', error: err.message });
                     }
-                    console.log("Session destroyed");
+                    logger.info("Session destroyed", {
+                        userId: req.session.user?._id,
+                        operation: 'session_destroy'
+                    });
                     return res.status(200).json({ message: 'User deleted successfully. Redirecting to login...', redirect: '/login' });
                 });
             } else {
-                console.log("User deleted successfully.");
+                logger.info("User deleted successfully", {
+                    userId: req.session.user?._id,
+                    targetUserId: user?._id,
+                    operation: 'delete_user'
+                });
                 return res.status(200).json({ message: 'User deleted successfully.' });
             }
         } else {
             return res.status(500).json({ message: 'Failed to delete the user' });
         }
     } catch (error) {
-        console.error("An error occurred while deleting the user:", error);
+        logger.error("An error occurred while deleting the user", error, {
+            userId: req.session.user?._id,
+            targetUserId: user?._id,
+            operation: 'delete_user'
+        });
         return res.status(500).json({ message: 'An error occurred while deleting the user', error: error.message });
     }
 });
