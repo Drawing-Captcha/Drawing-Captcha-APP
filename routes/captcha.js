@@ -27,8 +27,12 @@ const Company = require('../models/Company.js');
 router.post('/reload', (req, res) => {
     const session = sanitize(req.body.session);
     if (session && session.uniqueFileName) {
-        req.session.uniqueFileName = xss(session.uniqueFileName);
-        deleteFile.deleteFile(`./tmpimg/${req.session.uniqueFileName}`);
+        const resolvedPath = path.resolve(`./tmpimg/${session.uniqueFileName}`);
+        if (resolvedPath.startsWith(__dirname + '/tmpimg')) {
+            deleteFile.deleteFile(resolvedPath);
+        } else {
+            console.error("Path traversal attempt detected:", resolvedPath);
+        }
     }
 });
 
