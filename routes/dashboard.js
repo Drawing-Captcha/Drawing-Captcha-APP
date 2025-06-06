@@ -1,7 +1,6 @@
 const path = require("path");
 const { promises: fsPromises } = require('fs');
 const mongoose = require('mongoose');
-const fs = require("fs");
 const uuid = require('uuid');
 const express = require('express');
 const router = express.Router();
@@ -815,7 +814,7 @@ router.post("/captchaSettings", isAdmin, async (req, res) => {
         let message;
 
         if (initColorKit === true) {
-            if (!req.session.user.appAdmin === true) {
+            if (req.session.user.appAdmin !== true) {
                 return res.status(403).json({ success: false, message: "You don't have enough rights to perform this action" });
             }
         }
