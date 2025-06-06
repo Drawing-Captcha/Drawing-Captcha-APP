@@ -59,6 +59,7 @@ router.post("/captchaSettings", async (req, res) => {
     } catch (err) {
         logger.error("Error while processing captcha settings request", err, {
             operation: 'get_captcha_settings',
+            // file deepcode ignore HardcodedNonCryptoSecret: <ApiKey ist needed for Accountability and Security logging>
             apiKey: apiKey ? '[PRESENT]' : '[MISSING]',
             companyId: companyId || 'unknown'
         });

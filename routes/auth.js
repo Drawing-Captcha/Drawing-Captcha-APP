@@ -16,7 +16,7 @@ const emailService = process.env.EMAIL_SERVICE;
 let basicAuth = process.env.BASIC_AUTH === undefined || process.env.BASIC_AUTH === null ? true : process.env.BASIC_AUTH == 'true' ?? true;
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
-
+const xss = require('xss');
 
 if (basicAuth) {
     router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
@@ -72,10 +72,10 @@ if (basicAuth) {
 router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
         const { username, email, password, registerKey } = {
-            username: sanitizeInput(req.body.username),
-            email: sanitizeInput(req.body.email),
-            password: sanitizeInput(req.body.password),
-            registerKey: sanitizeInput(req.body.registerKey)
+            username: xss(sanitizeInput(req.body.username)),
+            email: xss(sanitizeInput(req.body.email)),
+            password: xss(sanitizeInput(req.body.password)),
+            registerKey: xss(sanitizeInput(req.body.registerKey))
         };
 
         const registerKeyDB = await registerKeyModel.findOne({ RegisterKey: registerKey });
@@ -86,7 +86,6 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
 
         const returnedKey = registerKeyDB.RegisterKey;
         const companyKeyId = registerKeyDB.Company;
-
 
         req.session.RegisterMessage = "";
 
@@ -109,12 +108,12 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
 
             if (emailService) {
                 const token = generateEmailConfirmationToken();
-                const confirmationLink = `http://${req.headers.host}/confirm-email?token=${token}`;
+                const confirmationLink = `http://${xss(req.headers.host)}/confirm-email?token=${token}`;
                 let emailConfirmationToken = token;
 
                 let subject = 'Drawing-Captcha | Email Confirmation';
                 let text = `Please click the following link to confirm your email address: ${confirmationLink}`;
-                let html = `<div style="width: 100%; height: fit-content; display: flex; align-items: center; justify-content: center;"><img src="https://docs.drawing-captcha.com/media/3yih32u5/drawing-captcha_small.png?width=240&v=1db77deb55dccb0" styles="width: 100px; height: 100px;"></div><h1>Confirm your Email for ${req.headers.host} Drawing Captcha App</h1><p>Please click the following link to confirm your email address: <a href="${confirmationLink}">Confirm Email here</a></p>`;
+                let html = `<div style="width: 100%; height: fit-content; display: flex; align-items: center; justify-content: center;"><img src="https://docs.drawing-captcha.com/media/3yih32u5/drawing-captcha_small.png?width=240&v=1db77deb55dccb0" style="width: 100px; height: 100px;"></div><h1>Confirm your Email for ${xss(req.headers.host)} Drawing Captcha App</h1><p>Please click the following link to confirm your email address: <a href="${confirmationLink}">Confirm Email here</a></p>`;
 
                 await sendEmail(subject, text, html, email);
 
