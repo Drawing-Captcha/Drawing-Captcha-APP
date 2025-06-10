@@ -22,6 +22,7 @@ const isRelatedToCompany = require("../services/companyRelationMiddleware.js")
 const proofRegexOrigins = require("../services/proofRegexOrigins.js")
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
+const sanitizeInput = require("../services/sanitizeInput.js")
 
 router.get('/getElements', async (req, res) => {
     const startTime = Date.now();
@@ -148,10 +149,11 @@ router.get('/getElements/notCategorized', isAppAdmin, async (req, res) => {
 
 router.put("/crud", notReadOnly, async (req, res) => {
     const startTime = Date.now();
+    const isDelete = sanitizeInput(req.body.isDelete);
     logger.request(req, "Dashboard CRUD operation", {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
-        operation: req.body.isDelete ? 'dashboard_delete_item' : 'dashboard_update_item',
+        operation: isDelete ? 'dashboard_delete_item' : 'dashboard_update_item',
         itemCount: req.body.tmpPool?.length || 0
     });
     
@@ -159,7 +161,7 @@ router.put("/crud", notReadOnly, async (req, res) => {
     let globalDeletedBin = await initializeBin();
     
     let deletedObject;
-    let tmpPool = req.body.tmpPool;
+    let tmpPool = sanitizeInput(req.body.tmpPool);
     let companyId = tmpPool[0].companies[0];
     let index;
     
@@ -168,14 +170,14 @@ router.put("/crud", notReadOnly, async (req, res) => {
             userId: req.session.user?._id,
             userRole: req.session.user?.role,
             companyId: companyId,
-            operation: req.body.isDelete ? 'dashboard_delete_unauthorized' : 'dashboard_update_unauthorized'
+            operation: isDelete ? 'dashboard_delete_unauthorized' : 'dashboard_update_unauthorized'
         });
         return res.status(401).json({ message: "Unauthorized" });
     }
     
     logger.info("Processing dashboard CRUD operation", {
         userId: req.session.user?._id,
-        isDelete: req.body.isDelete,
+        isDelete: isDelete,
         itemId: tmpPool[0]?.ID,
         companyId: companyId,
         operation: 'dashboard_crud_process'
@@ -275,7 +277,7 @@ router.put("/crud", notReadOnly, async (req, res) => {
         const duration = Date.now() - startTime;
         logger.info("CRUD operation completed successfully", {
             userId: req.session.user?._id,
-            operation: req.body.isDelete ? 'dashboard_delete_success' : 'dashboard_update_success',
+            operation: isDelete ? 'dashboard_delete_success' : 'dashboard_update_success',
             duration: `${duration}ms`
         });
     } else {
@@ -289,7 +291,7 @@ router.put("/crud", notReadOnly, async (req, res) => {
     }
     res.json({ isGood });
 });
-
+n 
 
 // file deepcode ignore NoRateLimitingForExpensiveWebOperation: <rate limiting is handled by the dashboardLimiter middleware in app.js>
 router.get('/deletedArchive', (req, res) => {
@@ -317,7 +319,7 @@ router.put('/deletedArchive', notReadOnly, async (req, res) => {
     let globalDeletedBin = await initializeBin();
 
     let deletedObject;
-    let tmpPool = req.body.tmpPool;
+    let tmpPool = sanitizeInput(req.body.tmpPool);
     let companyId = tmpPool[0].companies[0];
     let index;
 
@@ -593,7 +595,6 @@ router.post("/apiKey/deleteAll", isAppAdmin, async (req, res) => {
         else {
             deleteAll = "No existing Keys"
         }
-
     }
     catch (err) {
         deleteAll = "The deletion of all API keys has failed."
@@ -992,7 +993,7 @@ router.post('/newValidation', notReadOnly, async (req, res) => {
         isValid = true;
 
         const MaxTolerance = (validateMaxCubes.length * 1) / validateTrueCubes.length;
-        // file deepcode ignore HTTPSourceWithUncheckedType: <please specify a reason of ignoring this>
+        // file deepcode ignore HTTPSourceWithUncheckedType: <we validate the data before using it>
         const MinTolerance = (validateMinCubes.length * 1) / validateTrueCubes.length;
 
         const captchaData = {
