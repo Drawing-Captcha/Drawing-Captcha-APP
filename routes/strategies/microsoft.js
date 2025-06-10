@@ -67,7 +67,7 @@ if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
   router.get('/callback',
     passport.authenticate('microsoft', { failureRedirect: '/login?error=auth_conflict' }), csrfMiddleware.generateCSRFToken,
     function (req, res) {
-      req.session.user = sanitizeInput(req.user);
+      req.session.user = req.user;
       req.session.isAuth = true;
       res.redirect('/');
     }

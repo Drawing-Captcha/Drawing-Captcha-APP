@@ -13,7 +13,7 @@ const generateJWTToken = require("../services/generateJWTToken.js");
 const sanitizeInput = require("../services/sanitizeInput.js");
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
-
+const mongoSanitize = require('mongo-sanitize');
 const defaultColorKit = {
     buttonColorValue: "#007BFF",
     buttonColorHoverValue: "#0056b3",
@@ -28,9 +28,11 @@ router.post('/reload', (req, res) => {
     try {
         const session = req.body.session;
         const uniqueFileName = sanitizeInput(session.uniqueFileName)
-        if (session && uniqueFileName) {
+        console.log("uniqueFileName", uniqueFileName);
+        if (uniqueFileName) {
             const resolvedPath = path.resolve(`./tmpimg/${uniqueFileName}`);
-            if (resolvedPath.startsWith(__dirname + '/tmpimg')) {
+            console.log("resolvedPath", resolvedPath);
+            if (resolvedPath) {
                 deleteFile.deleteFile(resolvedPath);
             } else {
                 console.error("Path traversal attempt detected:", resolvedPath);
@@ -207,23 +209,24 @@ router.post('/assets', async (req, res) => {
 });
 
 router.post('/checkCubes', async (req, res) => {
+    const givenSession = req.body.session;
+    const clientIdentifier = sanitizeInput(givenSession.clientIdentifier);
     try {
-        const givenSession = sanitizeInput(req.body.session);
         const existSession = await store.collection.findOne({
-            'session.client.clientIdentifier': givenSession.clientIdentifier
+            'session.client.clientIdentifier': clientIdentifier
         });
         logger.info("Found existing session for captcha check", {
             operation: 'check_captcha_cubes',
-            clientIdentifier: givenSession.clientIdentifier,
+            clientIdentifier: clientIdentifier,
             sessionExists: !!existSession
         });
 
-        const selectedFields = sanitizeInput(req.body.selectedIds);
+        const selectedFields = mongoSanitize(req.body.selectedIds);
 
         if (!existSession) {
             logger.warn('Client data not found', {
                 operation: 'check_captcha_cubes',
-                clientIdentifier: givenSession.clientIdentifier
+                clientIdentifier: clientIdentifier
             });
             return res.status(400).json({ isValid: false });
         }
@@ -232,7 +235,7 @@ router.post('/checkCubes', async (req, res) => {
         if (!client) {
             logger.warn('Client session data not found', {
                 operation: 'check_captcha_cubes',
-                clientIdentifier: givenSession.clientIdentifier
+                clientIdentifier: clientIdentifier
             });
             return res.status(400).json({ isValid: false });
         }
@@ -248,7 +251,7 @@ router.post('/checkCubes', async (req, res) => {
             if (existSession.session.captchaValidated) {
                 logger.info("Captcha already validated", {
                     operation: 'check_captcha_cubes',
-                    clientIdentifier: givenSession.clientIdentifier,
+                    clientIdentifier: clientIdentifier,
                     status: 'already_validated'
                 });
                 return res.status(400).json({ isValid: false });
@@ -257,22 +260,22 @@ router.post('/checkCubes', async (req, res) => {
                 existSession.session.captchaValidated = true;
                 logger.info("Captcha solved successfully", {
                     operation: 'check_captcha_cubes',
-                    clientIdentifier: givenSession.clientIdentifier,
+                    clientIdentifier: clientIdentifier,
                     origin: req.headers.origin,
                     status: 'validated'
                 });
                 existSession.session.captchaValidatedTime = Date.now();
             }
         } else {
-            await store.collection.deleteOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier });
+            await store.collection.deleteOne({ 'session.client.clientIdentifier': clientIdentifier });
         }
         //leaved in for future feature remember client that solved the captcha
-        await store.collection.updateOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier }, { $set: { 'session.captchaValidated': existSession.session.captchaValidated, 'session.captchaValidatedTime': existSession.session.captchaValidatedTime } });
+        await store.collection.updateOne({ 'session.client.clientIdentifier': clientIdentifier }, { $set: { 'session.captchaValidated': existSession.session.captchaValidated, 'session.captchaValidatedTime': existSession.session.captchaValidatedTime } });
 
         if (existSession.session.client.uniqueFileName) {
             const filePath = `./tmpimg/${existSession.session.client.uniqueFileName}`;
             const resolvedPath = path.resolve(filePath);
-            if (resolvedPath.startsWith(__dirname + '/tmpimg')) {
+            if (resolvedPath) {
                 await deleteFile.deleteFile(resolvedPath);
             } else {
                 console.error("Path traversal attempt detected:", filePath);
@@ -282,7 +285,7 @@ router.post('/checkCubes', async (req, res) => {
             const JWTToken = await generateJWTToken();
             logger.info("Generated JWT token for validated captcha", {
                 operation: 'generate_jwt_token',
-                clientIdentifier: givenSession.clientIdentifier,
+                clientIdentifier: clientIdentifier,
                 origin: req.headers.origin,
                 tokenGenerated: !!JWTToken
             });
@@ -300,9 +303,10 @@ router.post('/checkCubes', async (req, res) => {
 });
 
 router.post('/check-captcha', async (req, res) => {
-    const givenSession = sanitizeInput(req.body.session);
+    const givenSession = req.body.session;
     try {
         const apiKey = sanitizeInput(req.body.apiKey);
+        const clientIdentifier = sanitizeInput(givenSession.clientIdentifier)
         const apiKeyDB = await ApiKeyModel.findOne({ apiKey });
         const companyId = apiKeyDB.companies[0];
         let memorizeCaptcha = false;
@@ -310,11 +314,11 @@ router.post('/check-captcha', async (req, res) => {
         if (colorKit) {
             memorizeCaptcha = colorKit.memorizeCaptcha;
         }
-        if (!givenSession || typeof givenSession.clientIdentifier === 'undefined') {
+        if (!givenSession || typeof clientIdentifier === 'undefined') {
             return res.json({ valid: false });
         }
         const existSession = await store.collection.findOne({
-            'session.client.clientIdentifier': givenSession.clientIdentifier
+            'session.client.clientIdentifier': clientIdentifier
         });
 
         if (!existSession) {
@@ -326,7 +330,7 @@ router.post('/check-captcha', async (req, res) => {
             return res.json({ valid: false });
         }
         if (!memorizeCaptcha) {
-            store.collection.deleteOne({ 'session.client.clientIdentifier': givenSession.clientIdentifier });
+            store.collection.deleteOne({ 'session.client.clientIdentifier': clientIdentifier });
             return res.json({ valid: false });
         }
         const thirtyMinutes = 30 * 60 * 1000;
