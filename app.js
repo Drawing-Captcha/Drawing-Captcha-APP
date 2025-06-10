@@ -68,9 +68,6 @@ if (!fs.existsSync(logsDir)) {
     logger.info('Created logs directory');
 }
 
-const httpLogger = require('./middlewares/httpLogger');
-app.use(httpLogger);
-
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static("public"));
@@ -170,7 +167,6 @@ app.use((err, req, res, next) => {
         error: 'An unexpected error occurred'
     });
 });
-
 
 app.listen(port, async () => {
     try {
