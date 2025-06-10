@@ -11,7 +11,7 @@ const xss = require('xss');
 
 // file deepcode ignore NoRateLimitingForExpensiveWebOperation: <is being handled by the emailConfirmationLimiter middleware in app.js>
 router.get('/', async (req, res) => {
-    let { token } = req.query;
+    let { token } = sanitizeInput(req.query);
     token = sanitizeInput(token);
     try {
         const user = await User.findOne({ emailConfirmationToken: token });
@@ -30,8 +30,7 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', csrfMiddleware.validateCSRFToken, async (req, res) => {
-    let { email } = req.body;
-    email = xss(sanitizeInput(email));
+    let email = sanitizeInput(req.body.email);
     try {
         if (isValidEmail(email) === false) {
             req.session.ResendMailMessage = "Invalid email address.";
