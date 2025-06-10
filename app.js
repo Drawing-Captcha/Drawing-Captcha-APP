@@ -29,6 +29,7 @@ const rateLimit = require("express-rate-limit");
 const port = process.env.PORT;
 const hasEnteredRegisterKey = require("./middlewares/hasEnteredRegisterKey.js");
 const cleanTokens = require("./crons/cleanTokens.js");
+const {authLimiter, tokenLimiter, captchaLimiter, testLimiter, dashboardLimiter, socialAuthLimiter} = require("./middlewares/rateLimiter.js")
 createDirectory()
 connectDB()
 createInitCaptcha()
@@ -85,49 +86,7 @@ app.use(helmet({
 }))
 const csrfProtection = csrf({ cookie: true });
 
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 40,
-    message: "Too Many Request's try later again",
-    delayMs: 1000
-});
-const tokenLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 50,
-    message: "Too Many Request's try later again"
-});
-const captchaLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: "Too Many Request's try later again"
-});
-const testLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: "Too Many Request's try later again"
-});
-const dashboardLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: "Too Many Request's try later again",
-    delayMs: 2000,
-    headers: true
-});
-const socialAuthLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, 
-    max: 30, 
-    message: "Too Many Request's try later again"
-});
-const emailConfirmationLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
-    message: "Too Many Request's try later again"
-});
-const siteVerifyLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    max: 10,
-    message: "Too Many Request's try later again"
-});
+
 
 app.use(cors({
     origin: async function (origin, callback) {
