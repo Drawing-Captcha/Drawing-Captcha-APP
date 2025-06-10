@@ -25,11 +25,10 @@ require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 const cleanSessions = require("./crons/cleanSessions.js");
 const store = require("./models/store.js")
 const csrfMiddleware = require("./middlewares/csurfMiddleware.js")
-const rateLimit = require("express-rate-limit");
 const port = process.env.PORT;
 const hasEnteredRegisterKey = require("./middlewares/hasEnteredRegisterKey.js");
 const cleanTokens = require("./crons/cleanTokens.js");
-const {authLimiter, tokenLimiter, captchaLimiter, testLimiter, dashboardLimiter, socialAuthLimiter} = require("./middlewares/rateLimiter.js")
+const {authLimiter, tokenLimiter, captchaLimiter, testLimiter, dashboardLimiter, socialAuthLimiter, emailConfirmationLimiter, siteVerifyLimiter} = require("./middlewares/rateLimiter.js")
 createDirectory()
 connectDB()
 createInitCaptcha()
@@ -85,8 +84,6 @@ app.use(helmet({
     crossOriginResourcePolicy: false
 }))
 const csrfProtection = csrf({ cookie: true });
-
-
 
 app.use(cors({
     origin: async function (origin, callback) {
