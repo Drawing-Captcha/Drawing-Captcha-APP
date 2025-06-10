@@ -16,16 +16,15 @@ const emailService = process.env.EMAIL_SERVICE;
 let basicAuth = process.env.BASIC_AUTH === undefined || process.env.BASIC_AUTH === null ? true : process.env.BASIC_AUTH == 'true' ?? true;
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
-const xss = require('xss');
 
 if (basicAuth) {
     router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
         try {
-            const { email, password } = req.body;
-            const cleanedMail = sanitizeInput(email);
+            const email = sanitizeInput(req.body.email);
+            const password = sanitizeInput(req.body.password);
             let user = null;
-            if (isValidEmail(cleanedMail)) {
-                user = await UserModel.findOne({ email: cleanedMail });
+            if (isValidEmail(email)) {
+                user = await UserModel.findOne({ email: email });
             }
             if (!user) {
                 req.session.message = "Incorrect username or password.";
@@ -62,7 +61,7 @@ if (basicAuth) {
         } catch (error) {
             logger.error("Error during login process", error, {
                 operation: 'login',
-                email: req.body.email
+                email: sanitizeInput(req.body.email)
             });
             res.status(500).json({ message: 'An internal server error occurred.' });
         }
@@ -72,10 +71,10 @@ if (basicAuth) {
 router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
         const { username, email, password, registerKey } = {
-            username: xss(sanitizeInput(req.body.username)),
-            email: xss(sanitizeInput(req.body.email)),
-            password: xss(sanitizeInput(req.body.password)),
-            registerKey: xss(sanitizeInput(req.body.registerKey))
+            username: sanitizeInput(req.body.username),
+            email: sanitizeInput(req.body.email),
+            password: sanitizeInput(req.body.password),
+            registerKey: sanitizeInput(req.body.registerKey)
         };
 
         const registerKeyDB = await registerKeyModel.findOne({ RegisterKey: registerKey });
@@ -154,8 +153,8 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
     } catch (error) {
         logger.error("Error occurred during registration", error, {
             operation: 'register',
-            username: req.body.username,
-            email: req.body.email
+            username: sanitizeInput(req.body.username),
+            email: sanitizeInput(req.body.email)
         });
         req.session.RegisterMessage = "An error occurred during registration. Please try again.";
         res.status(500).redirect('/register');
