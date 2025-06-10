@@ -25,15 +25,28 @@ const ApiKeyModel = require("../models/ApiKey.js");
 const Company = require('../models/Company.js');
 
 router.post('/reload', (req, res) => {
-    const session = sanitizeInput(req.body.session);
-    if (session && session.uniqueFileName) {
-        const resolvedPath = path.resolve(`./tmpimg/${session.uniqueFileName}`);
-        if (resolvedPath.startsWith(__dirname + '/tmpimg')) {
-            deleteFile.deleteFile(resolvedPath);
-        } else {
-            console.error("Path traversal attempt detected:", resolvedPath);
+    try {
+        const session = req.body.session;
+        const uniqueFileName = sanitizeInput(session.uniqueFileName)
+        if (session && uniqueFileName) {
+            const resolvedPath = path.resolve(`./tmpimg/${uniqueFileName}`);
+            if (resolvedPath.startsWith(__dirname + '/tmpimg')) {
+                deleteFile.deleteFile(resolvedPath);
+            } else {
+                console.error("Path traversal attempt detected:", resolvedPath);
+            }
         }
+    } catch (err) {
+        logger.error("Error while reloading captcha", {
+            message: err,
+            stack: err.stack,
+            name: err.name,
+            path: req.originalUrl,
+        });
+
+        res.status(500).json({ message: "Error while reloading captcha" });
     }
+
 });
 
 router.post("/captchaSettings", async (req, res) => {
@@ -68,21 +81,21 @@ router.post("/captchaSettings", async (req, res) => {
 // file deepcode ignore NoRateLimitingForExpensiveWebOperation: <is being handled by the captchaLimiter middleware in app.js>
 router.post('/assets', async (req, res) => {
     let globalPool = await initializePool();
+    let captchaIdentifier = uuid.v4();
     try {
-        let captchaIdentifier = uuid.v4();
         let selectedApiKey = await ApiKeyModel.findOne({ apiKey: sanitizeInput(req.body.apiKey) });
         let tmpContent = [];
         let uniqueFileName;
         let savePath;
         let finishedURL;
 
-        const session = sanitizeInput(req.body.session);
+        const session = req.body.session;
         if (session) {
             req.session.client = {
-                clientIdentifier: session.clientIdentifier,
-                authMethod: session.authMethod,
+                clientIdentifier: sanitizeInput(session.clientIdentifier),
+                authMethod: sanitizeInput(session.authMethod),
                 clientSpecificData: session.clientSpecificData,
-                uniqueFileName: session.uniqueFileName
+                uniqueFileName: sanitizeInput(session.uniqueFileName)
             };
         } else {
             req.session.client = {
@@ -287,8 +300,8 @@ router.post('/checkCubes', async (req, res) => {
 });
 
 router.post('/check-captcha', async (req, res) => {
+    const givenSession = sanitizeInput(req.body.session);
     try {
-        const givenSession = sanitizeInput(req.body.session);
         const apiKey = sanitizeInput(req.body.apiKey);
         const apiKeyDB = await ApiKeyModel.findOne({ apiKey });
         const companyId = apiKeyDB.companies[0];

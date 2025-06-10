@@ -13,8 +13,8 @@ const levels = {
 
 // Define log level based on environment
 const level = () => {
-  const env = process.env.NODE_ENV || 'development';
-  return env === 'development' ? 'debug' : 'info';
+  const env = process.env.NODE_ENV || 'DEVELOPMENT';
+  return env === 'DEVELOPMENT' ? 'debug' : 'info';
 };
 
 // Define custom colors for each log level
@@ -33,14 +33,19 @@ winston.addColors(colors);
 const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
+  winston.format.errors({ stack: true }), // Stacktrace wird hinzugefügt
   winston.format.printf(
-    (info) => `${info.timestamp} ${info.level}: ${info.message}`
+    (info) => {
+      const stack = info.stack ? `\n${info.stack}` : ''; // Stacktrace anhängen, falls vorhanden
+      return `${info.timestamp} ${info.level}: ${info.message}${stack}`;
+    }
   )
 );
 
 // Custom format for file logs (JSON)
 const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
+  winston.format.errors({ stack: true }), // Stacktrace wird hinzugefügt
   winston.format.json()
 );
 
@@ -92,5 +97,15 @@ logger.requestContext = (req) => {
   };
 };
 
-module.exports = logger;
+// Helper function to log errors with context
+logger.errorWithContext = (message, error, req) => {
+  const context = logger.requestContext(req);
+  logger.error(message, {
+    ...context,
+    message: error.message,
+    stack: error.stack,
+    name: error.name,
+  });
+};
 
+module.exports = logger;

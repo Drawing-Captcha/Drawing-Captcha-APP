@@ -203,18 +203,18 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
     logger.error('Unhandled error:', { 
-        error: err.message, 
-        stack: err.stack,
-        path: req.originalUrl,
-        ip: req.ip,
+        error: err.message || 'No error message',       
+        path: req.originalUrl, 
+        ip: req.ip, 
         method: req.method,
-        requestId: req.id
     });
+    
     res.status(500).json({
         message: 'Internal Server Error',
         error: 'An unexpected error occurred'
     });
-})
+});
+
 
 app.listen(port, async () => {
     try {
