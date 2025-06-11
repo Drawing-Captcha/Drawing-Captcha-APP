@@ -9,7 +9,6 @@ const isAuth = (req, res, next) => {
             session: req.session,
             url: req.originalUrl,
             method: req.method,
-            ip: req.ip,
             userAgent: req.get('User-Agent')
         });
         res.status(302).redirect("/login");

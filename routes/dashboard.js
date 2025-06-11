@@ -22,7 +22,8 @@ const isRelatedToCompany = require("../services/companyRelationMiddleware.js")
 const proofRegexOrigins = require("../services/proofRegexOrigins.js")
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
-const sanitizeInput = require("../services/sanitizeInput.js")
+const sanitizeInput = require("../services/sanitizeInput.js");
+const { error } = require("console");
 
 router.get('/getElements', async (req, res) => {
     const startTime = Date.now();
@@ -32,13 +33,12 @@ router.get('/getElements', async (req, res) => {
         isAppAdmin: req.session.user?.appAdmin,
         operation: 'dashboard_get_elements'
     });
-    
     try {
         let globalPool = await initializePool()
         let userRole = req.session.user.role;
         let appAdmin = req.session.user.appAdmin;
         let returnedPool
-        
+
         if (globalPool) {
             if (appAdmin) {
                 logger.info("Admin user accessing all elements", {
@@ -56,7 +56,7 @@ router.get('/getElements', async (req, res) => {
                     userCompany: req.session.user?.company,
                     operation: 'dashboard_get_elements_filtered'
                 });
-                
+
                 globalPool.forEach(item => {
                     if (item.initialCaptcha === true || item.companies.some(company => req.session.user.company === company)) {
                         returnedPool.push(item)
@@ -69,7 +69,7 @@ router.get('/getElements', async (req, res) => {
                 operation: 'dashboard_get_elements_pool_missing'
             });
         }
-        
+
         const duration = Date.now() - startTime;
         logger.info("Elements retrieved successfully", {
             userId: req.session.user?._id,
@@ -79,7 +79,7 @@ router.get('/getElements', async (req, res) => {
             duration: `${duration}ms`,
             operation: 'dashboard_get_elements_success'
         });
-        
+
         res.json({ globalPool: returnedPool, userRole, appAdmin: req.session.user.appAdmin });
     } catch (error) {
         logger.error("Error retrieving dashboard elements", error, {
@@ -99,12 +99,12 @@ router.get('/getElements/notCategorized', isAppAdmin, async (req, res) => {
         isAppAdmin: req.session.user?.appAdmin,
         operation: 'dashboard_get_uncategorized'
     });
-    
+
     try {
         let globalPool = await initializePool()
         let userRole = req.session.user.role;
         let returnedPool
-        
+
         if (globalPool) {
             returnedPool = []
             globalPool.forEach(item => {
@@ -125,7 +125,7 @@ router.get('/getElements/notCategorized', isAppAdmin, async (req, res) => {
                 operation: 'dashboard_get_uncategorized_pool_missing'
             });
         }
-        
+
         const duration = Date.now() - startTime;
         logger.info("Uncategorized elements request completed", {
             userId: req.session.user?._id,
@@ -134,7 +134,7 @@ router.get('/getElements/notCategorized', isAppAdmin, async (req, res) => {
             duration: `${duration}ms`,
             operation: 'dashboard_get_uncategorized_success'
         });
-        
+
         res.json({ globalPool: returnedPool, userRole });
     } catch (error) {
         logger.error("Error retrieving uncategorized dashboard elements", error, {
@@ -146,156 +146,171 @@ router.get('/getElements/notCategorized', isAppAdmin, async (req, res) => {
     }
 });
 
-
 router.put("/crud", notReadOnly, async (req, res) => {
-    const startTime = Date.now();
-    const isDelete = sanitizeInput(req.body.isDelete);
-    logger.request(req, "Dashboard CRUD operation", {
-        userId: req.session.user?._id,
-        userRole: req.session.user?.role,
-        operation: isDelete ? 'dashboard_delete_item' : 'dashboard_update_item',
-        itemCount: req.body.tmpPool?.length || 0
-    });
-    
-    let globalPool = await initializePool();
-    let globalDeletedBin = await initializeBin();
-    
-    let deletedObject;
-    let tmpPool = sanitizeInput(req.body.tmpPool);
-    let companyId = tmpPool[0].companies[0];
-    let index;
-    
-    if (!isRelatedToCompany(req, companyId)) {
-        logger.warn("Unauthorized CRUD operation attempt", {
-            userId: req.session.user?._id,
-            userRole: req.session.user?.role,
-            companyId: companyId,
-            operation: isDelete ? 'dashboard_delete_unauthorized' : 'dashboard_update_unauthorized'
-        });
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-    
-    logger.info("Processing dashboard CRUD operation", {
-        userId: req.session.user?._id,
-        isDelete: isDelete,
-        itemId: tmpPool[0]?.ID,
-        companyId: companyId,
-        operation: 'dashboard_crud_process'
-    });
+    try {
+        let isGood;
+        const isDelete = req.body.isDelete;
+        const startTime = Date.now();
 
-    if (Array.isArray(tmpPool)) {
-        tmpPool.forEach(x => {
-            index = globalPool.findIndex(b => b.ID === x.ID);
-        });
+        let globalPool = await initializePool();
+        let globalDeletedBin = await initializeBin();
 
-        if (req.body.isDelete) {
-            deletedObject = globalPool.splice(index, 1)[0];
-            logger.info("Item deleted from pool", {
-                userId: req.session.user?._id,
-                itemId: deletedObject?.ID,
-                itemName: deletedObject?.Name,
-                companyId: companyId,
-                operation: 'dashboard_delete_item'
-            });
-            logger.debug("Pool state after deletion", {
-                userId: req.session.user?._id,
-                poolSize: globalPool.length,
-                operation: 'dashboard_delete_item_pool_update'
-            });
+        let deletedObject;
+        let tmpPool = req.body.tmpPool;
 
-            globalDeletedBin.push(deletedObject);
-
-            try {
-                const found = await CaptchaModel.findOne({ ID: deletedObject.ID });
-
-                if (found) {
-                    await CaptchaModel.deleteOne({ ID: deletedObject.ID });
-
-                    const deletedCaptcha = new DeletedCaptchaModel({
-                        ...deletedObject.toObject(),
-                        _id: new mongoose.Types.ObjectId(),
-                    });
-
-                    await deletedCaptcha.save();
-                    logger.info('Data added to deleted bin in MongoDB', {
-                        userId: req.session.user?._id,
-                        itemId: deletedObject?.ID,
-                        operation: 'dashboard_add_to_deleted_bin'
-                    });
-                } else {
-                    logger.error('Document not found in Captcha collection', null, {
-                        userId: req.session.user?._id,
-                        itemId: deletedObject?.ID,
-                        operation: 'dashboard_delete_not_found'
-                    });
-                }
-            } catch (err) {
-                logger.error('Error saving to deleted bin in MongoDB', err, {
-                    userId: req.session.user?._id,
-                    itemId: deletedObject?.ID,
-                    operation: 'dashboard_add_to_deleted_bin_error'
-                });
-            }
-        } else {
-            logger.info("Updating item with companies", {
-                userId: req.session.user?._id,
-                itemId: tmpPool[0]?.ID,
-                itemName: tmpPool[0]?.Name,
-                companies: tmpPool[0]?.companies,
-                operation: 'dashboard_update_item'
-            });
-            let updatedCaptcha = {
-                Name: tmpPool[0].Name,
-                ValidateF: tmpPool[0].ValidateF,
-                validateMinCubes: tmpPool[0].validateMinCubes,
-                validateMaxCubes: tmpPool[0].validateMaxCubes,
-                MaxTolerance: (tmpPool[0].validateMaxCubes.length * 1) / tmpPool[0].ValidateF.length,
-                MinTolerance: (tmpPool[0].validateMinCubes.length * 1) / tmpPool[0].ValidateF.length,
-                todoTitle: tmpPool[0].todoTitle,
-                backgroundSize: tmpPool[0].backgroundSize,
-                companies: tmpPool[0].companies
-            };
-
-            try {
-                await CaptchaModel.updateOne({ ID: tmpPool[0].ID }, updatedCaptcha, { runValidators: true });
-                logger.info('Data updated in MongoDB', {
-                    userId: req.session.user?._id,
-                    itemId: tmpPool[0]?.ID,
-                    itemName: tmpPool[0]?.Name,
-                    operation: 'dashboard_update_item_success'
-                });
-            } catch (err) {
-                logger.error('Error updating data in MongoDB', err, {
-                    userId: req.session.user?._id,
-                    itemId: tmpPool[0]?.ID,
-                    operation: 'dashboard_update_item_error'
-                });
-            }
+        if (tmpPool === null || tmpPool === undefined) {
+            return res.status(400).json({ message: "Invalid request" });
         }
 
-        isGood = true;
-        const duration = Date.now() - startTime;
-        logger.info("CRUD operation completed successfully", {
+        let companyId = sanitizeInput(tmpPool[0].companies[0]);
+        let index;
+        let todoTitle = sanitizeInput(tmpPool[0].todoTitle);
+        let name = sanitizeInput(tmpPool[0].Name);
+        let id = sanitizeInput(tmpPool[0].ID);
+
+        logger.request(req, `Dashboard CRUD operation from user ${req.session.user?._id} ${isDelete ? "DELETE" : "UPDATE"} request for id ${sanitizeInput(req.body.tmpPool[0]?.ID) || "Unknown"}`, {
             userId: req.session.user?._id,
-            operation: isDelete ? 'dashboard_delete_success' : 'dashboard_update_success',
-            duration: `${duration}ms`
+            userRole: req.session.user?.role,
+            operation: isDelete ? 'dashboard_delete_item' : 'dashboard_update_item',
+            itemCount: req.body.tmpPool?.length || 0
         });
-    } else {
-        logger.error("Problem with the tmpPool array", null, {
+
+        if (!isRelatedToCompany(req, companyId)) {
+            logger.warn(`Unauthorized CRUD operation attempt from user ${req.session.user?._id} ${isDelete ? "DELETE" : "UPDATE"} request for id ${sanitizeInput(req.body.tmpPool[0]?.ID) || "Unknown"}`, {
+                userId: req.session.user?._id,
+                userRole: req.session.user?.role,
+                companyId: companyId,
+                operation: isDelete ? 'dashboard_delete_unauthorized' : 'dashboard_update_unauthorized'
+            });
+            return res.status(401).json({ message: "Unauthorized", error: "Unauthorized" });
+        }
+
+        logger.info("Processing dashboard CRUD operation", {
             userId: req.session.user?._id,
-            operation: 'dashboard_crud_array_error',
-            tmpPoolType: typeof tmpPool,
-            isArray: Array.isArray(tmpPool)
+            isDelete: isDelete,
+            itemId: tmpPool[0]?.ID,
+            companyId: companyId,
+            operation: 'dashboard_crud_process'
         });
-        isGood = false;
+
+        if (Array.isArray(tmpPool)) {
+            tmpPool.forEach(x => {
+                index = globalPool.findIndex(b => b.ID === x.ID);
+            });
+
+            if (req.body.isDelete) {
+                deletedObject = globalPool.splice(index, 1)[0];
+                logger.info("Item deleted from pool", {
+                    userId: req.session.user?._id,
+                    itemId: deletedObject?.ID,
+                    itemName: deletedObject?.Name,
+                    companyId: companyId,
+                    operation: 'dashboard_delete_item'
+                });
+                logger.debug("Pool state after deletion", {
+                    userId: req.session.user?._id,
+                    poolSize: globalPool.length,
+                    operation: 'dashboard_delete_item_pool_update'
+                });
+
+                globalDeletedBin.push(deletedObject);
+
+                try {
+                    const found = await CaptchaModel.findOne({ ID: deletedObject.ID });
+
+                    if (found) {
+                        await CaptchaModel.deleteOne({ ID: deletedObject.ID });
+
+                        const deletedCaptcha = new DeletedCaptchaModel({
+                            ...deletedObject.toObject(),
+                            _id: new mongoose.Types.ObjectId(),
+                        });
+
+                        await deletedCaptcha.save();
+                        logger.info('Data added to deleted bin in MongoDB', {
+                            userId: req.session.user?._id,
+                            itemId: deletedObject?.ID,
+                            operation: 'dashboard_add_to_deleted_bin'
+                        });
+                    } else {
+                        logger.error('Document not found in Captcha collection', null, {
+                            userId: req.session.user?._id,
+                            itemId: deletedObject?.ID,
+                            operation: 'dashboard_delete_not_found'
+                        });
+                    }
+                } catch (err) {
+                    logger.error('Error saving to deleted bin in MongoDB', err, {
+                        userId: req.session.user?._id,
+                        itemId: deletedObject?.ID,
+                        operation: 'dashboard_add_to_deleted_bin_error'
+                    });
+                }
+            } else {
+                logger.info("Updating item with companies", {
+                    userId: req.session.user?._id,
+                    itemId: id,
+                    itemName: name,
+                    companies: tmpPool[0]?.companies,
+                    operation: 'dashboard_update_item'
+                });
+                let updatedCaptcha = {
+                    Name: name,
+                    ValidateF: tmpPool[0].ValidateF,
+                    validateMinCubes: tmpPool[0].validateMinCubes,
+                    validateMaxCubes: tmpPool[0].validateMaxCubes,
+                    MaxTolerance: (tmpPool[0].validateMaxCubes.length * 1) / tmpPool[0].ValidateF.length,
+                    MinTolerance: (tmpPool[0].validateMinCubes.length * 1) / tmpPool[0].ValidateF.length,
+                    todoTitle: todoTitle,
+                    backgroundSize: tmpPool[0].backgroundSize,
+                    companies: tmpPool[0].companies
+                };
+
+                try {
+                    await CaptchaModel.updateOne({ ID: id }, updatedCaptcha, { runValidators: true });
+                    logger.info('Data updated in MongoDB', {
+                        userId: req.session.user?._id,
+                        itemId: sanitizeInput(tmpPool[0]?.ID),
+                        itemName: tmpPool[0]?.Name,
+                        operation: 'dashboard_update_item_success'
+                    });
+                } catch (err) {
+                    logger.error('Error updating data in MongoDB', err, {
+                        userId: req.session.user?._id,
+                        itemId: tmpPool[0]?.ID,
+                        operation: 'dashboard_update_item_error'
+                    });
+                }
+            }
+            isGood = true;
+            const duration = Date.now() - startTime;
+            logger.info("CRUD operation completed successfully", {
+                userId: req.session.user?._id,
+                operation: isDelete ? 'dashboard_delete_success' : 'dashboard_update_success',
+                duration: `${duration}ms`
+            });
+        } else {
+            logger.error("Problem with the tmpPool array", null, {
+                userId: req.session.user?._id,
+                operation: 'dashboard_crud_array_error',
+                tmpPoolType: typeof tmpPool,
+                isArray: Array.isArray(tmpPool)
+            });
+            isGood = false;
+        }
+        res.json({ isGood });
+    } catch (error) {
+        logger.error('Error during dashboard CRUD operation', error, {
+            userId: req.session.user?._id,
+            operation: 'dashboard_crud_error'
+        });
+        res.status(500).json({ message: 'Server error during CRUD operation' });
     }
-    res.json({ isGood });
 });
- 
 
 // file deepcode ignore NoRateLimitingForExpensiveWebOperation: <rate limiting is handled by the dashboardLimiter middleware in app.js>
 router.get('/deletedArchive', (req, res) => {
-    logger.request(req, "Access deleted archive view", {
+    logger.request(req, `Access deleted archive view from User ${req.session.user._id}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         operation: 'dashboard_view_deleted_archive'
@@ -304,7 +319,7 @@ router.get('/deletedArchive', (req, res) => {
 })
 
 router.get('/notAuthorized', (req, res) => {
-    logger.warn("User accessed unauthorized page", {
+    logger.warn(`User accessed unauthorized page from User ${req.session.user._id}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         username: req.session.user?.username,
@@ -314,13 +329,11 @@ router.get('/notAuthorized', (req, res) => {
 })
 
 router.put('/deletedArchive', notReadOnly, async (req, res) => {
-
     let globalPool = await initializePool();
     let globalDeletedBin = await initializeBin();
-
     let deletedObject;
-    let tmpPool = sanitizeInput(req.body.tmpPool);
-    let companyId = tmpPool[0].companies[0];
+    let tmpPool = req.body.tmpPool;
+    let companyId = sanitizeInput(tmpPool[0].companies[0]);
     let index;
 
     if (!isRelatedToCompany(req, companyId)) {
@@ -353,13 +366,13 @@ router.put('/deletedArchive', notReadOnly, async (req, res) => {
             deletedObject = globalDeletedBin.splice(index, 1)[0];
             try {
                 await DeletedCaptchaModel.deleteOne({ ID: deletedObject.ID });
-                logger.info('Deleted object removed from MongoDB deleted bin', {
+                logger.info(`Deleted object removed from MongoDB deleted bin USER:${req.session.user._id}, deletedObjectID: ${deletedObject.ID}`, {
                     userId: req.session.user?._id,
                     itemId: deletedObject?.ID,
                     operation: 'remove_from_deleted_bin'
                 });
             } catch (err) {
-                logger.error('Error deleting from MongoDB deleted bin', err, {
+                logger.error(`Error deleting from MongoDB deleted bin USER:${req.session.user._id}, deletedObjectID: ${deletedObject.ID}`, err, {
                     userId: req.session.user?._id,
                     itemId: deletedObject?.ID,
                     operation: 'remove_from_deleted_bin_error'
@@ -376,13 +389,13 @@ router.put('/deletedArchive', notReadOnly, async (req, res) => {
                     _id: new mongoose.Types.ObjectId(),
                 });
                 await newCaptcha.save();
-                logger.info('Deleted object restored to active pool', {
+                logger.info(`Deleted object restored to active pool USER:${req.session.user._id}, deletedObjectID: ${deletedObject.ID}`, {
                     userId: req.session.user?._id,
                     itemId: deletedObject?.ID,
                     operation: 'restore_deleted_item'
                 });
             } catch (err) {
-                logger.error('Error restoring object to pool', err, {
+                logger.error(`Error restoring object to pool USER:${req.session.user._id}, deletedObjectID: ${deletedObject.ID}`, err, {
                     userId: req.session.user?._id,
                     itemId: deletedObject?.ID,
                     operation: 'restore_deleted_item_error'
@@ -421,14 +434,14 @@ router.get('/deletedArchiveAssets', async (req, res) => {
             })
         }
     } else {
-        logger.error("Deleted bin pool not defined", null, {
+        logger.error(`Deleted bin pool not defined USER:${req.session.user._id}`, null, {
             userId: req.session.user?._id,
             operation: 'get_deleted_archive_assets_pool_missing'
         });
     }
 
     if (globalDeletedBin) {
-        logger.info("Returning deleted archive assets", {
+        logger.info(`Returning deleted archive assets USER:${req.session.user._id}`, {
             userId: req.session.user?._id,
             userRole: req.session.user.role,
             isAppAdmin: req.session.user.appAdmin,
@@ -438,7 +451,7 @@ router.get('/deletedArchiveAssets', async (req, res) => {
         res.json({ globalDeletedBin: returnedPool, userRole: req.session.user.role, appAdmin: req.session.user.appAdmin });
     }
     else {
-        logger.error("Deleted bin not defined", null, {
+        logger.error(`Deleted bin not defined USER:${req.session.user._id}`, null, {
             userId: req.session.user?._id,
             operation: 'get_deleted_archive_assets_bin_missing'
         });
@@ -446,38 +459,41 @@ router.get('/deletedArchiveAssets', async (req, res) => {
 });
 
 router.get("/apiKeySection", isAdmin, (req, res) => {
-    logger.request(req, "Access API key management section", {
+    logger.request(req, `Access API key management section from User ${req.session.user._id}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         operation: 'view_api_key_section'
     });
-    
+
     res.render("apiKeys", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 })
 
 router.put("/apiKey", isAdmin, async (req, res) => {
     const startTime = Date.now();
-    logger.request(req, "API key delete request", {
+    logger.request(req, `API key PUT request from User ${req.session.user._id}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
-        operation: 'delete_api_key',
+        operation: 'put_api_key',
         isDelete: req.body.isDelete
     });
-    
-    if (req.body.isDelete) {
-        let key = req.body.key;
+
+    if (req.body.isDelete === true) {
+        let key = sanitizeInput(req.body.key);
         let isKeyDeleted = false;
         try {
-            logger.info("Looking up API key for deletion", {
+            logger.info(`Looking up API key for deletion USER:${req.session.user._id}, key: ${key}`, {
                 userId: req.session.user?._id,
                 keyExists: !!key,
                 operation: 'delete_api_key_lookup'
             });
-            
+
             let keyExists = await ApiKeyModel.findOne({ apiKey: key });
-            let companyId = keyExists.companies[0];
+            let companyId = sanitizeInput(keyExists.companies[0]);
+            if (!companyId) {
+                return res.status(404).json({ message: "Missing Parameters" });
+            }
             if (!isRelatedToCompany(req, companyId)) {
-                logger.warn("Unauthorized API key deletion attempt", {
+                logger.warn(`Unauthorized API key deletion attempt from User ${req.session.user._id}, key: ${key}`, {
                     userId: req.session.user?._id,
                     userRole: req.session.user?.role,
                     companyId: companyId,
@@ -489,22 +505,27 @@ router.put("/apiKey", isAdmin, async (req, res) => {
                 let keyDeleted = await ApiKeyModel.deleteOne({ apiKey: key });
                 isKeyDeleted = true;
                 if (keyDeleted.deletedCount === 0) {
-                    throw new Error("Error deleting API key");
+                    logger.error(`API key deletion failed USER:${req.session.user._id}, key: ${key}`, null, {
+                        userId: req.session.user?._id,
+                        keyPresent: !!key,
+                        operation: 'delete_api_key_error'
+                    });
+                    return res.status(500).json({ error: "An error occurred while deleting the API key" });
                 }
             } else {
                 return res.status(404).json({ error: "The given key does not exist" });
             }
         } catch (err) {
-            logger.error("Error deleting API key", err, {
+            logger.error(`Error deleting API key USER:${req.session.user._id}, key: ${key}`, err, {
                 userId: req.session.user?._id,
                 keyPresent: !!key,
                 operation: 'delete_api_key_error'
             });
             return res.status(500).json({ error: "An error occurred while deleting the API key" });
         }
-        
+
         const duration = Date.now() - startTime;
-        logger.info("API key deletion complete", {
+        logger.info(`API key deletion complete USER:${req.session.user._id} key: ${key}`, {
             userId: req.session.user?._id,
             success: isKeyDeleted,
             duration: `${duration}ms`,
@@ -522,14 +543,13 @@ router.put("/apiKey", isAdmin, async (req, res) => {
 });
 
 router.get("/apiKey", isAdmin, async (req, res) => {
-    const startTime = Date.now();
-    logger.request(req, "Get API keys request", {
+    logger.request(req, `Get API keys request from User ${req.session.user._id}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         isAppAdmin: req.session.user?.appAdmin,
         operation: 'get_api_keys'
     });
-    
+
     try {
         let userRole = req.session.user.role
         let appAdmin = req.session.user.appAdmin
@@ -538,7 +558,7 @@ router.get("/apiKey", isAdmin, async (req, res) => {
         let returnedKeys
 
         if (appAdmin) {
-            logger.info("Admin retrieving all API keys", {
+            logger.info(`Admin retrieving all API keys USER:${req.session.user._id} isAppAdmin:${appAdmin}`, {
                 userId: req.session.user?._id,
                 isAppAdmin: appAdmin,
                 operation: 'get_all_api_keys'
@@ -553,7 +573,7 @@ router.get("/apiKey", isAdmin, async (req, res) => {
             });
             returnedKeys = await ApiKeyModel.find({ companies: { $in: company } })
         }
-        
+
         logger.info("API keys retrieved", {
             userId: req.session.user?._id,
             keyCount: returnedKeys?.length || 0,
@@ -573,12 +593,12 @@ router.get("/apiKey", isAdmin, async (req, res) => {
 
 router.post("/apiKey/deleteAll", isAppAdmin, async (req, res) => {
     const startTime = Date.now();
-    logger.request(req, "Delete all API keys request", {
+    logger.request(req, `Delete all API keys request from USER:${req.session.user._id}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         operation: 'delete_all_api_keys'
     });
-    
+
     let deleteAll;
     logger.info("Starting deletion of all API keys", {
         userId: req.session.user?._id,
@@ -599,37 +619,40 @@ router.post("/apiKey/deleteAll", isAppAdmin, async (req, res) => {
     catch (err) {
         deleteAll = "The deletion of all API keys has failed."
     }
-    
+
     const duration = Date.now() - startTime;
-    logger.info("API keys deletion completed", {
+    logger.info("API keys deletion completed successfully", {
         userId: req.session.user?._id,
         status: deleteAll,
         duration: `${duration}ms`,
         operation: 'delete_all_api_keys_complete'
     });
-    
+
     res.json({ deleteAll })
 
 })
 
 router.post("/apiKey", isAdmin, async (req, res) => {
     const startTime = Date.now();
-    logger.request(req, "Create API key request", {
+    const apiKeyName = sanitizeInput(req.body.apiKeyName);
+    logger.request(req, `Create API key request from User ${req.session.user._id}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
-        keyName: req.body.apiKeyName,
+        keyName: apiKeyName,
         operation: 'create_api_key'
     });
-    
+
     let successfully;
     let message;
     try {
-        let name = req.body.apiKeyName;
+        let name = apiKeyName;
         let selectedCompanies = req.body.selectedCompanies;
-        let companyId = req.body.selectedCompanies[0];
-        
+        let companyId = sanitizeInput(selectedCompanies[0]);
+        if (!companyId) {
+            return res.status(400).json({ message: "Missing Parameters" });
+        }
         if (!isRelatedToCompany(req, companyId)) {
-            logger.warn("Unauthorized API key creation attempt", {
+            logger.warn(`Unauthorized API key creation attempt from User ${req.session.user._id}, name: ${name}`, {
                 userId: req.session.user?._id,
                 userRole: req.session.user?.role,
                 companyId: companyId,
@@ -673,14 +696,14 @@ router.post("/apiKey", isAdmin, async (req, res) => {
 
     }
     catch (err) {
-        logger.error("Error creating API key", err, {
+        logger.error(`Error creating API key ${apiKeyName}`, err, {
             userId: req.session.user?._id,
             keyName: req.body.apiKeyName,
             operation: 'create_api_key_error'
         });
         successfully = false;
     }
-    
+
     const duration = Date.now() - startTime;
     logger.info("API key creation process completed", {
         userId: req.session.user?._id,
@@ -688,7 +711,7 @@ router.post("/apiKey", isAdmin, async (req, res) => {
         duration: `${duration}ms`,
         operation: 'create_api_key_complete'
     });
-    
+
     res.json({ successfully, message });
 })
 
@@ -698,7 +721,6 @@ router.get("/", (req, res) => {
 
 router.get("/captchaSettings", isAdmin, async (req, res) => {
     let companyData = {};
-
     try {
         let company = await CompanyModel.findOne({ companyId: req.session.user.company })
         if (company) {
@@ -719,6 +741,7 @@ router.get("/captchaSettings", isAdmin, async (req, res) => {
 router.get("/registeredUsers", (req, res) => {
     res.render("users", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 })
+
 router.get("/companies", (req, res) => {
     res.render("company", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 })
@@ -726,6 +749,7 @@ router.get("/companies", (req, res) => {
 router.get("/registerKey", isAdmin, (req, res) => {
     res.render("registerKey", { username: req.session.user.username, email: req.session.user.email, ppURL: req.session.user.ppURL, role: req.session.user.role, appAdmin: req.session.user.appAdmin });
 })
+
 router.get("/registerKey/assets", isAdmin, async (req, res) => {
     logger.request(req, "Get register keys assets", {
         userId: req.session.user?._id,
@@ -750,7 +774,7 @@ router.get("/registerKey/assets", isAdmin, async (req, res) => {
                 }
             });
         }
-        logger.info("Register keys retrieved successfully", {
+        logger.info(`Register keys retrieved successfully from database for USER:${req.session.user._id}`, {
             userId: req.session.user?._id,
             keyCount: returnedKey?.length || 0,
             isAppAdmin: req.session.user?.appAdmin,
@@ -769,13 +793,14 @@ router.get("/registerKey/assets", isAdmin, async (req, res) => {
 
 router.put("/registerKey", isAdmin, notReadOnly, async (req, res) => {
     try {
-        let companyId = req.body.companyId;
+        let companyId = sanitizeInput(req.body.companyId)
+
         if (!isRelatedToCompany(req, companyId)) {
             return res.status(401).json({ message: "Unauthorized" });
         }
         generateNewRegisterKey(req, res);
     } catch (error) {
-        logger.error("Error handling register key", error, {
+        logger.error(`Error handling register key for company ${companyId}`, error, {
             userId: req.session.user?._id,
             companyId: companyId,
             operation: 'update_register_key_error'
@@ -783,16 +808,14 @@ router.put("/registerKey", isAdmin, notReadOnly, async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal server error", error: error.message });
     }
 });
-
-
 router.post("/captchaSettings", isAdmin, async (req, res) => {
     try {
-        logger.debug("Captcha settings request body", {
+        logger.info(`Captcha settings request body from USER:${req.session.user._id} for Company ${sanitizeInput(req.body.company)}`, {
             userId: req.session.user?._id,
             companyId: req.body.company,
             operation: 'update_captcha_settings'
         });
-        const {
+        let {
             buttonColorValue,
             buttonColorHoverValue,
             selectedCubeColorValue,
@@ -804,15 +827,21 @@ router.post("/captchaSettings", isAdmin, async (req, res) => {
             memorizeCaptcha
         } = req.body;
 
+        buttonColorValue = sanitizeInput(buttonColorValue);
+        buttonColorHoverValue = sanitizeInput(buttonColorHoverValue);
+        selectedCubeColorValue = sanitizeInput(selectedCubeColorValue);
+        canvasOnHoverColorValue = sanitizeInput(canvasOnHoverColorValue);
+        defaultTitle = sanitizeInput(defaultTitle);
+        isResetColorKit = sanitizeInput(isResetColorKit);
+        company = sanitizeInput(company);
+        initColorKit = sanitizeInput(initColorKit);
+        memorizeCaptcha = memorizeCaptcha;
+
         let companyId = company;
+
         if (!isRelatedToCompany(req, companyId)) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        logger.debug("Captcha settings init color kit", {
-            userId: req.session.user?._id,
-            initColorKit: initColorKit,
-            operation: 'update_captcha_settings'
-        });
         let message;
 
         if (initColorKit === true) {
@@ -881,7 +910,7 @@ router.post("/captchaSettings", isAdmin, async (req, res) => {
                         });
                     }
                 }
-                logger.info("Color kit updated successfully", {
+                logger.info(`Color kit updated successfully for company ${company} from USER:${req.session.user._id}`, {
                     userId: req.session.user?._id,
                     company: company,
                     initColorKit: initColorKit,
@@ -920,7 +949,7 @@ router.get("/colorKit", notReadOnly, async (req, res) => {
         }
         res.status(200).json({ returnedColorKit });
     } catch (err) {
-        logger.error("Error retrieving color kit", err, {
+        logger.error(`Error retrieving color kit for company ${company} from USER:${req.session.user._id}`, err, {
             userId: req.session.user?._id,
             company: company,
             isAppAdmin: appAdmin,
@@ -935,48 +964,58 @@ router.get("/createItem", notReadOnly, (req, res) => {
 })
 
 router.post("/logout", (req, res) => {
-    logger.info("User logging out", {
+    logger.info(`User logging out from USER:${req.session.user._id}`, {
         userId: req.session.user?._id,
         username: req.session.user?.username,
         userRole: req.session.user?.role,
         operation: 'user_logout'
     });
-    
-    req.session.destroy((err) => {
-        if (err) {
-            logger.error("Error destroying session during logout", err, {
-                operation: 'user_logout_error'
+    try {
+        req.session.destroy((err) => {
+            if (err) {
+                logger.error(`Error destroying session during logout for User ${req.session.user._id}`, err, {
+                    operation: 'user_logout_error'
+                });
+                throw err;
+            }
+            logger.info(`User logged out successfully`, {
+                operation: 'user_logout_success'
             });
-            throw err;
-        }
-        logger.info("User logged out successfully", {
-            operation: 'user_logout_success'
+            res.redirect("/login")
+        })
+    }
+    catch (err) {
+        logger.error(`Error logging out User ${req.session.user._id}`, err, {
+            operation: 'user_logout_error'
         });
-        res.redirect("/login")
-    })
+        res.status(500).json({ message: "An internal server error occurred." });
+    }
 })
 
 router.post('/newValidation', notReadOnly, async (req, res) => {
     const startTime = Date.now();
-    logger.request(req, "Create new validation", {
+    logger.request(req, `Create new CAPTCHA from USER:${req.session.user._id} for Company ${sanitizeInput(req.body.selectedCompanies[0])}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
-        componentName: req.body.sessionComponentName,
+        componentName: sanitizeInput(req.body.sessionComponentName),
         operation: 'create_new_validation'
     });
-    
+    //Sanitizing Input has to be extended here
     let globalPool = await initializePool();
     const ID = crypto.randomUUID();
     const validateTrueCubes = req.body.validateTrueCubes;
     const validateMinCubes = req.body.validateMinCubes;
     const validateMaxCubes = req.body.validateMaxCubes;
-    const componentName = req.body.sessionComponentName;
+    const componentName = sanitizeInput(req.body.sessionComponentName);
     const backgroundImage = req.body.backgroundImage;
-    const todoTitle = req.body.todoTitle;
+    const todoTitle = sanitizeInput(req.body.todoTitle);
     const backgroundSize = req.body.backgroundSize;
     const selectedCompanies = req.body.selectedCompanies
-    
+
     let companyId = selectedCompanies[0];
+    if (!companyId) {
+        return res.status(400).json({ message: "Missing Parameters" });
+    }
     if (!isRelatedToCompany(req, companyId)) {
         logger.warn("Unauthorized attempt to create validation", {
             userId: req.session.user?._id,
@@ -1036,7 +1075,7 @@ router.post('/newValidation', notReadOnly, async (req, res) => {
             });
             isValid = false;
         }
-        
+
         await initializePool();
         const duration = Date.now() - startTime;
         logger.info('Validation creation process completed', {
@@ -1059,17 +1098,22 @@ router.post('/newValidation', notReadOnly, async (req, res) => {
     }
 });
 
+//TODO : Add proper sanitization here and test it
 router.post('/newValidation/nameExists', notReadOnly, async (req, res) => {
     let globalPool = await initializePool()
     let nameExists = false;
+    let name = sanitizeInput(req.body.sessionComponentName);
     globalPool.forEach(item => {
-        if (item.Name === req.body.sessionComponentName) {
-            nameExists = true;
-            return;
+        if (item.companies[0] == req.session.user.company) {
+            if (item.Name === name) {
+                nameExists = true;
+                return;
+            }
         }
     });
     res.json({ nameExists });
 });
+
 router.get('/allowedOrigins', async (req, res) => {
     try {
         const userRole = req.session.user.role;
@@ -1103,6 +1147,7 @@ router.get('/allowedOrigins', async (req, res) => {
         return res.status(500).json({ error: "An error occurred while attempting to retrieve the allowed origins" });
     }
 })
+
 router.post('/allowedOrigins', isAdmin, async (req, res) => {
     logger.request(req, "Create allowed origin", {
         userId: req.session.user?._id,
@@ -1110,13 +1155,13 @@ router.post('/allowedOrigins', isAdmin, async (req, res) => {
         originName: req.body.originName,
         operation: 'create_allowed_origin'
     });
-    
+
     try {
         let message;
         let originName = req.body.originName;
         let selectedCompanies = req.body.selectedCompanies;
         let regexResult = await proofRegexOrigins(originName);
-        if(!regexResult.test){
+        if (!regexResult.test) {
             logger.warn("Invalid origin format", {
                 userId: req.session.user?._id,
                 originName: originName,
@@ -1125,7 +1170,7 @@ router.post('/allowedOrigins', isAdmin, async (req, res) => {
             return res.status(401).json({ message: "Regex error: please define your origin like this schema: https://yourdomain.com" });
         }
         let doesOriginExist = await AllowedOriginModel.findOne({ allowedOrigin: originName, companies: { $in: selectedCompanies } });
-        
+
         let companyId = selectedCompanies[0];
         if (!isRelatedToCompany(req, companyId)) {
             logger.warn("Unauthorized attempt to create allowed origin", {
@@ -1162,7 +1207,7 @@ router.post('/allowedOrigins', isAdmin, async (req, res) => {
             });
             message = `${originName} is undefined or already exists`;
         }
-        
+
         res.json({ message });
     } catch (err) {
         logger.error("Error while trying to create AllowedOrigins", err, {

@@ -15,7 +15,7 @@ const proofRegexOrigins = require("../services/proofRegexOrigins.js")
 const sanitizeInput = require("../services/sanitizeInput.js")
 
 router.get('/', async (req, res) => {
-    logger.request(req, "Get companies request", {
+    logger.request(req, `Get companies request from USER:${req.session.user._id}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         isAppAdmin: req.session.user?.appAdmin,
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
         let returnedCompanies = []
         if (req.session.user.appAdmin) {
             returnedCompanies = allCompanies;
-            logger.info('Returning all companies for app admin', {
+            logger.info(`Returning all companies for app admin USER:${req.session.user._id}`, {
                 userId: req.session.user?._id,
                 companyCount: returnedCompanies.length,
                 operation: 'get_companies_admin'
@@ -58,7 +58,7 @@ router.get('/', async (req, res) => {
         }
 
         if (allCompanies) {
-            logger.info("Successfully retrieved companies", {
+            logger.info(`Successfully retrieved companies for USER:${req.session.user._id}`, {
                 userId: req.session.user?._id,
                 totalCompanies: allCompanies.length,
                 returnedCompanies: returnedCompanies.length,
@@ -78,8 +78,7 @@ router.get('/', async (req, res) => {
 })
 
 router.post('/', isAppAdmin, async (req, res) => {
-    console.log("Create company request received");
-    logger.request(req, "Create company request", {
+    logger.request(req, `Create company request from USER:${req.session.user._id} with name: ${sanitizeInput(req.body.name)}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         companyName: sanitizeInput(req.body.name) || "Unknown",
@@ -247,8 +246,6 @@ router.delete('/', isAppAdmin, async (req, res) => {
             });
             return res.status(401).json({ message: "Unauthorized" });
         }
-
-
 
         // Log company information before deletion
         const company = await CompanyModel.findOne({ companyId });
