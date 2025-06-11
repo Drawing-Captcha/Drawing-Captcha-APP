@@ -1,10 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const CompanyModel = require("../models/Company.js")
-const CaptchaModel = require("../models/Captcha.js")
-const csrfMiddleware = require("../middlewares/csurfMiddleware");
-const authMiddleware = require("../middlewares/authMiddleware");
-const notReadOnly = require("../middlewares/notReadOnly.js")
 const deleteAllRelations = require("../services/deleteAllCompanyRelation.js")
 const createCompanyRegisterKey = require("../services/createCompanyRegisterKey.js")
 const createCompanyColorKit = require("../services/createCompanyColorKit.js")
@@ -15,6 +11,8 @@ const isAdmin = require("../middlewares/adminMiddleware.js")
 const isRelatedToCompany = require('../services/companyRelationMiddleware.js');
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
+const proofRegexOrigins = require("../services/proofRegexOrigins.js")
+const sanitizeInput = require("../services/sanitizeInput.js")
 
 router.get('/', async (req, res) => {
     logger.request(req, "Get companies request", {
@@ -84,7 +82,7 @@ router.post('/', isAppAdmin, async (req, res) => {
     logger.request(req, "Create company request", {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
-        companyName: sanitizeInput(req.body.name),
+        companyName: sanitizeInput(req.body.name) || "Unknown",
         operation: 'create_company'
     });
     const name = sanitizeInput(req.body.name);
@@ -92,6 +90,12 @@ router.post('/', isAppAdmin, async (req, res) => {
     const originName = sanitizeInput(req.body.originName);
 
     try {
+        if (!name || !originName) {
+            return res.status(400).json({ message: "Missing parameters" });
+        }
+        if (proofRegexOrigins(originName).test === false) {
+            return res.status(400).json({ message: "Regex error: please define your origin like this schema: https://yourdomain.com" });
+        }
         let companyExists = await CompanyModel.findOne({ name: name });
         if (companyExists) {
             logger.warn("Attempted to create company with existing name", {
@@ -155,9 +159,9 @@ router.post('/', isAppAdmin, async (req, res) => {
 
 router.put('/', isAdmin, async (req, res) => {
     const { companyId, name, ppURL } = {
-        companyId: sanitizeInput(req.body.companyId),
-        name: sanitizeInput(req.body.name),
-        ppURL: sanitizeInput(req.body.ppURL)
+        companyId: sanitizeInput(req.body.companyId) || "",
+        name: sanitizeInput(req.body.name) || "",
+        ppURL: sanitizeInput(req.body.ppURL) || ""
     };
     logger.request(req, "Update company request", {
         userId: req.session.user?._id,
@@ -166,29 +170,17 @@ router.put('/', isAdmin, async (req, res) => {
         operation: 'update_company'
     });
     try {
+        if (!name && !companyId || !ppURL && !companyId) {
+            return res.status(400).json({ message: "Missing parameters" });
+        }
         if (!isRelatedToCompany(req, companyId)) {
-            logger.warn("Unauthorized company update attempt", {
+            logger.warn(`Unauthorized company update attempt for company: ${companyId}, from user: ${req.session.user?._id} `, {
                 userId: req.session.user?._id,
                 userRole: req.session.user?.role,
                 companyId: companyId,
                 operation: 'update_company_unauthorized'
             });
             return res.status(401).json({ message: "Unauthorized" });
-        }
-        if (!companyId) {
-            logger.warn("Missing company ID in update request", {
-                userId: req.session.user?._id,
-                operation: 'update_company_invalid'
-            });
-            return res.status(400).json({ message: "Company ID is required." });
-        }
-        if (!name) {
-            logger.warn("Missing company name in update request", {
-                userId: req.session.user?._id,
-                companyId: companyId,
-                operation: 'update_company_invalid'
-            });
-            return res.status(400).json({ message: "Company name is required." });
         }
 
         const company = await CompanyModel.findOne({ companyId });
@@ -202,7 +194,7 @@ router.put('/', isAdmin, async (req, res) => {
         }
 
         const oldName = company.name;
-        company.name = name;
+        company.name = name || company.name;
         company.ppURL = ppURL || company.ppURL;
 
         await company.save();
@@ -211,7 +203,7 @@ router.put('/', isAdmin, async (req, res) => {
             userId: req.session.user?._id,
             companyId: companyId,
             oldName: oldName,
-            newName: name,
+            newName: name || company.name,
             operation: 'update_company_success'
         });
         res.status(200).json({ message: "Company successfully updated.", company });
@@ -225,11 +217,11 @@ router.put('/', isAdmin, async (req, res) => {
     }
 });
 
-router.delete('/', isAdmin, async (req, res) => {
+router.delete('/', isAppAdmin, async (req, res) => {
     const { companyId, name, ppURL } = {
-        companyId: sanitizeInput(req.body.companyId),
-        name: sanitizeInput(req.body.name),
-        ppURL: sanitizeInput(req.body.ppURL)
+        companyId: sanitizeInput(req.body.companyId) || "",
+        name: sanitizeInput(req.body.name) || "",
+        ppURL: sanitizeInput(req.body.ppURL) || ""
     };
     logger.request(req, "Delete company request", {
         userId: req.session.user?._id,
@@ -239,6 +231,13 @@ router.delete('/', isAdmin, async (req, res) => {
     });
 
     try {
+        if (!companyId) {
+            logger.warn("Missing company ID in delete request", {
+                userId: req.session.user?._id,
+                operation: 'delete_company_invalid'
+            });
+            return res.status(400).json({ message: "Company ID is required." });
+        }
         if (!isRelatedToCompany(req, companyId)) {
             logger.warn("Unauthorized company delete attempt", {
                 userId: req.session.user?._id,
@@ -249,16 +248,18 @@ router.delete('/', isAdmin, async (req, res) => {
             return res.status(401).json({ message: "Unauthorized" });
         }
 
-        if (!companyId) {
-            logger.warn("Missing company ID in delete request", {
-                userId: req.session.user?._id,
-                operation: 'delete_company_invalid'
-            });
-            return res.status(400).json({ message: "Company ID is required." });
-        }
+
 
         // Log company information before deletion
         const company = await CompanyModel.findOne({ companyId });
+        if (!company) {
+            logger.warn(`Company not found for deletion ${companyId}`, {
+                userId: req.session.user?._id,
+                companyId: companyId,
+                operation: 'delete_company_not_found'
+            });
+            return res.status(404).json({ message: "Company not found." });
+        }
         if (company) {
             logger.info("Deleting company", {
                 userId: req.session.user?._id,

@@ -11,14 +11,17 @@ const registerKeyModel = require("../models/RegisterKey.js")
 const isPasswordStrong = require("../services/isStrongPassword.js");
 const sendEmail = require('../services/sendEmail.js');
 const generateEmailConfirmationToken = require("../services/generateEmailConfirmationToken.js");
-const { send } = require('process');
 const emailService = process.env.EMAIL_SERVICE;
 let basicAuth = process.env.BASIC_AUTH === undefined || process.env.BASIC_AUTH === null ? true : process.env.BASIC_AUTH == 'true' ?? true;
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
 
 if (basicAuth) {
-    router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
+    router.post("/login", async (req, res) => {
+        logger.info(`User logged in with basicAuth with email: ${sanitizeInput(req.body.email)}, IPAddress: ${sanitizeInput(req.ip)}`, {
+            operation: 'login',
+            email: sanitizeInput(req.body.email)
+        });
         try {
             const email = sanitizeInput(req.body.email);
             const password = sanitizeInput(req.body.password);
@@ -59,7 +62,7 @@ if (basicAuth) {
                 res.redirect('/dashboard');
             });
         } catch (error) {
-            logger.error("Error during login process", error, {
+            logger.error(`Error during login process with user email: ${sanitizeInput(req.body.email)}`, error, {
                 operation: 'login',
                 email: sanitizeInput(req.body.email)
             });

@@ -1,4 +1,3 @@
-
 function proofRegexOrigins(originName) {
     if (!originName) {
         alert("Please enter a origin, you can still change it afterwarts in the settings");

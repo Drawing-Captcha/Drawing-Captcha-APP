@@ -12,7 +12,7 @@ const tokenLimiter = rateLimit({
     message: "Too Many Request's try later again"
 });
 const captchaLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
+    windowMs: 5 * 60 * 1000,
     max: 100,
     message: "Too Many Request's try later again"
 });
@@ -22,19 +22,19 @@ const testLimiter = rateLimit({
     message: "Too Many Request's try later again"
 });
 const dashboardLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
+    windowMs: 5 * 60 * 1000,
     max: 100,
     message: "Too Many Request's try later again",
     delayMs: 2000,
     headers: true
 });
 const socialAuthLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, 
+    windowMs: 5 * 60 * 1000, 
     max: 30, 
     message: "Too Many Request's try later again"
 });
 const emailConfirmationLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
+    windowMs: 5 * 60 * 1000,
     max: 10,
     message: "Too Many Request's try later again"
 });
