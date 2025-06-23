@@ -18,9 +18,9 @@ const logger = createModuleLogger(__filename);
 
 if (basicAuth) {
     router.post("/login", async (req, res) => {
-        logger.info(`User logged in with basicAuth with email: ${sanitizeInput(req.body.email)}, IPAddress: ${sanitizeInput(req.ip)}`, {
-            operation: 'login',
-            email: sanitizeInput(req.body.email)
+        logger.info(`Tried to log in with basicAuth with email: ${sanitizeInput(req.body.email)}, IPAddress: ${sanitizeInput(req.ip)}`, {
+            email: sanitizeInput(req.body.email),
+            operation: 'login'
         });
         try {
             const email = sanitizeInput(req.body.email);
@@ -66,13 +66,17 @@ if (basicAuth) {
                 operation: 'login',
                 email: sanitizeInput(req.body.email)
             });
-            res.status(500).json({ message: 'An internal server error occurred.' });
+            res.status(500).json({ message: 'An internal server error occurred during login.' });
         }
     })
 }
 
 router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
+        logger.info(`Tried to Register in with basicAuth with email: ${sanitizeInput(req.body.email)}, IPAddress: ${sanitizeInput(req.ip)}`, {
+            email: sanitizeInput(req.body.email),
+            operation: 'register'
+        });
         const { username, email, password, registerKey } = {
             username: sanitizeInput(req.body.username),
             email: sanitizeInput(req.body.email),
@@ -130,7 +134,7 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
                     emailConfirmationToken,
                     usedRegisterKey: true
                 });
-
+                logger.info(`Registration successful! Email verification link has been sent to ${email}`);
             } else {
                 newUser = new UserModel({
                     username,
