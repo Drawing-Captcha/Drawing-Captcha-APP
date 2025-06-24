@@ -5,7 +5,7 @@ const isAuth = (req, res, next) => {
     if (req.session.isAuth) {
         next();
     } else {
-        logger.warn(`is authenticated failed`, {
+        logger.warn(`IP ${sanitizeInput(req.ip)} from ${sanitizeInput(req.get('User-Agent'))} and path ${req.originalUrl} is authenticated failed`, {
             session: req.session,
             url: req.originalUrl,
             method: req.method,
