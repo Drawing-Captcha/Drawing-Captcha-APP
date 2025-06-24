@@ -28,10 +28,8 @@ router.post('/reload', (req, res) => {
     try {
         const session = req.body.session;
         const uniqueFileName = sanitizeInput(session.uniqueFileName)
-        console.log("uniqueFileName", uniqueFileName);
         if (uniqueFileName) {
             const resolvedPath = path.resolve(`./tmpimg/${uniqueFileName}`);
-            console.log("resolvedPath", resolvedPath);
             if (resolvedPath) {
                 deleteFile.deleteFile(resolvedPath);
             } else {
@@ -306,6 +304,11 @@ router.post('/check-captcha', async (req, res) => {
     const givenSession = req.body.session;
     try {
         const apiKey = sanitizeInput(req.body.apiKey);
+        logger.request(req, `Checking captcha from ${req.ip} with apiKey: ${apiKey}`, {
+            operation: 'check_captcha',
+            clientIdentifier: givenSession?.clientIdentifier,
+            apiKey: sanitizeInput(req.body.apiKey) ? '[PRESENT]' : '[MISSING]',
+        });
         const clientIdentifier = sanitizeInput(givenSession.clientIdentifier)
         const apiKeyDB = await ApiKeyModel.findOne({ apiKey });
         const companyId = apiKeyDB.companies[0];
