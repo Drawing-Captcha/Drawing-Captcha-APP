@@ -11,7 +11,7 @@ const xss = require('xss');
 
 // file deepcode ignore NoRateLimitingForExpensiveWebOperation: <is being handled by the emailConfirmationLimiter middleware in app.js>
 router.get('/', async (req, res) => {
-    let { token } = sanitizeInput(req.query);
+    let { token } = req.query;
     token = sanitizeInput(token);
     try {
         const user = await User.findOne({ emailConfirmationToken: token });
