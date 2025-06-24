@@ -27,7 +27,7 @@ const { error } = require("console");
 
 router.get('/getElements', async (req, res) => {
     const startTime = Date.now();
-    logger.request(req, "Dashboard getElements request", {
+    logger.request(req, `USER: ${req.session.user._id} Dashboard get Captcha Elements request with role: ${req.session.user.role} and company: ${req.session.user.company} and AppAdmin: ${req.session.user.appAdmin}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         isAppAdmin: req.session.user?.appAdmin,
@@ -41,22 +41,10 @@ router.get('/getElements', async (req, res) => {
 
         if (globalPool) {
             if (appAdmin) {
-                logger.info("Admin user accessing all elements", {
-                    userId: req.session.user?._id,
-                    userRole: req.session.user?.role,
-                    totalElements: globalPool.length,
-                    operation: 'dashboard_get_elements_admin'
-                });
                 returnedPool = globalPool
             }
             else {
                 returnedPool = []
-                logger.info("Regular user filtering elements by company", {
-                    userId: req.session.user?._id,
-                    userCompany: req.session.user?.company,
-                    operation: 'dashboard_get_elements_filtered'
-                });
-
                 globalPool.forEach(item => {
                     if (item.initialCaptcha === true || item.companies.some(company => req.session.user.company === company)) {
                         returnedPool.push(item)
@@ -71,7 +59,7 @@ router.get('/getElements', async (req, res) => {
         }
 
         const duration = Date.now() - startTime;
-        logger.info("Elements retrieved successfully", {
+        logger.debug(`Elements retrieved successfully from USER:${req.session.user._id} with role: ${userRole} and company: ${req.session.user.company} and AppAdmin: ${appAdmin} in ${duration}ms`, {
             userId: req.session.user?._id,
             userRole: userRole,
             isAppAdmin: appAdmin,
@@ -93,7 +81,7 @@ router.get('/getElements', async (req, res) => {
 
 router.get('/getElements/notCategorized', isAppAdmin, async (req, res) => {
     const startTime = Date.now();
-    logger.request(req, "Dashboard get uncategorized elements request", {
+    logger.request(req, `USER: ${req.session.user._id} Dashboard get uncategorized elements request with appAdmin: ${req.session.user.appAdmin}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         isAppAdmin: req.session.user?.appAdmin,
@@ -112,12 +100,6 @@ router.get('/getElements/notCategorized', isAppAdmin, async (req, res) => {
                     returnedPool.push(item)
                 }
             })
-            logger.info("Uncategorized elements retrieved", {
-                userId: req.session.user?._id,
-                totalElements: globalPool.length,
-                uncategorizedCount: returnedPool.length,
-                operation: 'dashboard_get_uncategorized'
-            });
         }
         else {
             logger.error("Pool not defined", null, {
@@ -127,7 +109,7 @@ router.get('/getElements/notCategorized', isAppAdmin, async (req, res) => {
         }
 
         const duration = Date.now() - startTime;
-        logger.info("Uncategorized elements request completed", {
+        logger.debug(`Uncategorized elements request completed in ${duration}ms from USER:${req.session.user._id}` , {
             userId: req.session.user?._id,
             userRole: userRole,
             elementCount: returnedPool?.length || 0,
@@ -185,7 +167,7 @@ router.put("/crud", notReadOnly, async (req, res) => {
             return res.status(401).json({ message: "Unauthorized", error: "Unauthorized" });
         }
 
-        logger.info("Processing dashboard CRUD operation", {
+        logger.info("Processing dashboard CRUD operation...", {
             userId: req.session.user?._id,
             isDelete: isDelete,
             itemId: tmpPool[0]?.ID,
@@ -200,17 +182,12 @@ router.put("/crud", notReadOnly, async (req, res) => {
 
             if (req.body.isDelete) {
                 deletedObject = globalPool.splice(index, 1)[0];
-                logger.info("Item deleted from pool", {
+                logger.info(`Item: ${deletedObject?.ID} deleted from pool from user ${req.session.user?._id} with company ${companyId} role ${req.session.user?.role} and appAdmin ${req.session.user?.appAdmin}`, {
                     userId: req.session.user?._id,
                     itemId: deletedObject?.ID,
                     itemName: deletedObject?.Name,
                     companyId: companyId,
                     operation: 'dashboard_delete_item'
-                });
-                logger.debug("Pool state after deletion", {
-                    userId: req.session.user?._id,
-                    poolSize: globalPool.length,
-                    operation: 'dashboard_delete_item_pool_update'
                 });
 
                 globalDeletedBin.push(deletedObject);
@@ -227,31 +204,31 @@ router.put("/crud", notReadOnly, async (req, res) => {
                         });
 
                         await deletedCaptcha.save();
-                        logger.info('Data added to deleted bin in MongoDB', {
+                        logger.info(`Item: ${deletedObject?.ID} added to deleted bin from user ${req.session.user?._id} with company ${companyId} role ${req.session.user?.role} and appAdmin ${req.session.user?.appAdmin}`, {
                             userId: req.session.user?._id,
                             itemId: deletedObject?.ID,
                             operation: 'dashboard_add_to_deleted_bin'
                         });
                     } else {
-                        logger.error('Document not found in Captcha collection', null, {
+                        logger.error(`Item: ${deletedObject?.ID} not found in Captcha collection?`, null, {
                             userId: req.session.user?._id,
                             itemId: deletedObject?.ID,
                             operation: 'dashboard_delete_not_found'
                         });
                     }
                 } catch (err) {
-                    logger.error('Error saving to deleted bin in MongoDB', err, {
+                    logger.error(`Error saving Item ${deletedObject?.ID} to deleted bin from user ${req.session.user?._id}`, err, {
                         userId: req.session.user?._id,
                         itemId: deletedObject?.ID,
                         operation: 'dashboard_add_to_deleted_bin_error'
                     });
                 }
             } else {
-                logger.info("Updating item with companies", {
+                logger.info(`Updating item with company ${sanitizeInput(tmpPool[0]?.companies)} from user ${req.session.user?._id} with company ${companyId} role ${req.session.user?.role} and appAdmin ${req.session.user?.appAdmin}`, {
                     userId: req.session.user?._id,
                     itemId: id,
                     itemName: name,
-                    companies: tmpPool[0]?.companies,
+                    companies: sanitizeInput(tmpPool[0]?.companies),
                     operation: 'dashboard_update_item'
                 });
                 let updatedCaptcha = {
@@ -268,23 +245,17 @@ router.put("/crud", notReadOnly, async (req, res) => {
 
                 try {
                     await CaptchaModel.updateOne({ ID: id }, updatedCaptcha, { runValidators: true });
-                    logger.info('Data updated in MongoDB', {
+                } catch (err) {
+                    logger.error(`Error updating Item ${sanitizeInput(tmpPool[0]?.ID)} from user ${req.session.user?._id}`, err, {
                         userId: req.session.user?._id,
                         itemId: sanitizeInput(tmpPool[0]?.ID),
-                        itemName: tmpPool[0]?.Name,
-                        operation: 'dashboard_update_item_success'
-                    });
-                } catch (err) {
-                    logger.error('Error updating data in MongoDB', err, {
-                        userId: req.session.user?._id,
-                        itemId: tmpPool[0]?.ID,
                         operation: 'dashboard_update_item_error'
                     });
                 }
             }
             isGood = true;
             const duration = Date.now() - startTime;
-            logger.info("CRUD operation completed successfully", {
+            logger.debug(`CRUD operation on Item ${sanitizeInput(tmpPool[0]?.ID)} completed successfully in ${duration}ms from USER:${req.session.user._id}`, {
                 userId: req.session.user?._id,
                 operation: isDelete ? 'dashboard_delete_success' : 'dashboard_update_success',
                 duration: `${duration}ms`
@@ -310,7 +281,7 @@ router.put("/crud", notReadOnly, async (req, res) => {
 
 // file deepcode ignore NoRateLimitingForExpensiveWebOperation: <rate limiting is handled by the dashboardLimiter middleware in app.js>
 router.get('/deletedArchive', (req, res) => {
-    logger.request(req, `Access deleted archive view from User ${req.session.user._id}`, {
+    logger.request(req, `Access deleted archive view from User ${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         operation: 'dashboard_view_deleted_archive'
@@ -319,7 +290,7 @@ router.get('/deletedArchive', (req, res) => {
 })
 
 router.get('/notAuthorized', (req, res) => {
-    logger.warn(`User accessed unauthorized page from User ${req.session.user._id}`, {
+    logger.warn(`User accessed unauthorized page ${req.url} from User ${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         username: req.session.user?.username,
@@ -337,7 +308,7 @@ router.put('/deletedArchive', notReadOnly, async (req, res) => {
     let index;
 
     if (!isRelatedToCompany(req, companyId)) {
-        logger.warn("Unauthorized attempt to access deleted archive", {
+        logger.warn(`Unauthorized attempt from User ${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin} to access deleted archive`, {
             userId: req.session.user?._id,
             userRole: req.session.user?.role,
             companyId: companyId,
@@ -345,7 +316,7 @@ router.put('/deletedArchive', notReadOnly, async (req, res) => {
         });
         return res.status(401).json({ message: "Unauthorized" });
     }
-    logger.debug("Processing deleted archive pool", {
+    logger.debug("Processing deleted archive pool...", {
         userId: req.session.user?._id,
         poolSize: tmpPool?.length,
         operation: 'process_deleted_archive'
@@ -405,7 +376,7 @@ router.put('/deletedArchive', notReadOnly, async (req, res) => {
 
         isGood = true;
     } else {
-        logger.error("Problem with the deleted archive array", null, {
+        logger.error(`Problem with the deleted archive array USER:${req.session.user._id}`, null, {
             userId: req.session.user?._id,
             operation: 'deleted_archive_array_error',
             tmpPoolType: typeof tmpPool,
@@ -459,7 +430,7 @@ router.get('/deletedArchiveAssets', async (req, res) => {
 });
 
 router.get("/apiKeySection", isAdmin, (req, res) => {
-    logger.request(req, `Access API key management section from User ${req.session.user._id}`, {
+    logger.request(req, `Access API key management section from User ${req.session.user._id} with role ${req.session.user.role} and appAdmin ${req.session.user.appAdmin}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         operation: 'view_api_key_section'
@@ -470,7 +441,7 @@ router.get("/apiKeySection", isAdmin, (req, res) => {
 
 router.put("/apiKey", isAdmin, async (req, res) => {
     const startTime = Date.now();
-    logger.request(req, `API key PUT request from User ${req.session.user._id}`, {
+    logger.request(req, `API key PUT request from User ${req.session.user._id} to ${req.body.isDelete ? "delete" : "update"} an API key`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         operation: 'put_api_key',
@@ -490,10 +461,15 @@ router.put("/apiKey", isAdmin, async (req, res) => {
             let keyExists = await ApiKeyModel.findOne({ apiKey: key });
             let companyId = sanitizeInput(keyExists.companies[0]);
             if (!companyId) {
+                logger.warn(`Missing company ID in API key USER:${req.session.user._id}, key: ${key}`, {
+                    userId: req.session.user?._id,
+                    keyExists: !!key,
+                    operation: 'delete_api_key_missing_company_id'
+                });
                 return res.status(404).json({ message: "Missing Parameters" });
             }
             if (!isRelatedToCompany(req, companyId)) {
-                logger.warn(`Unauthorized API key deletion attempt from User ${req.session.user._id}, key: ${key}`, {
+                logger.warn(`Unauthorized API key deletion attempt from User ${req.session.user._id} with role ${req.session.user.role} and appAdmin ${req.session.user.appAdmin}, key: ${key}`, {
                     userId: req.session.user?._id,
                     userRole: req.session.user?.role,
                     companyId: companyId,
@@ -533,7 +509,7 @@ router.put("/apiKey", isAdmin, async (req, res) => {
         });
         res.json({ isKeyDeleted });
     } else {
-        logger.warn("Invalid API key delete request", {
+        logger.warn(`Invalid API key delete request from User ${req.session.user._id} with role ${req.session.user.role} and appAdmin ${req.session.user.appAdmin}`, {
             userId: req.session.user?._id,
             isDelete: req.body.isDelete,
             operation: 'delete_api_key_invalid_request'
@@ -543,7 +519,7 @@ router.put("/apiKey", isAdmin, async (req, res) => {
 });
 
 router.get("/apiKey", isAdmin, async (req, res) => {
-    logger.request(req, `Get API keys request from User ${req.session.user._id}`, {
+    logger.request(req, `Get API keys request from User ${req.session.user._id} with role ${req.session.user.role} and appAdmin ${req.session.user.appAdmin} and company ${req.session.user.company}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         isAppAdmin: req.session.user?.appAdmin,
@@ -558,7 +534,7 @@ router.get("/apiKey", isAdmin, async (req, res) => {
         let returnedKeys
 
         if (appAdmin) {
-            logger.info(`Admin retrieving all API keys USER:${req.session.user._id} isAppAdmin:${appAdmin}`, {
+            logger.info(`AppAdmin retrieving all API keys USER:${req.session.user._id} isAppAdmin:${appAdmin}`, {
                 userId: req.session.user?._id,
                 isAppAdmin: appAdmin,
                 operation: 'get_all_api_keys'
@@ -566,19 +542,13 @@ router.get("/apiKey", isAdmin, async (req, res) => {
             returnedKeys = await ApiKeyModel.find({});
         }
         else {
-            logger.info("User retrieving company API keys", {
+            logger.info(`User retrieving company API keys USER:${req.session.user._id} company:${company} isAppAdmin:${appAdmin}`, {
                 userId: req.session.user?._id,
                 company: company,
                 operation: 'get_company_api_keys'
             });
             returnedKeys = await ApiKeyModel.find({ companies: { $in: company } })
         }
-
-        logger.info("API keys retrieved", {
-            userId: req.session.user?._id,
-            keyCount: returnedKeys?.length || 0,
-            operation: 'get_api_keys_success'
-        });
 
         res.json({ apiKeys: returnedKeys, userRole, appAdmin: req.session.user.appAdmin });
     } catch (error) {
@@ -593,14 +563,14 @@ router.get("/apiKey", isAdmin, async (req, res) => {
 
 router.post("/apiKey/deleteAll", isAppAdmin, async (req, res) => {
     const startTime = Date.now();
-    logger.request(req, `Delete all API keys request from USER:${req.session.user._id}`, {
+    logger.request(req, `Delete all API keys request from USER:${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin} and IP: ${req.ip}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         operation: 'delete_all_api_keys'
     });
 
     let deleteAll;
-    logger.info("Starting deletion of all API keys", {
+    logger.info("Starting deletion of all API keys...", {
         userId: req.session.user?._id,
         operation: 'delete_all_api_keys_start'
     });
@@ -621,7 +591,7 @@ router.post("/apiKey/deleteAll", isAppAdmin, async (req, res) => {
     }
 
     const duration = Date.now() - startTime;
-    logger.info("API keys deletion completed successfully", {
+    logger.debug(`API keys deletion completed successfully from USER:${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin} and IP: ${req.ip} in ${duration}ms` , {
         userId: req.session.user?._id,
         status: deleteAll,
         duration: `${duration}ms`,
@@ -635,7 +605,7 @@ router.post("/apiKey/deleteAll", isAppAdmin, async (req, res) => {
 router.post("/apiKey", isAdmin, async (req, res) => {
     const startTime = Date.now();
     const apiKeyName = sanitizeInput(req.body.apiKeyName);
-    logger.request(req, `Create API key request from User ${req.session.user._id}`, {
+    logger.request(req, `Create API key request from User ${req.session.user._id} with role ${req.session.user.role} and keyName: ${apiKeyName} and AppAdmin: ${req.session.user.appAdmin}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         keyName: apiKeyName,
@@ -649,10 +619,14 @@ router.post("/apiKey", isAdmin, async (req, res) => {
         let selectedCompanies = req.body.selectedCompanies;
         let companyId = sanitizeInput(selectedCompanies[0]);
         if (!companyId) {
+            logger.warn(`Missing company ID in API key creation request from User ${req.session.user._id}, API key name: ${name}`, {
+                userId: req.session.user?._id,
+                operation: 'create_api_key_missing_company_id'
+            });
             return res.status(400).json({ message: "Missing Parameters" });
         }
         if (!isRelatedToCompany(req, companyId)) {
-            logger.warn(`Unauthorized API key creation attempt from User ${req.session.user._id}, name: ${name}`, {
+            logger.warn(`Unauthorized API key creation attempt from User ${req.session.user._id}, ApiKey Name: ${name} is not related to company ${companyId} with role ${req.session.user.role} and appAdmin ${req.session.user.appAdmin}` , {
                 userId: req.session.user?._id,
                 userRole: req.session.user?.role,
                 companyId: companyId,
