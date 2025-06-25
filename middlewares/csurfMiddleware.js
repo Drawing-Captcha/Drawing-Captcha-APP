@@ -15,10 +15,12 @@ const generateCSRFToken = (req, res, next) => {
             res.cookie('mycsrfToken', csrfToken, { httpOnly: true, secure: true });
             req.session.csrfToken = csrfToken;
 
-            logger.info({
-                csrfToken: csrfToken,
-                path: req.path
-            }, "CSRF token generated and stored in session");
+            logger.info(`CSRF Token generated for path: ${req.path} and IP: ${req.ip}`, {
+                operation: 'generate_csrf_token',
+                path: req.path,
+                token: csrfToken
+            });
+
         }
     }
     next();
@@ -28,17 +30,18 @@ const validateCSRFToken = (req, res, next) => {
     const csrfToken = req.cookies.mycsrfToken;
 
     if (req.session.csrfToken === csrfToken && req.session.csrfToken != null && csrfToken != null) {
-        logger.info({
-            csrfToken: csrfToken,
-            operation: 'validate_csrf_token'
-        }, "CSRF token validation successful");
+        logger.info(`CSRF token validated for path: ${req.path} and IP: ${req.ip}`, {
+            operation: 'validate_csrf_token',
+            path: req.path,
+            token: csrfToken
+        })
         next();
     } else {
-        logger.warn({
-            sessionCSRFToken: req.session.csrfToken,
-            csrfToken: csrfToken,
-            operation: 'validate_csrf_token'
-        }, "CSRF token validation failed");
+        logger.warn(`CSRF token validation failed for path: ${req.path} and IP: ${req.ip}`, {
+            operation: 'validate_csrf_token',
+            path: req.path,
+            token: csrfToken
+        })
         res.redirect("/login");
     }
 };
@@ -50,10 +53,12 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
         const apiKey = req.body.apiKey;
 
         if (!apiKey || !uuidRegex.test(apiKey)) {
-            logger.warn({
+            logger.warn(`Invalid API key: ${apiKey}, from IP: ${req.ip} and path: ${req.path}`, {
+                operation: 'validate_api_key',
                 apiKey: apiKey,
-                operation: 'validate_api_key'
-            }, "Invalid or missing API key");
+                ip: req.ip
+            })
+            return res.status(400).json({ error: "Invalid API key" });
         }
 
         const doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
@@ -65,23 +70,22 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
             });
 
             if (originRelation.length === 0) {
-                logger.warn({
+                logger.warn( `Origin not allowed, with this apiKey: ${apiKey}, from IP: ${req.ip} and path: ${req.path}`, {
                     apiKey: apiKey,
                     origin: req.headers.origin,
                     operation: 'validate_api_key'
-                }, "Origin not allowed for this API key");
+                })
                 return res.status(403).json({ error: "Origin not allowed, with this apiKey" });
             }
 
             req.session.authMethod = "apiKey";
             req.session.apiKey = apiKey;
 
-            logger.info({
-                apiKey: apiKey,
-                origin: req.headers.origin,
-                operation: 'validate_api_key'
-            }, "API key validation successful");
-            console.log("validated api key")
+            logger.info(`API key validated for path: ${req.path} and IP: ${req.ip}`,{
+                operation: 'validate_api_key',
+                path: req.path,
+                apiKey: apiKey
+            })
             next();
         } else {
             const CSRFToken = req.cookies.mycsrfToken;
@@ -89,17 +93,18 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
             if (req.session.csrfToken === CSRFToken && req.session.csrfToken != null && CSRFToken != null) {
                 req.session.authMethod = "csrfToken";
 
-                logger.info({
-                    csrfToken: CSRFToken,
-                    operation: 'validate_csrf_token'
-                }, "CSRF token validation successful as fallback");
+                logger.info(`CSRF token validated for path: ${req.path} and IP: ${req.ip}`,{
+                    operation: 'validate_csrf_or_external_key',
+                    path: req.path,
+                    token: CSRFToken
+                })
                 next();
             } else {
-                logger.warn({
-                    sessionCSRFToken: req.session.csrfToken,
-                    csrfToken: CSRFToken,
-                    operation: 'validate_csrf_or_external_key'
-                }, "CSRF token and API key validation both failed");
+                logger.warn(`CSRF Token or API Key validation failed for path: ${req.path} and IP: ${req.ip}`,{
+                    operation: 'validate_csrf_or_external_key',
+                    path: req.path,
+                    token: CSRFToken
+                })
                 res.status(403).json({ error: "CSRF Token or API Key validation failed" });
             }
         }
