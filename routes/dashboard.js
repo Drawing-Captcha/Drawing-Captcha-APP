@@ -109,7 +109,7 @@ router.get('/getElements/notCategorized', isAppAdmin, async (req, res) => {
         }
 
         const duration = Date.now() - startTime;
-        logger.debug(`Uncategorized elements request completed in ${duration}ms from USER:${req.session.user._id}` , {
+        logger.debug(`Uncategorized elements request completed in ${duration}ms from USER:${req.session.user._id}`, {
             userId: req.session.user?._id,
             userRole: userRole,
             elementCount: returnedPool?.length || 0,
@@ -591,7 +591,7 @@ router.post("/apiKey/deleteAll", isAppAdmin, async (req, res) => {
     }
 
     const duration = Date.now() - startTime;
-    logger.debug(`API keys deletion completed successfully from USER:${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin} and IP: ${req.ip} in ${duration}ms` , {
+    logger.debug(`API keys deletion completed successfully from USER:${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin} and IP: ${req.ip} in ${duration}ms`, {
         userId: req.session.user?._id,
         status: deleteAll,
         duration: `${duration}ms`,
@@ -626,7 +626,7 @@ router.post("/apiKey", isAdmin, async (req, res) => {
             return res.status(400).json({ message: "Missing Parameters" });
         }
         if (!isRelatedToCompany(req, companyId)) {
-            logger.warn(`Unauthorized API key creation attempt from User ${req.session.user._id}, ApiKey Name: ${name} is not related to company ${companyId} with role ${req.session.user.role} and appAdmin ${req.session.user.appAdmin}` , {
+            logger.warn(`Unauthorized API key creation attempt from User ${req.session.user._id}, ApiKey Name: ${name} is not related to company ${companyId} with role ${req.session.user.role} and appAdmin ${req.session.user.appAdmin}`, {
                 userId: req.session.user?._id,
                 userRole: req.session.user?.role,
                 companyId: companyId,
@@ -725,7 +725,7 @@ router.get("/registerKey", isAdmin, (req, res) => {
 })
 
 router.get("/registerKey/assets", isAdmin, async (req, res) => {
-    logger.request(req, "Get register keys assets", {
+    logger.request(req, `Get register keys assets from ${req.session.user._id} with role ${req.session.user.role} and appAdmin ${req.session.user.appAdmin}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         operation: 'get_register_keys'
@@ -748,7 +748,7 @@ router.get("/registerKey/assets", isAdmin, async (req, res) => {
                 }
             });
         }
-        logger.info(`Register keys retrieved successfully from database for USER:${req.session.user._id}`, {
+        logger.info(`Register keys retrieved successfully from database for USER:${req.session.user._id} with role ${req.session.user.role} and appAdmin ${req.session.user.appAdmin}`, {
             userId: req.session.user?._id,
             keyCount: returnedKey?.length || 0,
             isAppAdmin: req.session.user?.appAdmin,
@@ -770,6 +770,12 @@ router.put("/registerKey", isAdmin, notReadOnly, async (req, res) => {
         let companyId = sanitizeInput(req.body.companyId)
 
         if (!isRelatedToCompany(req, companyId)) {
+            logger.warn(`Unauthorized attempt from User ${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin} to update register key`, {
+                userId: req.session.user?._id,
+                userRole: req.session.user?.role,
+                companyId: companyId,
+                operation: 'update_register_key_unauthorized'
+            });
             return res.status(401).json({ message: "Unauthorized" });
         }
         generateNewRegisterKey(req, res);
@@ -782,6 +788,7 @@ router.put("/registerKey", isAdmin, notReadOnly, async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal server error", error: error.message });
     }
 });
+
 router.post("/captchaSettings", isAdmin, async (req, res) => {
     try {
         logger.info(`Captcha settings request body from USER:${req.session.user._id} for Company ${sanitizeInput(req.body.company)}`, {
@@ -814,12 +821,23 @@ router.post("/captchaSettings", isAdmin, async (req, res) => {
         let companyId = company;
 
         if (!isRelatedToCompany(req, companyId)) {
+            logger.warn(`Unauthorized attempt from User ${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin} to update captcha settings`, {
+                userId: req.session.user?._id,
+                userRole: req.session.user?.role,
+                companyId: companyId,
+                operation: 'update_captcha_settings_unauthorized'
+            });
             return res.status(401).json({ message: "Unauthorized" });
         }
         let message;
 
         if (initColorKit === true) {
             if (req.session.user.appAdmin !== true) {
+                logger.warn(`Unauthorized attempt from User ${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin} to reset color kit`, {
+                    userId: req.session.user?._id,
+                    userRole: req.session.user?.role,
+                    operation: 'reset_color_kit_unauthorized'
+                });
                 return res.status(403).json({ success: false, message: "You don't have enough rights to perform this action" });
             }
         }
@@ -919,6 +937,12 @@ router.get("/colorKit", notReadOnly, async (req, res) => {
             returnedColorKit = await ColorKit.findOne({ company: company });
         }
         if (!returnedColorKit) {
+            logger.warn(`Color kit not found for company ${company} from USER:${req.session.user._id}`, {
+                userId: req.session.user?._id,
+                company: company,
+                isAppAdmin: appAdmin,
+                operation: 'get_color_kit_not_found'
+            });
             return res.status(404).json({ message: "ColorKit not found" });
         }
         res.status(200).json({ returnedColorKit });
@@ -938,7 +962,7 @@ router.get("/createItem", notReadOnly, (req, res) => {
 })
 
 router.post("/logout", (req, res) => {
-    logger.info(`User logging out from USER:${req.session.user._id}`, {
+    logger.info(`USER:${req.session.user._id} logging out from dashboard...`, {
         userId: req.session.user?._id,
         username: req.session.user?.username,
         userRole: req.session.user?.role,
@@ -952,7 +976,7 @@ router.post("/logout", (req, res) => {
                 });
                 throw err;
             }
-            logger.info(`User logged out successfully`, {
+            logger.info(`USER:${req.session.user._id} logged out successfully from dashboard`, {
                 operation: 'user_logout_success'
             });
             res.redirect("/login")
@@ -968,7 +992,7 @@ router.post("/logout", (req, res) => {
 
 router.post('/newValidation', notReadOnly, async (req, res) => {
     const startTime = Date.now();
-    logger.request(req, `Create new CAPTCHA from USER:${req.session.user._id} for Company ${sanitizeInput(req.body.selectedCompanies[0])}`, {
+    logger.request(req, `Create new CAPTCHA from USER:${req.session.user._id} for Company ${sanitizeInput(req.body.selectedCompanies[0])}, with role: ${req.session.user.role} and AppAdmin: ${req.session.user.appAdmin} and Captcha Name: ${sanitizeInput(req.body.sessionComponentName)}`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         componentName: sanitizeInput(req.body.sessionComponentName),
@@ -1085,6 +1109,13 @@ router.post('/newValidation/nameExists', notReadOnly, async (req, res) => {
             }
         }
     });
+    if (nameExists) {
+        logger.warn(`Name already exists for User ${req.session.user._id}, Captcha name: ${name}`, {
+            userId: req.session.user?._id,
+            name: name,
+            operation: 'name_exists'
+        });
+    }
     res.json({ nameExists });
 });
 
@@ -1103,7 +1134,7 @@ router.get('/allowedOrigins', async (req, res) => {
             returnedOrigins = await AllowedOriginModel.find({ companies: { $in: userCompany }, initOrigin: false });
             message = "Only the allowed origins related to your company are returned, as you are not an App Administrator";
         }
-        logger.info("Retrieved allowed origins", {
+        logger.info(`Retrieved allowed origins for User ${req.session.user._id} with role ${userRole} and appAdmin ${appAdmin}`, {
             userId: req.session.user?._id,
             userRole: userRole,
             isAppAdmin: appAdmin,
@@ -1123,7 +1154,7 @@ router.get('/allowedOrigins', async (req, res) => {
 })
 
 router.post('/allowedOrigins', isAdmin, async (req, res) => {
-    logger.request(req, "Create allowed origin", {
+    logger.request(req, `USER: ${req.session.user._id} request to Dashboard Create allowed origin`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         originName: req.body.originName,
@@ -1136,7 +1167,7 @@ router.post('/allowedOrigins', isAdmin, async (req, res) => {
         let selectedCompanies = req.body.selectedCompanies;
         let regexResult = await proofRegexOrigins(originName);
         if (!regexResult.test) {
-            logger.warn("Invalid origin format", {
+            logger.warn(`Invalid origin format from User ${req.session.user._id}, originName: ${originName} and AppAdmin: ${req.session.user.appAdmin}`, {
                 userId: req.session.user?._id,
                 originName: originName,
                 operation: 'create_allowed_origin_invalid_format'
@@ -1147,7 +1178,7 @@ router.post('/allowedOrigins', isAdmin, async (req, res) => {
 
         let companyId = selectedCompanies[0];
         if (!isRelatedToCompany(req, companyId)) {
-            logger.warn("Unauthorized attempt to create allowed origin", {
+            logger.warn(`Unauthorized attempt to create allowed origin from User ${req.session.user._id}, originName: ${originName} is not related to company ${companyId} with role ${req.session.user.role} and appAdmin ${req.session.user.appAdmin}`, {
                 userId: req.session.user?._id,
                 userRole: req.session.user?.role,
                 companyId: companyId,
@@ -1165,15 +1196,9 @@ router.post('/allowedOrigins', isAdmin, async (req, res) => {
 
             await origin.save();
             initializeAllowedOrigins();
-            logger.info("Allowed origin successfully created", {
-                userId: req.session.user?._id,
-                originName: originName,
-                companyId: companyId,
-                operation: 'create_allowed_origin_success'
-            });
             message = "Allowed origin successfully created";
         } else {
-            logger.warn("Allowed origin already exists or is undefined", {
+            logger.warn(`Allowed origin already exists or is undefined from User ${req.session.user._id}, originName: ${originName}`, {
                 userId: req.session.user?._id,
                 originName: originName,
                 originExists: !!doesOriginExist,
@@ -1201,6 +1226,12 @@ router.put("/allowedOrigins", isAdmin, async (req, res) => {
             let originExists = await AllowedOriginModel.findOne({ allowedOrigin: origin });
             let companyId = originExists.companies[0];
             if (!isRelatedToCompany(req, companyId)) {
+                logger.warn(`Unauthorized attempt to update allowed origin from User ${req.session.user._id}, originName: ${originName} is not related to company ${companyId} with role ${req.session.user.role} and appAdmin ${req.session.user.appAdmin}`, {
+                    userId: req.session.user?._id,
+                    userRole: req.session.user?.role,
+                    companyId: companyId,
+                    operation: 'create_allowed_origin_unauthorized'
+                });
                 return res.status(401).json({ message: "Unauthorized" });
             }
             if (originExists && !originExists.initOrigin) {
@@ -1214,7 +1245,7 @@ router.put("/allowedOrigins", isAdmin, async (req, res) => {
                 return res.status(404).json({ error: "The given Origin does not exist" });
             }
         } catch (err) {
-            logger.error("Error deleting allowed origin", err, {
+            logger.error(`Error deleting allowed origin`, err, {
                 userId: req.session.user?._id,
                 origin: origin,
                 operation: 'delete_allowed_origin_error'
