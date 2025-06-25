@@ -23,7 +23,6 @@ const proofRegexOrigins = require("../services/proofRegexOrigins.js")
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
 const sanitizeInput = require("../services/sanitizeInput.js");
-const { error } = require("console");
 
 router.get('/getElements', async (req, res) => {
     const startTime = Date.now();
