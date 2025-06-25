@@ -62,7 +62,7 @@ router.get('/', async (req, res) => {
         res.json({ allCompanies: returnedCompanies, userRole: req.session.user.role })
     }
     catch (error) {
-        logger.error(`Error retrieving companies for USER:${req.session.user._id} with company ${req.session.user.companyId}`, error, {
+        logger.error(`Error retrieving companies for USER:${req.session.user._id} with company ${req.session.user.company}`, error, {
             userId: req.session.user?._id,
             userRole: req.session.user?.role,
             operation: 'get_companies'
