@@ -61,7 +61,7 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
             return res.status(400).json({ error: "Invalid API key" });
         }
 
-        const doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
+        const doesExist = await ApiKeyModel.findOne({ apiKey: { $eq: apiKey } });
 
         if (doesExist) {
             const originRelation = await OriginModel.find({
