@@ -231,19 +231,19 @@ router.put("/crud", notReadOnly, async (req, res) => {
                     operation: 'dashboard_update_item'
                 });
                 let updatedCaptcha = {
-                    Name: name,
-                    ValidateF: tmpPool[0].ValidateF,
-                    validateMinCubes: tmpPool[0].validateMinCubes,
-                    validateMaxCubes: tmpPool[0].validateMaxCubes,
-                    MaxTolerance: (tmpPool[0].validateMaxCubes.length * 1) / tmpPool[0].ValidateF.length,
-                    MinTolerance: (tmpPool[0].validateMinCubes.length * 1) / tmpPool[0].ValidateF.length,
-                    todoTitle: todoTitle,
-                    backgroundSize: tmpPool[0].backgroundSize,
-                    companies: tmpPool[0].companies
+                    Name: sanitizeInput(name),
+                    ValidateF: Array.isArray(tmpPool[0].ValidateF) ? tmpPool[0].ValidateF.map(sanitizeInput) : [],
+                    validateMinCubes: Array.isArray(tmpPool[0].validateMinCubes) ? tmpPool[0].validateMinCubes.map(sanitizeInput) : [],
+                    validateMaxCubes: Array.isArray(tmpPool[0].validateMaxCubes) ? tmpPool[0].validateMaxCubes.map(sanitizeInput) : [],
+                    MaxTolerance: (Array.isArray(tmpPool[0].validateMaxCubes) && Array.isArray(tmpPool[0].ValidateF)) ? (tmpPool[0].validateMaxCubes.length * 1) / tmpPool[0].ValidateF.length : 0,
+                    MinTolerance: (Array.isArray(tmpPool[0].validateMinCubes) && Array.isArray(tmpPool[0].ValidateF)) ? (tmpPool[0].validateMinCubes.length * 1) / tmpPool[0].ValidateF.length : 0,
+                    todoTitle: sanitizeInput(todoTitle),
+                    backgroundSize: sanitizeInput(tmpPool[0].backgroundSize),
+                    companies: Array.isArray(tmpPool[0].companies) ? tmpPool[0].companies.map(sanitizeInput) : []
                 };
 
                 try {
-                    await CaptchaModel.updateOne({ ID: id }, updatedCaptcha, { runValidators: true });
+                    await CaptchaModel.updateOne({ ID: { $eq: sanitizeInput(id) } }, updatedCaptcha, { runValidators: true });
                 } catch (err) {
                     logger.error(`Error updating Item ${sanitizeInput(tmpPool[0]?.ID)} from user ${req.session.user?._id}`, err, {
                         userId: req.session.user?._id,
