@@ -6,7 +6,8 @@ const CaptchaModel = require("../models/Captcha.js")
 const DeletedCaptchaModel = require("../models/DeletedCaptchaModel.js")
 const registerKeyModel = require("../models/RegisterKey.js")
 const crypto = require("crypto");
-
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 let pool = [];
 let deletedBin = [];
 let allowedOrigins = [];
@@ -17,13 +18,15 @@ async function initializePool() {
     try {
         const pool = await CaptchaModel.find({});
         if (pool.length === 0) {
-            console.log("The pool collection in MongoDB is empty");
+            logger.info("The pool collection in the Database is empty", {
+                operation: 'initialize_pool'
+            })
             return [];
         } else {
             return pool;
         }
     } catch (err) {
-        console.log("Error retrieving data from MongoDB:", err);
+        logger.error('Error retrieving data from Database:', { error: err.message, stack: err.stack, operation: 'initialize_pool' });
         return [];
     }
 }
@@ -38,11 +41,13 @@ async function initializeAllowedOrigins() {
             defaultOrigin = [...new Set(defaultOrigin)];
             return defaultOrigin;
         } else {
-            console.log("Allowed origins are currently empty. Added localhost as default.");
+            logger.info("Allowed origins are currently empty. Added localhost as default.",{
+                operation: 'initialize_allowed_origins'
+            });
             return defaultOrigin;
         }
     } catch (err) {
-        console.log("Error parsing JSON data while initializing allowedOrigins:", err);
+        logger.error('Error retrieving data from Database:', { error: err.message, stack: err.stack, operation: 'initialize_allowed_origins' });
     }
 }
 
@@ -51,13 +56,15 @@ async function initializeBin() {
     try {
         const bin = await DeletedCaptchaModel.find({});
         if (bin.length === 0) {
-            console.log("The deleted bin collection in MongoDB is empty");
+            logger.warn("The bin collection in the Database is empty", {
+                operation: 'initialize_bin'
+            });
             return [];
         } else {
             return bin;
         }
     } catch (err) {
-        console.log("Error retrieving data from MongoDB:", err);
+        logger.error('Error retrieving data from Database:', { error: err.message, stack: err.stack, operation: 'initialize_bin' });
         return [];
     }
 }
@@ -75,20 +82,22 @@ async function initializeRegisterKey() {
 
             await newRegisterKey.save();
             message = "New register key successfully generated";
-            console.log(message);
-            console.log("New register key:", newRegisterKey);
+                logger.info(`New register key: ${newRegisterKey}`, {
+                    operation: 'initialize_register_key'
+                });
             return message;
         } else {
             existingRegisterKey.RegisterKey = crypto.randomUUID();
             await existingRegisterKey.save();
             message = "Register key successfully updated";
-            console.log(message);
-            console.log("Updated register key:", existingRegisterKey);
+            logger.info(message, {
+                operation: 'update_register_key'
+            });
             return message;
 
         }
     } catch (error) {
-        console.error("Error initializing register key:", error);
+        logger.error('Error updating register key:', { error: error.message, stack: error.stack });
     }
 }
 

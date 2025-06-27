@@ -1,6 +1,8 @@
 const AllowedOriginModel = require("../models/AllowedOrigins.js");
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 async function configInitDomain() {
     try {
@@ -11,11 +13,14 @@ async function configInitDomain() {
                 initOrigin: true
             });
             await newOrigin.save();
-            console.log("Initial Origin successfully created")
+            logger.info("Initial Origin successfully created")
         }
-        console.log("Initial Origin already exists")
+        logger.info("Initial Origin already exists");
     } catch (error) {
-        console.error("Error occurred while fetching allowed origins:", error);
+        logger.error("Error occurred while fetching allowed origins:", {
+            error: error,
+            operation: 'config_init_domain'
+        });
     }
 }
 

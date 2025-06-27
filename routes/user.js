@@ -22,7 +22,7 @@ router.get('/ownUser', async (req, res) => {
 router.get('/allUsers', async (req, res) => {
     logger.request(req, `USER: ${req.session.user._id} allUsers endpoint hit`, {
         userId: req.session.user?._id,
-        userRole: req.session.user?.role,
+        userRole: req.session.user?.role, 
         operation: 'get_all_users'
     });
     try {

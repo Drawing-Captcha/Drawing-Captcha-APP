@@ -29,6 +29,7 @@ const port = process.env.PORT;
 const hasEnteredRegisterKey = require("./middlewares/hasEnteredRegisterKey.js");
 const cleanTokens = require("./crons/cleanTokens.js");
 const {authLimiter, tokenLimiter, captchaLimiter, testLimiter, dashboardLimiter, socialAuthLimiter, emailConfirmationLimiter, siteVerifyLimiter} = require("./middlewares/rateLimiter.js")
+
 createDirectory()
 connectDB()
 createInitCaptcha()
@@ -80,7 +81,6 @@ app.use(helmet({
     crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: false
 }))
-const csrfProtection = csrf({ cookie: true });
 
 app.use(cors({
     origin: async function (origin, callback) {
@@ -178,8 +178,7 @@ app.listen(port, async () => {
                 logger.info('All Sessions cleared successfully.');
             }
         });
-        let message = await initializeRegisterKey();
-        logger.info(message);
+        await initializeRegisterKey();
     }
     catch (err) {
         logger.error('Error clearing session store:', { error: err.message, stack: err.stack });

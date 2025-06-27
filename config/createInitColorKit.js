@@ -1,11 +1,15 @@
 const ColorKitModel = require("../models/ColorKit.js");
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 async function createInitColorKit() {
-    console.log("Trying to create the initial ColorKit...");
     try {
         const initColorKit = await ColorKitModel.findOne({ initColorKit: true });
         if (!initColorKit) {
-            console.log("No ColorKit found, creating a new one...");
+            const started = Date.now();
+            logger.info("Creating initial ColorKit...", {
+                operation: 'create_init_color_kit'
+            });
             const newInitColorKit = new ColorKitModel({
                 buttonColorValue: "#007BFF",
                 buttonColorHoverValue: "#0056b3",
@@ -16,9 +20,12 @@ async function createInitColorKit() {
             });
 
             await newInitColorKit.save();
-            console.log("Initial ColorKit created and saved successfully.");
+            const ended = Date.now();
+                logger.debug(`Initial ColorKit created and saved successfully in ${ended - started} ms` , {
+                operation: 'create_init_color_kit'
+            })
         } else {
-            console.log("Initial ColorKit already exists, no changes made.");
+            logger.info("Initial ColorKit already exists.");
         }
     } catch (error) {
         console.error("An error occurred while creating the initial ColorKit:", error);

@@ -1,4 +1,6 @@
 const CaptchaModel = require("../models/Captcha.js")
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 const initCaptcha = {
     ID: 'ea9bf7ba-1994-49bd-990a-48979a6db274',
     Name: 'Captcha-Logo',
@@ -69,7 +71,9 @@ async function createInitCaptcha() {
             message = "Initial Captcha already exists";
         }
 
-        console.log(message);
+        logger.info(message, {
+            operation: 'create_init_captcha'
+        });
     } catch (error) {
         console.error("Error handling initial Captcha:", error);
     }

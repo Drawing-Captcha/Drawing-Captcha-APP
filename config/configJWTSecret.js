@@ -1,5 +1,8 @@
 const appSettingsModel = require("../models/AppSettings.js");
 const crypto = require("crypto");
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
+
 async function configJWTSecret() {
     try {
         const appSettings = await appSettingsModel.findOne({});
@@ -22,11 +25,16 @@ async function configJWTSecret() {
             message = "JWT Secret successfully configured & created new AppSettings"
         }
 
-        console.log(message);
+        logger.info(message, {
+            operation: 'config_jwt_secret'
+        });
         return
     }
     catch (err) {
-        console.log("Error configuring JWT Secret: ", err);
+        logger.error("Error configuring JWT Secret: ", {
+            error: err,
+            operation: 'config_jwt_secret'
+        });
         return
     }
 }
