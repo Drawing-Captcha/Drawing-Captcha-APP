@@ -4,70 +4,23 @@ const session = require("express-session");
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const crypto = require("crypto");
-const fs = require('fs');
 const path = require("path");
 const authMiddleware = require("./middlewares/authMiddleware.js")
 const csrf = require('csurf');
 const passport = require('passport');
 const cookieParser = require('cookie-parser');
-const connectDB = require("./config/db.js")
-const deleteAndLog = require("./services/deleteAndLog.js")
-const logger = require('./utils/logger');
-const deleteAllFilesInDir = require("./services/deleteAllFilesInDir.js");
-const { pool, deletedBin, initializeAllowedOrigins, initializeRegisterKey } = require("./controllers/initializeController.js")
-const createInitCaptcha = require("./config/createInitCaptcha.js")
-const generateNewRegisterKey = require("./services/generateRegisterKey.js")
-const configInitDomain = require("./config/configInitDomain.js")
-const createInitColorKit = require("./config/createInitColorKit.js")
-const createDirectory = require("./services/createDirectory.js")
-const configureJWTSecret = require("./config/configJWTSecret.js")
+const createModuleLogger = require('./utils/loggerHelper');
+const logger = createModuleLogger(__filename);
+const {initializeAllowedOrigins, initializeRegisterKey } = require("./controllers/initializeController.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
-const cleanSessions = require("./crons/cleanSessions.js");
 const store = require("./models/store.js")
 const csrfMiddleware = require("./middlewares/csurfMiddleware.js")
 const port = process.env.PORT;
 const hasEnteredRegisterKey = require("./middlewares/hasEnteredRegisterKey.js");
-const cleanTokens = require("./crons/cleanTokens.js");
 const {authLimiter, tokenLimiter, captchaLimiter, testLimiter, dashboardLimiter, socialAuthLimiter, emailConfirmationLimiter, siteVerifyLimiter} = require("./middlewares/rateLimiter.js")
-
-createDirectory()
-connectDB()
-createInitCaptcha()
-createInitColorKit()
-configInitDomain()
-configureJWTSecret()
-
-setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
-setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
-setInterval(() => {
-    logger.info('Running session cleanup...');
-    cleanSessions();
-}, 1000 * 60 * 60)
-setInterval(() => {
-    logger.info('Running token cleanup...');
-    cleanTokens();
-}, 1000 * 60 * 5);
-
-
-async function initialize() {
-    await pool
-    await deletedBin
-}
-
-initialize().then(() => {
-    logger.info("src initialized")
-}).catch(err => {
-    logger.error('Error initializing src:', { error: err.message, stack: err.stack });
-})
-
+const initializeAppComposer = require("./controllers/initializeAppComposer.js")
+initializeAppComposer()
 const app = express();
-deleteAllFilesInDir("./tmpimg").then(() => logger.info("All files deleted in ./tmpimg")).catch(err => logger.error('Error deleting files:', err));
-
-const logsDir = path.join(__dirname, 'logs');
-if (!fs.existsSync(logsDir)) {
-    fs.mkdirSync(logsDir);
-    logger.info('Created logs directory');
-}
 
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
@@ -81,7 +34,6 @@ app.use(helmet({
     crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: false
 }))
-
 app.use(cors({
     origin: async function (origin, callback) {
         try {
@@ -101,7 +53,6 @@ app.use(cors({
     },
     credentials: true
 }));
-
 app.set("view engine", "ejs")
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -127,6 +78,7 @@ const confirmEmail = require("./routes/confirm-email.js");
 const registerKeyRoutes = require("./routes/registerKey.js")
 const siteVerifyCallback = require("./routes/siteVerifyCallback.js");
 const { error } = require("console");
+const { init } = require("./models/ApiKey.js");
 
 if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
     const MicrosoftStrategy = require("./routes/strategies/microsoft.js")
