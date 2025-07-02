@@ -1,8 +1,35 @@
 const winston = require('winston');
-const path = require('path');
-require('winston-daily-rotate-file');
+const { LoggerProvider } = require('@opentelemetry/sdk-logs');
+const { OTLPLogExporter } = require('@opentelemetry/exporter-logs-otlp-http');
+const { SimpleLogRecordProcessor } = require('@opentelemetry/sdk-logs');
+const { resourceFromAttributes } = require('@opentelemetry/resources')
+const { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } = require('@opentelemetry/semantic-conventions')
 
-// Define log levels
+const otlpExporter = new OTLPLogExporter({
+  url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://127.0.0.1:4318/v1/logs', // OTLP-HTTP-Endpoint
+});
+
+const otelProvider = new LoggerProvider({
+  resource: resourceFromAttributes({
+    [ATTR_SERVICE_NAME]: "Drawing-Captcha-Logger",
+    [ATTR_SERVICE_VERSION]: "process.env.OTEL_SERVICE_VERSION"
+  })
+})
+otelProvider.addLogRecordProcessor(new SimpleLogRecordProcessor(otlpExporter));
+
+class OpenTelemetryTransport extends winston.Transport {
+  log(info, callback) {
+    const { level, message, ...meta } = info;
+    const logger = otelProvider.getLogger('default'); 
+    logger.emit({
+      severityText: level,
+      body: message,
+      attributes: meta,
+    });
+    callback();
+  }
+}
+
 const levels = {
   error: 0,
   warn: 1,
@@ -11,13 +38,11 @@ const levels = {
   debug: 4,
 };
 
-// Define log level based on environment
 const level = () => {
   const env = process.env.NODE_ENV || 'DEVELOPMENT';
   return env === 'DEVELOPMENT' ? 'debug' : 'info';
 };
 
-// Define custom colors for each log level
 const colors = {
   error: 'red',
   warn: 'yellow',
@@ -26,68 +51,33 @@ const colors = {
   debug: 'blue',
 };
 
-// Add colors to winston
 winston.addColors(colors);
 
-// Custom format for console logs
 const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
-  winston.format.errors({ stack: true }), // Stacktrace wird hinzugefügt
+  winston.format.errors({ stack: true }),
   winston.format.printf(
     (info) => {
-      const stack = info.stack ? `\n${info.stack}` : ''; // Stacktrace anhängen, falls vorhanden
+      const stack = info.stack ? `\n${info.stack}` : ''; 
       return `${info.timestamp} ${info.level}: ${info.message}${stack}`;
     }
   )
 );
 
-// Custom format for file logs (JSON)
-const fileFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
-  winston.format.errors({ stack: true }), // Stacktrace wird hinzugefügt
-  winston.format.json()
-);
-
-// Create a DailyRotateFile transport for error logs
-const errorRotateFile = new winston.transports.DailyRotateFile({
-  filename: path.join('logs', 'error-%DATE%.log'),
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: true,
-  maxSize: '20m',
-  maxFiles: '14d',
-  level: 'error',
-  format: fileFormat,
-});
-
-// Create a DailyRotateFile transport for all logs
-const combinedRotateFile = new winston.transports.DailyRotateFile({
-  filename: path.join('logs', 'combined-%DATE%.log'),
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: true,
-  maxSize: '20m',
-  maxFiles: '14d',
-  format: fileFormat,
-});
-
-// Define transports array
 const transports = [
   new winston.transports.Console({
     format: consoleFormat,
   }),
-  errorRotateFile,
-  combinedRotateFile,
+  new OpenTelemetryTransport(), 
 ];
 
-// Create the Winston logger instance
 const logger = winston.createLogger({
   level: level(),
   levels,
-  format: fileFormat,
   transports,
 });
 
-// Add request context to logger
 logger.requestContext = (req) => {
   return {
     method: req.method,
@@ -97,7 +87,6 @@ logger.requestContext = (req) => {
   };
 };
 
-// Helper function to log errors with context
 logger.errorWithContext = (message, error, req) => {
   const context = logger.requestContext(req);
   logger.error(message, {
@@ -109,3 +98,4 @@ logger.errorWithContext = (message, error, req) => {
 };
 
 module.exports = logger;
+
