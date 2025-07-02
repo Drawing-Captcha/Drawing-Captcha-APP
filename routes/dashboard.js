@@ -975,10 +975,7 @@ router.post("/logout", (req, res) => {
                 });
                 throw err;
             }
-            logger.info(`USER:${req.session.user._id} logged out successfully from dashboard`, {
-                operation: 'user_logout_success'
-            });
-            res.redirect("/login")
+            res.redirect("/");
         })
     }
     catch (err) {
