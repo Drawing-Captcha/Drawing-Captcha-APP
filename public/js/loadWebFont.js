@@ -1,0 +1,1 @@
+WebFont.load({ google: { families: ["Poppins:regular,500,600,700", "Outfit:100,200,300,regular,500,600,700,800,900"] } });
