@@ -85,8 +85,6 @@ const testConnectionRoutes = require("./routes/testConnection.js")
 const confirmEmail = require("./routes/confirm-email.js");
 const registerKeyRoutes = require("./routes/registerKey.js")
 const siteVerifyCallback = require("./routes/siteVerifyCallback.js");
-const { error } = require("console");
-const { init } = require("./models/ApiKey.js");
 
 if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
     const MicrosoftStrategy = require("./routes/strategies/microsoft.js")
@@ -114,7 +112,6 @@ app.use((req, res, next) => {
     }
     next();
 });
-
 
 app.use((err, req, res, next) => {
     const errorDetails = {
