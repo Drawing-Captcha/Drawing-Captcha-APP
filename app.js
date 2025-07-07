@@ -11,13 +11,13 @@ const passport = require('passport');
 const cookieParser = require('cookie-parser');
 const createModuleLogger = require('./utils/loggerHelper');
 const logger = createModuleLogger(__filename);
-const {initializeAllowedOrigins, initializeRegisterKey } = require("./controllers/initializeController.js")
+const { initializeAllowedOrigins, initializeRegisterKey } = require("./controllers/initializeController.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 const store = require("./models/store.js")
 const csrfMiddleware = require("./middlewares/csurfMiddleware.js")
 const port = process.env.PORT;
 const hasEnteredRegisterKey = require("./middlewares/hasEnteredRegisterKey.js");
-const {authLimiter, tokenLimiter, captchaLimiter, testLimiter, dashboardLimiter, socialAuthLimiter, emailConfirmationLimiter, siteVerifyLimiter} = require("./middlewares/rateLimiter.js")
+const { authLimiter, tokenLimiter, captchaLimiter, testLimiter, dashboardLimiter, socialAuthLimiter, emailConfirmationLimiter, siteVerifyLimiter } = require("./middlewares/rateLimiter.js")
 const initializeAppComposer = require("./controllers/initializeAppComposer.js")
 initializeAppComposer()
 const app = express();
@@ -29,7 +29,13 @@ app.use('/tmpimg', express.static('tmpimg'));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+        directives: {
+            "script-src": ["'self'", "https://ajax.googleapis.com", "https://d3e54v103j8qbb.cloudfront.net", "'unsafe-inline'"],
+            "style-src": ["'self'", "https://fonts.googleapis.com", "https://fonts.gstatic.com", "https://fonts.googleapis.com/css2", "https://fonts.googleapis.com/css", "'unsafe-inline'"],
+            "script-src-attr": ["'self'", "'unsafe-inline'"],
+        }
+    },
     crossOriginEmbedderPolicy: false,
     crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: false
@@ -61,8 +67,10 @@ app.use(session({
     saveUninitialized: false,
     store: store,
     cookie: {
-        maxAge: 4 * 60 * 60 * 1000,
-        secure: process.env.NODE_ENV !== 'DEVELOPMENT', // Set to true in production
+        maxAge: 30 * 60 * 1000, 
+        secure: process.env.NODE_ENV !== 'DEVELOPMENT',
+        httpOnly: true,
+        sameSite: 'strict' 
     }
 }));
 app.use(passport.initialize())
@@ -98,25 +106,31 @@ app.use('/company', authMiddleware, dashboardLimiter, csrfMiddleware.validateCSR
 app.use('/registerKey', authMiddleware, dashboardLimiter, csrfMiddleware.validateCSRFToken, registerKeyRoutes)
 app.use('/test', testLimiter, testConnectionRoutes)
 app.use("/confirm-email", emailConfirmationLimiter, confirmEmail)
-app.use("/siteVerify", tokenLimiter, siteVerifyLimiter, csrfMiddleware.validateCSRFOrExternalKey ,siteVerifyCallback)
+app.use("/siteVerify", tokenLimiter, siteVerifyLimiter, csrfMiddleware.validateCSRFOrExternalKey, siteVerifyCallback)
 
 app.use((req, res, next) => {
-    if (!res.headersSent) {
-        res.redirect('/404');
+    if (res.statusCode === 404) {
+        return res.redirect('/404');
     }
+    next();
 });
 
+
 app.use((err, req, res, next) => {
-    logger.error('Unhandled error:', { 
-        error: err.message || 'No error message',       
+    const errorDetails = {
+        message: err.message || 'No error message provided',
+        stack: err.stack || 'No stack trace available',
+        name: err.name || 'UnknownError',
         path: req.originalUrl, 
         ip: req.ip, 
         method: req.method,
-    });
+    };
     
-    res.status(500).json({
-        message: 'Internal Server Error',
-        error: 'An unexpected error occurred'
+    logger.error(`Unhandled error: ${process.env.NODE_ENV === 'DEVELOPMENT' ? err : err.message}`, errorDetails);
+    
+    res.status(err.status || 500).json({
+        error: 'Internal Server Error',
+        details: process.env.NODE_ENV === 'DEVELOPMENT' ? errorDetails : undefined,
     });
 });
 
