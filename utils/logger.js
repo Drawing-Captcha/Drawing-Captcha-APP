@@ -1,33 +1,70 @@
 const winston = require('winston');
-const { LoggerProvider } = require('@opentelemetry/sdk-logs');
+const { LoggerProvider, BatchLogRecordProcessor } = require('@opentelemetry/sdk-logs');
 const { OTLPLogExporter } = require('@opentelemetry/exporter-logs-otlp-http');
-const { SimpleLogRecordProcessor } = require('@opentelemetry/sdk-logs');
 const { resourceFromAttributes } = require('@opentelemetry/resources')
 const { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } = require('@opentelemetry/semantic-conventions')
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-const otlpExporter = new OTLPLogExporter({
-  url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://127.0.0.1:4318/v1/logs', // OTLP-HTTP-Endpoint
-});
+let transports;
 
-const otelProvider = new LoggerProvider({
-  resource: resourceFromAttributes({
-    [ATTR_SERVICE_NAME]: "Drawing-Captcha-Logger",
-    [ATTR_SERVICE_VERSION]: "process.env.OTEL_SERVICE_VERSION"
+const consoleFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
+  winston.format.colorize({ all: true }),
+  winston.format.errors({ stack: true }),
+  winston.format.printf(
+    (info) => {
+      const stack = info.stack ? `\n${info.stack}` : '';
+      return `${info.timestamp} ${info.level}: ${info.message}${stack}`;
+    }
+  )
+);
+
+if (process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
+  const otlpExporter = new OTLPLogExporter({
+    url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+  });
+
+  const otelProvider = new LoggerProvider({
+    resource: resourceFromAttributes({
+      [ATTR_SERVICE_NAME]: "Drawing-Captcha-Logger",
+      [ATTR_SERVICE_VERSION]: "process.env.OTEL_SERVICE_VERSION"
+    })
   })
-})
-otelProvider.addLogRecordProcessor(new SimpleLogRecordProcessor(otlpExporter));
 
-class OpenTelemetryTransport extends winston.Transport {
-  log(info, callback) {
-    const { level, message, ...meta } = info;
-    const logger = otelProvider.getLogger('default'); 
-    logger.emit({
-      severityText: level,
-      body: message,
-      attributes: meta,
-    });
-    callback();
+  otelProvider.addLogRecordProcessor(new BatchLogRecordProcessor(otlpExporter, {
+    maxExportBatchSize: 10,
+    scheduledDelayMillis: 1000,
+  }));
+
+
+  class OpenTelemetryTransport extends winston.Transport {
+    log(info, callback) {
+      const { level, message, ...meta } = info;
+      const logger = otelProvider.getLogger('default');
+      logger.emit({
+        severityText: level,
+        body: message,
+        attributes: meta,
+      });
+      callback();
+    }
   }
+
+  transports = [
+    new winston.transports.Console({
+      format: consoleFormat,
+    }),
+    new OpenTelemetryTransport(),
+  ];
+
+}
+else {
+  transports = [
+    new winston.transports.Console({
+      format: consoleFormat,
+    })
+  ];
 }
 
 const levels = {
@@ -53,24 +90,6 @@ const colors = {
 
 winston.addColors(colors);
 
-const consoleFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
-  winston.format.colorize({ all: true }),
-  winston.format.errors({ stack: true }),
-  winston.format.printf(
-    (info) => {
-      const stack = info.stack ? `\n${info.stack}` : ''; 
-      return `${info.timestamp} ${info.level}: ${info.message}${stack}`;
-    }
-  )
-);
-
-const transports = [
-  new winston.transports.Console({
-    format: consoleFormat,
-  }),
-  new OpenTelemetryTransport(), 
-];
 
 const logger = winston.createLogger({
   level: level(),

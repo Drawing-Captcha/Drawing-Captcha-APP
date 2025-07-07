@@ -97,6 +97,9 @@ Here are some of the project's best features:
    MICROSOFT_CLIENT_SECRET=
    #if none is given the default is "common"
    MICROSOFT_TENANT_ID=
+   #OpenTelemetry HTTPS endpoint
+   OTEL_EXPORTER_OTLP_ENDPOINT="http://127.0.0.1:4318/v1/logs"
+
 
    ```
 
