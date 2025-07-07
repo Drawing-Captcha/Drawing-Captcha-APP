@@ -26,14 +26,16 @@ const Company = require('../models/Company.js');
 
 router.post('/reload', (req, res) => {
     try {
-        const session = req.body.session;
-        const uniqueFileName = sanitizeInput(session.uniqueFileName)
-        if (uniqueFileName) {
-            const resolvedPath = path.resolve(`./tmpimg/${uniqueFileName}`);
-            if (resolvedPath) {
-                deleteFile.deleteFile(resolvedPath);
-            } else {
-                console.error("Path traversal attempt detected:", resolvedPath);
+        const session = req.body?.session;
+        if (session) {
+            const uniqueFileName = sanitizeInput(session.uniqueFileName ?? "")
+            if (uniqueFileName) {
+                const resolvedPath = path.resolve(`./tmpimg/${uniqueFileName}`);
+                if (resolvedPath) {
+                    deleteFile.deleteFile(resolvedPath);
+                } else {
+                    logger.error("Path traversal attempt detected:", resolvedPath);
+                }
             }
         }
     } catch (err) {
@@ -133,6 +135,14 @@ router.post('/assets', async (req, res) => {
                     tmpContent.push(item);
                 }
             });
+        }
+
+        if (tmpContent.length === 0) {
+            logger.warn("No valid content found in the pool", null, {
+                operation: 'get_captcha_assets',
+                clientIdentifier: captchaIdentifier
+            });
+            return res.status(500).json({ error: 'No valid content found in the pool.' });
         }
 
         const randomIndex = Math.floor(Math.random() * tmpContent.length);

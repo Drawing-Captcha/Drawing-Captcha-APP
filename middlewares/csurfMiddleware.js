@@ -5,16 +5,11 @@ const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
 
 const generateCSRFToken = (req, res, next) => {
-    if (!req.session) {
-        req.session = {};
-    }
-
     if (!req.session.csrfToken) {
         if (req.path === '/login' || req.path === '/register') {
             const csrfToken = crypto.randomBytes(16).toString('hex');
-            res.cookie('mycsrfToken', csrfToken, { httpOnly: true, secure: true });
             req.session.csrfToken = csrfToken;
-
+            res.cookie('mycsrfToken', csrfToken, { httpOnly: true, secure: true });
             logger.info(`CSRF Token generated for path: ${req.path} and IP: ${req.ip}`, {
                 operation: 'generate_csrf_token',
                 path: req.path,
@@ -28,7 +23,6 @@ const generateCSRFToken = (req, res, next) => {
 
 const validateCSRFToken = (req, res, next) => {
     const csrfToken = req.cookies.mycsrfToken;
-
     if (req.session.csrfToken === csrfToken && req.session.csrfToken != null && csrfToken != null) {
         logger.info(`CSRF token validated for path: ${req.path} and IP: ${req.ip}`, {
             operation: 'validate_csrf_token',

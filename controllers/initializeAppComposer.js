@@ -16,7 +16,7 @@ const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
 
 async function initializeAppComposer() {
-    deleteAllFilesInDir("./tmpimg").then(() => logger.info("All files deleted in ./tmpimg")).catch(err => logger.error('Error deleting files:', err));
+    deleteAllFilesInDir("./tmpimg").then(() => logger.info("All files deleted in ./tmpimg")).catch(err => logger.error('Error deleting files in ./tmpimg:', err));
 
     setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
     setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);

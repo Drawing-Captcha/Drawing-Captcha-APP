@@ -337,7 +337,6 @@ function resetCheckboxes() {
     })
 }
 
-
 async function changeDetails(e) {
     let allCompaniesData = await getCompanies();
     let elementCompany = allCompaniesData.allCompanies.find(company => e.company === company.companyId);
@@ -477,7 +476,6 @@ passwordInput.addEventListener("input", () => {
         retypePasswordInput.value = "";
     }
 });
-
 
 function deleteUser(user) {
     if (!confirm("Are you sure you want to delete the User: " + user.username + "?")) {
@@ -619,7 +617,6 @@ function createCompanyAdminSection(company) {
     `;
 }
 
-
 async function buildCompanyShells() {
     let data = await getCompanies()
     const allCompanies = data.allCompanies;
@@ -643,7 +640,6 @@ async function buildCompanyShells() {
     await getAllUser();
 
 }
-
 
 
 document.getElementById('changeDetailsForm').addEventListener('submit', submitForm);
