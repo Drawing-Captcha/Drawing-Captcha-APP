@@ -1,5 +1,6 @@
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
+const sanitizeInput = require("../services/sanitizeInput.js");
 const isAuthorizedUpdateUser = (req, res, next) => {
     if (!req.session.user) {
         logger.warn(`Session User is not defined for user ${req.session.user?._id}`, {
@@ -9,7 +10,7 @@ const isAuthorizedUpdateUser = (req, res, next) => {
         return res.status(401).json({ message: "Unauthorized" });
     }
 
-    if (!req.body.submittedData || !req.body.submittedData.id) {
+    if (!req.body.submittedData || !sanitizeInput(req.body.submittedData.id)) {
         logger.warn(`Submitted User ID is not defined for user ${req.session.user?._id}`, {
             userId: req.session.user?._id,
             operation: 'update_user_no_user_id'
@@ -18,7 +19,7 @@ const isAuthorizedUpdateUser = (req, res, next) => {
     }
 
     const sessionUserId = req.session.user._id.toString();
-    const submittedUserId = req.body.submittedData.id.toString();
+    const submittedUserId = sanitizeInput(req.body.submittedData.id.toString());
 
     logger.info(`Session User: ${sessionUserId}`, {
         userId: req.session.user?._id,
