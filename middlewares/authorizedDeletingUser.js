@@ -1,10 +1,9 @@
-const sanitize = require("mongo-sanitize");
-const xss = require("xss");
+const sanitizeInput = require("../services/sanitizeInput.js");
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
 
 const isAuthorizedDeletingUser = (req, res, next) => {
-    const user = xss(sanitize(req.body.user));
+    const user = req.body.user;
     if (!req.session.user) {
         logger.warn(`Session User is not defined for user ${req.session.user?._id}`, {
             userId: req.session.user?._id,
@@ -15,10 +14,11 @@ const isAuthorizedDeletingUser = (req, res, next) => {
 
     logger.info(`Requested user: ${user}`, {
         userId: req.session.user?._id,
-        requestedUserId: user?._id,
+        requestedUserId: sanitizeInput(user?._id),
         operation: 'delete_user_request'
     });
-    if (!user || !user._id) {
+    if (!user || !sanitizeInput(user._id)) {
+        console.log(user)
         logger.warn(`Submitted User ID is not defined for user ${req.session.user?._id}`, {
             userId: req.session.user?._id,
             operation: 'delete_user_no_user_id'
@@ -27,7 +27,7 @@ const isAuthorizedDeletingUser = (req, res, next) => {
     }
 
     const sessionUserId = req.session.user._id.toString();
-    const submittedUserId = user._id.toString();
+    const submittedUserId = sanitizeInput(user._id.toString());
 
     logger.info(`Session User: ${sessionUserId}`, {
         userId: req.session.user?._id,
