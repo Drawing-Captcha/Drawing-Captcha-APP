@@ -58,7 +58,11 @@ router.post("/callback", async (req, res) => {
                 token: token
             })
         }
-        console.log("SiteVerifyCallback: Callback successful");
+        logger.info(`SiteVerifyCallback: Callback successful from IP: ${req.ip} and path: ${req.path} and origin: ${req.headers.origin}`, {
+            operation: 'site_verify_callback',
+            ip: req.ip,
+            token: token
+        })
         res.json({ isValid: true, message: "Callback successful" });
     } catch (error) {
         console.error("SiteVerifyCallback:", error);

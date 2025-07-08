@@ -1,16 +1,28 @@
-const ColorKitModel = require("../models/ColorKit.js")
+const ColorKitModel = require("../models/ColorKit.js");
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 async function deleteColorKitRelation(companyId) {
     try {
-        console.log(`Color Kits for company ID ${companyId} wird gelöscht.`);
-        const colorKits = await ColorKitModel.findOneAndDelete({ company: companyId })
+        logger.info(`Deleting Color Kits for company ID: ${companyId}`, {
+            companyId: companyId,
+            operation: 'delete_color_kit_relation'
+        });
+        const colorKits = await ColorKitModel.findOneAndDelete({ company: companyId });
         if (!colorKits) {
-            console.log(`Kein Color Kit für die Firma ${companyId} gefunden.`);
+            logger.warn(`No Color Kit found for company ID: ${companyId}`, {
+                companyId: companyId,
+                operation: 'delete_color_kit_not_found'
+            });
         }
     } catch (error) {
-        console.error(`An error occurred while deleting Color Kits relations with company ID: ${companyId}`, error)
+        logger.error(`An error occurred while deleting Color Kits relations with company ID: ${companyId}`, {
+            error: error,
+            companyId: companyId,
+            operation: 'delete_color_kit_relation_error'
+        });
     }
-
 }
 
 module.exports = deleteColorKitRelation;
+

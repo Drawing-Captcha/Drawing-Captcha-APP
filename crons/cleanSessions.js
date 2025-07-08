@@ -1,5 +1,7 @@
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 async function cleanSessions() {
     const uri = process.env.MONGO_URI; 
@@ -18,11 +20,16 @@ async function cleanSessions() {
             ]
         };
 
-
         const result = await sessions.deleteMany(query);
-        console.log(`Deleted ${result.deletedCount} sessions.`);
+        logger.info(`Deleted ${result.deletedCount} sessions.`, {
+            operation: 'clean_sessions',
+            deletedCount: result.deletedCount
+        });
     } catch (error) {
-        console.error('Error cleaning sessions:', error);
+        logger.error(`Error cleaning sessions: ${error}`, {
+            operation: 'clean_sessions',
+            error: error
+        });
     } finally {
         await client.close();
     }

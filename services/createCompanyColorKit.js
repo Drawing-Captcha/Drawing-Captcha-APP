@@ -1,51 +1,69 @@
-const ColorKitModel = require("../models/ColorKit.js")
+const ColorKitModel = require("../models/ColorKit.js");
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 async function createCompanyColorKit(companyId) {
-    console.log(`createCompanyColorKit: trying to create a new color kit for company ${companyId}`);
+    logger.info(`Attempting to create a new color kit for company ${companyId}`, {
+        companyId: companyId,
+        operation: 'create_company_color_kit_attempt'
+    });
     try {
         const companyColorKitExists = await ColorKitModel.findOne({ company: companyId });
-        const initColorKit = await ColorKitModel.findOne({initColorKit: true})
+        const initColorKit = await ColorKitModel.findOne({ initColorKit: true });
         let colorKit;
+
         if (companyColorKitExists) {
-            console.log(`createCompanyColorKit: company color kit already exists for company ${companyId}`);
+            logger.warn(`Company color kit already exists for company ${companyId}`, {
+                companyId: companyId,
+                operation: 'create_company_color_kit_exists'
+            });
             return { success: false, message: "A company color kit for this company already exists." };
         }
-        if(!initColorKit){
+
+        if (!initColorKit) {
             colorKit = new ColorKitModel({
                 buttonColorValue: "#007BFF",
                 company: companyId,
                 buttonColorHoverValue: "#0056b3",
-                selectedCubeColorValue: "#ffff00", 
-                canvasOnHoverColorValue: "#ff0000", 
+                selectedCubeColorValue: "#ffff00",
+                canvasOnHoverColorValue: "#ff0000",
                 defaultTitle: "Please draw the object currently being displayed.",
                 initColorKit: false
-    
             });
-    
-        }
-        else{
+        } else {
             colorKit = new ColorKitModel({
                 buttonColorValue: initColorKit.buttonColorHoverValue,
                 company: companyId,
                 buttonColorHoverValue: initColorKit.buttonColorHoverValue,
-                selectedCubeColorValue: initColorKit.selectedCubeColorValue, 
-                canvasOnHoverColorValue: initColorKit.canvasOnHoverColorValue, 
+                selectedCubeColorValue: initColorKit.selectedCubeColorValue,
+                canvasOnHoverColorValue: initColorKit.canvasOnHoverColorValue,
                 defaultTitle: initColorKit.defaultTitle,
                 initColorKit: false
-    
             });
-    
         }
-        console.log(`createCompanyColorKit: created new color kit: ${JSON.stringify(colorKit)}`);
+
+        logger.debug(`Created new color kit: ${JSON.stringify(colorKit)}`, {
+            companyId: companyId,
+            operation: 'create_company_color_kit_created'
+        });
+
         const savedColorKit = await colorKit.save();
-        console.log(`createCompanyColorKit: saved new color kit to database: ${JSON.stringify(savedColorKit)}`);
+
+        logger.info(`Saved new color kit to database: ${JSON.stringify(savedColorKit)}`, {
+            companyId: companyId,
+            operation: 'create_company_color_kit_saved'
+        });
 
         return { success: true, message: "Company color kit successfully created.", colorKit: savedColorKit };
 
     } catch (error) {
-        console.error(`createCompanyColorKit: caught error: ${error.message}`);
-        console.error(error);
+        logger.error(`Error creating company color kit for company ${companyId}: ${error.message}`, {
+            companyId: companyId,
+            error: error,
+            operation: 'create_company_color_kit_error'
+        });
     }
 }
 
 module.exports = createCompanyColorKit;
+

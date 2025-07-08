@@ -4,12 +4,13 @@ const nodemailer = require('nodemailer');
 var postmark = require("postmark");
 const emailService = process.env.EMAIL_SERVICE;
 const fromEmail = process.env.EMAIL_FROM;
-
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 async function sendEmail(subject, text, html, toEmail) {
     try {
         logger.info(`Sending email with ${emailService} service`);
         if(process.env.NODE_ENV === "development"){
-            console.log("Development environment detected. Setting NODE_TLS_REJECT_UNAUTHORIZED to 0.");
+            logger.warn("Development environment detected. Setting NODE_TLS_REJECT_UNAUTHORIZED to 0.", { operation: 'send_email' });
             // file deepcode ignore InsecureTLSConfig: <this is a development environment, so we disable TLS verification>
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
         }
