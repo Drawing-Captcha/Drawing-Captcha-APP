@@ -22,7 +22,7 @@ router.get('/ownUser', async (req, res) => {
 router.get('/allUsers', async (req, res) => {
     logger.request(req, `USER: ${req.session.user._id} allUsers endpoint hit`, {
         userId: req.session.user?._id,
-        userRole: req.session.user?.role, 
+        userRole: req.session.user?.role,
         operation: 'get_all_users'
     });
     try {
@@ -217,15 +217,18 @@ router.put('/updateUser', isAuthorizedUpdating, async (req, res) => {
 });
 
 router.delete('/deleteUser', isAuthorizedDeleting, async (req, res) => {
-logger.request(req, `User ${req.session.user._id} with appAdmin: ${req.session.user.appAdmin} is trying to call deleteUser endpoint`, {
+    logger.request(req, `User ${req.session.user._id} with appAdmin: ${req.session.user.appAdmin} is trying to call deleteUser endpoint`, {
         userId: req.session.user?._id,
         userRole: req.session.user?.role,
         targetUserId: req.body.user?._id,
         operation: 'delete_user'
     });
+    const user = req.body.user;
+    let result
+    let initialUser = Boolean(user.initialUser)
+    const userId = sanitizeInput(user._id);
+    const appAdmin = Boolean(user.appAdmin);
     try {
-        const user = req.body.user;
-
         if (!user) {
             logger.warn(`User ${req.session.user._id} with appAdmin: ${req.session.user.appAdmin} is trying to delete a user without user information`, {
                 userId: req.session.user?._id,
@@ -235,34 +238,33 @@ logger.request(req, `User ${req.session.user._id} with appAdmin: ${req.session.u
             return res.status(400).json({ message: 'User information is required' });
         }
 
-        if (user.appAdmin && !user.initialUser && !req.session.user.appAdmin) {
-            logger.warn(`User ${req.session.user._id} with appAdmin: ${req.session.user.appAdmin} is trying to delete a USER: ${user._id} with appAdmin: ${user.appAdmin}`, {
+        if (user.appAdmin && !initialUser && !req.session.user.appAdmin) {
+            logger.warn(`User ${req.session.user._id} with appAdmin: ${req.session.user.appAdmin} is trying to delete a USER: ${userId} with appAdmin: ${appAdmin}`, {
                 userId: req.session.user?._id,
                 userRole: req.session.user?.role,
-                targetUserId: user?._id,
+                targetUserId: userId,
                 operation: 'delete_user'
             })
             return res.status(403).json({ message: 'You are not allowed to delete this user' });
 
         }
 
-        if (user.company === req.session.user.company && !user.initialUser || req.session.user.appAdmin && !user.initialUser) {
-            logger.info(`User ${req.session.user._id} with appAdmin: ${req.session.user.appAdmin} is trying to delete a USER: ${user._id} with appAdmin: ${user.appAdmin}`, {
+        if (user.company === req.session.user.company && !initialUser || req.session.user.appAdmin && !initialUser) {
+            logger.info(`User ${req.session.user._id} with appAdmin: ${req.session.user.appAdmin} is trying to delete a USER: ${userId} with appAdmin: ${appAdmin}`, {
                 userId: req.session.user?._id,
                 userRole: req.session.user?.role,
-                targetUserId: user?._id,
+                targetUserId: userId,
                 operation: 'delete_user'
             })
-            const result = await User.deleteOne({ _id: user._id });
+            result = await User.deleteOne({ _id: userId });
         }
 
-        if (result.deletedCount === 1) {
             if (req.session.user.role != "admin") {
                 req.session.destroy((err) => {
                     if (err) {
-                        logger.error(`Failed to destroy session for USER: ${user._id}`, err, {
+                        logger.error(`Failed to destroy session for USER: ${userId}`, err, {
                             userId: req.session.user?._id,
-                            targetUserId: user?._id,
+                            targetUserId: userId,
                             operation: 'session_destroy'
                         });
                         return res.status(500).json({ message: 'Failed to destroy session', error: err.message });
@@ -276,18 +278,16 @@ logger.request(req, `User ${req.session.user._id} with appAdmin: ${req.session.u
             } else {
                 logger.info(`User: ${user._id} deleted successfully by user ${req.session.user._id}`, {
                     userId: req.session.user?._id,
-                    targetUserId: user?._id,
+                    targetUserId: userId,
                     operation: 'delete_user'
                 });
                 return res.status(200).json({ message: 'User deleted successfully.' });
             }
-        } else {
-            return res.status(500).json({ message: 'Failed to delete the user' });
-        }
+
     } catch (error) {
         logger.error(`An error occurred while deleting the user`, error, {
             userId: req.session.user?._id,
-            targetUserId: user?._id,
+            targetUserId: userId,
             operation: 'delete_user'
         });
         return res.status(500).json({ message: 'An error occurred while deleting the user', error: error.message });
