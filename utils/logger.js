@@ -33,23 +33,51 @@ if (process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
   })
 
   otelProvider.addLogRecordProcessor(new BatchLogRecordProcessor(otlpExporter, {
-    maxExportBatchSize: 10,
-    scheduledDelayMillis: 1000,
+    maxExportBatchSize: 100,
+    scheduledDelayMillis: 100,
   }));
-
 
   class OpenTelemetryTransport extends winston.Transport {
     log(info, callback) {
-      const { level, message, ...meta } = info;
-      const logger = otelProvider.getLogger('default');
-      logger.emit({
-        severityText: level,
-        body: message,
-        attributes: meta,
-      });
+      try {
+        const { level, message, ...meta } = info;
+        const logger = otelProvider.getLogger('default');
+        const serializedMeta = serializeMeta(meta);
+        const logAttributes = {
+          level: level || 'info',
+          message: message || '',
+          ...serializedMeta,
+        };
+        logger.emit({
+          severityText: level,
+          body: message,
+          attributes: logAttributes
+        });
+      } catch (error) {
+        console.error('Error sending log to OpenTelemetry:', error); 8
+      }
       callback();
     }
   }
+
+
+  function serializeMeta(meta) {
+    return Object.entries(meta || {}).reduce((acc, [key, value]) => {
+      if (typeof key === 'symbol') return acc;
+      if (typeof value === 'object' && value !== null) {
+        try {
+          acc[key] = JSON.stringify(value);
+        } catch (err) {
+          acc[key] = String(value); 
+        }
+      } else {
+        acc[key] = value;
+      }
+
+      return acc;
+    }, {});
+  }
+
 
   transports = [
     new winston.transports.Console({
