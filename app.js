@@ -40,6 +40,7 @@ app.use(helmet({
     crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: false
 }))
+app.use(csrf({ cookie: true }));
 app.use(cors({
     origin: async function (origin, callback) {
         try {
