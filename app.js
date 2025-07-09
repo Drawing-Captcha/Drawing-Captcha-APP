@@ -50,7 +50,12 @@ app.use(cors({
             if (origins.includes(origin)) {
                 return callback(null, true);
             } else {
-                return callback(new Error('Not allowed by CORS'));
+                logger.warn(`CORS request from disallowed origin: ${origin} form ip: ${req.ip}`,
+                    {
+                        origin: origin,
+                        ip: req.ip,
+                        operation: 'cors_check'
+                    });
             }
         } catch (error) {
             logger.error('Error fetching allowed origins:', { error: error.message, stack: error.stack });
