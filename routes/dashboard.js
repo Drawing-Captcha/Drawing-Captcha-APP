@@ -975,7 +975,7 @@ router.post("/logout", (req, res) => {
                 });
                 throw err;
             }
-            res.redirect("/");
+            res.status(200).json({ message: "Logout successful" });
         })
     }
     catch (err) {

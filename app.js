@@ -6,7 +6,6 @@ const cors = require('cors');
 const crypto = require("crypto");
 const path = require("path");
 const authMiddleware = require("./middlewares/authMiddleware.js")
-const csrf = require('csurf');
 const passport = require('passport');
 const cookieParser = require('cookie-parser');
 const createModuleLogger = require('./utils/loggerHelper');
@@ -40,7 +39,6 @@ app.use(helmet({
     crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: false
 }))
-app.use(csrf({ cookie: true }));
 app.use(cors({
     origin: async function (origin, callback) {
         try {
@@ -73,10 +71,10 @@ app.use(session({
     saveUninitialized: false,
     store: store,
     cookie: {
-        maxAge: 30 * 60 * 1000, 
+        maxAge: 30 * 60 * 1000,
         secure: process.env.NODE_ENV !== 'DEVELOPMENT',
         httpOnly: true,
-        sameSite: 'strict' 
+        sameSite: 'strict'
     }
 }));
 app.use(passport.initialize())
@@ -124,13 +122,13 @@ app.use((err, req, res, next) => {
         message: err.message || 'No error message provided',
         stack: err.stack || 'No stack trace available',
         name: err.name || 'UnknownError',
-        path: req.originalUrl, 
-        ip: req.ip, 
+        path: req.originalUrl,
+        ip: req.ip,
         method: req.method,
     };
-    
+
     logger.error(`Unhandled error: ${process.env.NODE_ENV === 'DEVELOPMENT' ? err : err.message}`, errorDetails);
-    
+
     res.status(err.status || 500).json({
         error: 'Internal Server Error',
         details: process.env.NODE_ENV === 'DEVELOPMENT' ? errorDetails : undefined,
