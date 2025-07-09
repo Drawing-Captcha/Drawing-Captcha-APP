@@ -88,15 +88,24 @@ router.put('/updateUser', isAuthorizedUpdating, async (req, res) => {
         const userRole = req.session.user.role;
 
         const focusedUser = await User.findById(id);
-
-        if (focusedUser.appAdmin) {
-            logger.warn(`User ${req.session.user._id} with appAdmin: ${req.session.user.appAdmin} is trying to update an appAdmin user of the company ${focusedUser.company}`, {
+        if (focusedUser.appAdmin && !req.session.user.initialUser) {
+            logger.warn(`User ${req.session.user._id} with appAdmin: ${req.session.user.appAdmin} is trying to update an appAdmin user with id ${focusedUser._id}`, {
                 userId: req.session.user?._id,
                 userRole: req.session.user?.role,
                 targetUserId: focusedUser._id,
                 operation: 'update_user'
             })
-            if (!(req.session.user.appAdmin)) return res.status(401).json({ message: 'You are not authorized to perform this action' })
+            return res.status(401).json({ message: 'You are not authorized to perform this action' })
+        }
+
+        if (focusedUser.initialUser && req.session.user._id.toString() !== focusedUser._id.toString()) {
+            logger.warn(`User ${req.session.user._id} with appAdmin: ${req.session.user.appAdmin} is trying to update the initialUser of the company ${focusedUser.company}`, {
+                userId: req.session.user?._id,
+                userRole: req.session.user?.role,
+                targetUserId: focusedUser._id,
+                operation: 'update_user'
+            })
+            return res.status(401).json({ message: 'You are not authorized to perform this action' })
         }
 
         if (focusedUser.authType === "google" || focusedUser.authType === "microsoft") {
