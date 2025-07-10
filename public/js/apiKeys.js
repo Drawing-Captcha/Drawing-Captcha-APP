@@ -1,11 +1,11 @@
 const wrapper = document.querySelector(".stacked-list1_list-wrapper.apiKey");
 const itemPageWrapper = document.querySelector(".itemPageWrapper");
 const createForm = itemPageWrapper.querySelector("form");
-const formName = createForm.querySelector("input");
 const ItemWrapper = document.querySelector(".itemWrapper");
-const toDo = ItemWrapper.querySelector("h3");
 const selectBtn = document.querySelector(".select-btn")
 const companyAccessSection = document.querySelectorAll("#companyAccess")
+const originUrlWrapper = changeDetailsDialog.querySelector("#originUrlWrapper")
+const apiKeyName = changeDetailsDialog.querySelector("#name")
 
 selectBtn.addEventListener("click", () => {
     selectBtn.classList.toggle("open");
@@ -195,23 +195,13 @@ function pushToServer(key, isDelete, element) {
 }
 
 async function addApiKey() {
-    companyAccessSection.forEach(item => {
-        item.style.display = "block"
-    })
-    let noCompaniesShell = document.querySelector(".not-categorized")
-    if(noCompaniesShell){
-        noCompaniesShell.style.display = "none";
-    }
-    toDo.innerHTML = "Add API Key 🔑"
-    toDoLabel.innerHTML = "Key Name:"
-    submitButton.innerHTML = "Add Key"
-    shellLayout.style.display = "none"
-    sectionHeader.style.display = "none"
-    inputName.setAttribute("placeholder", "KeyName")
-    createForm.setAttribute("onsubmit", "submitApi(event); return false;")
-    addFrom()
-
-
+    toDoTitle.innerText = "Add new ApiKey 🔑"
+    ApiKeyNameWrapper.style.display = "block"
+    originUrlWrapper.style.display = "none"
+    toDoText.innerHTML = ""
+    originInput.style = "border: 2px solid black";
+    changeDetailsDialog.setAttribute("onsubmit", "submitApi(event); return false;");
+    displayDialog()
 }
 function addFrom() {
 
@@ -245,9 +235,16 @@ function submitApi(event) {
             selectedCompanies.push(company.getAttribute("obj-id"))
         }
     })
-    console.log( "companies ", selectedCompanies)
+    if (selectedCompanies.length === 0) {
+        alert("Please select one company to add the ApiKey to.")
+        return;
+    }
+    if (!apiKeyName.value || apiKeyName.value.length < 3) {
+        alert("Please enter a valid ApiKey name with at least 3 characters.");
+        return;
+    }
     if (selectedCompanies.length >= 1) {
-        let apiName = formName.value;
+        let apiName = apiKeyName.value;
 
         fetch("/dashboard/apiKey", {
             method: "POST",

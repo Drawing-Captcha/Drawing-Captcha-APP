@@ -20,7 +20,6 @@ const { authLimiter, tokenLimiter, captchaLimiter, testLimiter, dashboardLimiter
 const initializeAppComposer = require("./controllers/initializeAppComposer.js")
 initializeAppComposer()
 const app = express();
-
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static("public"));
@@ -32,7 +31,7 @@ app.use(helmet({
         directives: {
             "script-src": ["'self'", "https://ajax.googleapis.com", "https://d3e54v103j8qbb.cloudfront.net", "'unsafe-inline'"],
             "style-src": ["'self'", "https://fonts.googleapis.com", "https://fonts.gstatic.com", "https://fonts.googleapis.com/css2", "https://fonts.googleapis.com/css", "'unsafe-inline'"],
-            "script-src-attr": ["'self'", "'unsafe-inline'"],
+            "script-src-attr": ["'self'", "'unsafe-inline'"]
         }
     },
     crossOriginEmbedderPolicy: false,
@@ -49,13 +48,13 @@ app.use(cors({
             if (origins.includes(origin)) {
                 return callback(null, true);
             } else {
-                logger.warn(`CORS request from disallowed origin: ${origin} form ip: ${req.ip}`,
+                logger.warn(`CORS request from disallowed origin: ${origin}`,
                     {
                         origin: origin,
-                        ip: req.ip,
                         operation: 'cors_check'
                     });
             }
+            return callback(new Error('Not allowed by CORS'));
         } catch (error) {
             logger.error('Error fetching allowed origins:', { error: error.message, stack: error.stack });
             return callback(new Error('Failed to fetch allowed origins'));
