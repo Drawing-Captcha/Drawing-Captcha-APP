@@ -36,12 +36,12 @@ router.post('/reload', (req, res) => {
                 } else {
                     logger.error("Path traversal attempt detected:", resolvedPath);
                 }
-            }
+            }    
         }
     } catch (err) {
         logger.error("Error while reloading captcha", {
             message: err,
-            stack: err.stack,
+            stack: err.stack, 
             name: err.name,
             path: req.originalUrl,
         });
@@ -80,7 +80,6 @@ router.post("/captchaSettings", async (req, res) => {
     }
 });
 
-// file deepcode ignore NoRateLimitingForExpensiveWebOperation: <is being handled by the captchaLimiter middleware in app.js>
 router.post('/assets', async (req, res) => {
     let globalPool = await initializePool();
     let captchaIdentifier = uuid.v4();
@@ -91,19 +90,27 @@ router.post('/assets', async (req, res) => {
         let savePath;
         let finishedURL;
 
-        const session = req.body.session;
+        let session = req.body.session;
+        if (session && session.uniqueFileName) {
+            uniqueFileName = sanitizeInput(session.uniqueFileName);
+        } else {
+            uniqueFileName = generateUniqueName.generateUniqueName(`${uuid.v4()}.png`);
+        }
+        savePath = `./tmpimg/${uniqueFileName}`;
+        finishedURL = `/tmpimg/${uniqueFileName}`;
+
         if (session) {
             req.session.client = {
                 clientIdentifier: sanitizeInput(session.clientIdentifier),
                 authMethod: sanitizeInput(session.authMethod),
                 clientSpecificData: session.clientSpecificData,
-                uniqueFileName: sanitizeInput(session.uniqueFileName)
+                uniqueFileName: uniqueFileName
             };
         } else {
             req.session.client = {
                 clientIdentifier: captchaIdentifier,
                 authMethod: "drawing-captcha",
-                uniqueFileName: null,
+                uniqueFileName: uniqueFileName,
                 itemAssets: {}
             };
         }
@@ -122,9 +129,7 @@ router.post('/assets', async (req, res) => {
                     tmpContent.push(item);
                 }
             });
-            if (tmpContent.length === 0 || tmpContent === null) {
-                setNotCategorized();
-            }
+            if (tmpContent.length === 0) setNotCategorized();
         } else {
             setNotCategorized();
         }
@@ -160,13 +165,18 @@ router.post('/assets', async (req, res) => {
             maxToleranceOfPool: selectedContent.MaxTolerance,
         };
 
+        req.session.client.itemAssets = {
+            itemTitle: selectedContent.todoTitle,
+            backgroundSize: selectedContent.backgroundSize,
+            finishedURL: finishedURL
+        };
+        req.session.client.uniqueFileName = uniqueFileName;
+        res.json({ client: req.session.client });
+
         if (req.session.captchaSession.imgURL) {
             const imageBase64 = req.session.captchaSession.imgURL;
             const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
             const imageBuffer = Buffer.from(base64Data, 'base64');
-            uniqueFileName = generateUniqueName.generateUniqueName(`${uuid.v4()}.png`);
-
-            savePath = `./tmpimg/${uniqueFileName}`;
 
             fs.writeFile(savePath, imageBuffer, (err) => {
                 if (err) {
@@ -175,7 +185,6 @@ router.post('/assets', async (req, res) => {
                         clientIdentifier: captchaIdentifier,
                         path: savePath
                     });
-                    return res.status(500).json({ error: 'Error saving file.' });
                 } else {
                     logger.info("File successfully saved", {
                         operation: 'save_captcha_image',
@@ -191,21 +200,7 @@ router.post('/assets', async (req, res) => {
                 clientIdentifier: captchaIdentifier,
                 selectedContentId: selectedContent?.ID
             });
-            return res.status(500).json({ error: 'client.imgURL is undefined.' });
         }
-
-        finishedURL = `/tmpimg/${uniqueFileName}`;
-
-        req.session.client.itemAssets = {
-            itemTitle: selectedContent.todoTitle,
-            backgroundSize: selectedContent.backgroundSize,
-            finishedURL: finishedURL
-        };
-
-        req.session.client.uniqueFileName = uniqueFileName;
-
-        res.json({ client: req.session.client });
-
     } catch (err) {
         logger.error("Error getting captcha assets", err, {
             operation: 'get_captcha_assets',
