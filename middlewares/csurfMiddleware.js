@@ -42,7 +42,6 @@ const validateCSRFToken = (req, res, next) => {
 
 const validateCSRFOrExternalKey = async (req, res, next) => {
     try {
-        console
         const uuidRegex = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
         const apiKey = req.body.apiKey;
 
