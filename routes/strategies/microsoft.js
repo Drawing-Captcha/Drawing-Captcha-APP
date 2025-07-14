@@ -5,7 +5,10 @@ const MicrosoftStrategy = require('passport-microsoft').Strategy;
 const UserModel = require("../../models/User.js");
 const csrfMiddleware = require("../../middlewares/csurfMiddleware");
 const path = require('path');
+const sanitizeInput = require("../../services/sanitizeInput.js");
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+const createModuleLogger = require('../../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
   passport.use(new MicrosoftStrategy({
     tenant: process.env.MICROSOFT_TENANT_ID || 'common',
@@ -57,6 +60,7 @@ if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
   });
 
   router.get('/',
+    // file deepcode ignore NoRateLimitingForLogin: <is being handled by the socialAuthLimiter middleware in app.js>
     passport.authenticate('microsoft', {
       prompt: 'select_account',
     })
@@ -68,6 +72,10 @@ if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
       req.session.user = req.user;
       req.session.isAuth = true;
       res.redirect('/');
+      logger.info(`User: ${req.session.user._id} logged in with Microsoft with email: ${sanitizeInput(req.user.email)}, IPAddress: ${sanitizeInput(req.ip)}`, {
+        operation: 'login',
+        email: sanitizeInput(req.user.email)
+      });
     }
   );
 

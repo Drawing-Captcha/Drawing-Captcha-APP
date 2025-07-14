@@ -1,14 +1,24 @@
 const RegisterKeyModel = require("../models/RegisterKey.js")
-
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 async function deleteRegisterKey(companyId) {
     try {
-        console.log(`Register Key for company ID ${companyId} wird gelöscht.`);
+        logger.info(`Deleting register key for company ID ${companyId}`, {
+            companyId: companyId,
+            operation: 'delete_register_key'
+        });
         const registerKey = await RegisterKeyModel.findOneAndDelete({ Company: companyId });
         if (!registerKey) {
-            console.log(`Kein Register Key für die Firma ${companyId} gefunden.`);
+            logger.info(`No register key found for company ${companyId}`, {
+                companyId: companyId,
+                operation: 'delete_register_key_not_found'
+            });
         }
     } catch (error) {
-        console.error(`Fehler beim Löschen des Register Keys für Firma ${companyId}:`, error);
+        logger.error(`Error deleting register key for company ${companyId}:`, error, {
+            companyId: companyId,
+            operation: 'delete_register_key_error'
+        });
     }
 }
 

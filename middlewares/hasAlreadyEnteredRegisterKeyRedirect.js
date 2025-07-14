@@ -8,7 +8,7 @@ async function hasAlreadyEnteredRegisterKeyRedirect(req, res, next) {
             next();
         }   
         else{
-            res.redirect("/dashboard");
+            res.status(302).redirect("/dashboard");
         }
     } catch (err) {
         console.error(err);

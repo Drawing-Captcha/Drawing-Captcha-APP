@@ -1,57 +1,84 @@
-const ApiKeyModel = require("../models/ApiKey.js")
-const OriginModel = require("../models/AllowedOrigins.js")
+const ApiKeyModel = require("../models/ApiKey.js");
+const OriginModel = require("../models/AllowedOrigins.js");
 const crypto = require("crypto");
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 const generateCSRFToken = (req, res, next) => {
     if (!req.session.csrfToken) {
-        if (req.path === '/login' || req.path === '/register' || req.path === '/callback' || req.path === '/callback') {
-            if (!req.session) {
-                req.session = {};
-            }
+        if (req.path === '/login' || req.path === '/register') {
             const csrfToken = crypto.randomBytes(16).toString('hex');
-            res.cookie('mycsrfToken', csrfToken);
             req.session.csrfToken = csrfToken;
-            console.log("given token: ", csrfToken);
+            res.cookie('mycsrfToken', csrfToken, { httpOnly: true, secure: true });
+            logger.info(`CSRF Token generated for path: ${req.path} and IP: ${req.ip}`, {
+                operation: 'generate_csrf_token',
+                path: req.path,
+                token: csrfToken
+            });
 
         }
-        next();
     }
     next();
-}
+};
 
 const validateCSRFToken = (req, res, next) => {
     const csrfToken = req.cookies.mycsrfToken;
     if (req.session.csrfToken === csrfToken && req.session.csrfToken != null && csrfToken != null) {
-        console.log("token validation successfull")
+        logger.info(`CSRF token validated for path: ${req.path} and IP: ${req.ip}`, {
+            operation: 'validate_csrf_token',
+            path: req.path,
+            token: csrfToken
+        })
         next();
     } else {
-        console.log("Session Token not valid: ", req.session.csrfToken);
-        res.redirect("/");
+        logger.warn(`CSRF token validation failed for path: ${req.path} and IP: ${req.ip}`, {
+            operation: 'validate_csrf_token',
+            path: req.path,
+            token: csrfToken
+        })
+        res.redirect("/login");
     }
-}
+};
 
 const validateCSRFOrExternalKey = async (req, res, next) => {
-    let failed = false;
     try {
         const uuidRegex = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
         const apiKey = req.body.apiKey;
+
         if (!apiKey || !uuidRegex.test(apiKey)) {
-            res.status(405).json({ error: "Not allowed" });
-            return;
+            logger.warn(`Invalid API key: ${apiKey}, from IP: ${req.ip} and path: ${req.path}`, {
+                operation: 'validate_api_key',
+                apiKey: apiKey,
+                ip: req.ip
+            })
+            return res.status(400).json({ error: "Invalid API key" });
         }
-        let doesExist = await ApiKeyModel.findOne({ apiKey: apiKey });
+
+        const doesExist = await ApiKeyModel.findOne({ apiKey: { $eq: apiKey } });
 
         if (doesExist) {
-            let originRelation = await OriginModel.find({ companies: { $in: doesExist.companies }, allowedOrigin: req.headers.origin });
+            const originRelation = await OriginModel.find({
+                companies: { $in: doesExist.companies },
+                allowedOrigin: req.headers.origin
+            });
+
             if (originRelation.length === 0) {
-                failed = true;
-                console.info("Origin header validateCSRFOrExternalKey: ", req.headers.origin)
-                res.status(403).json({ error: "Origin not allowed" });
-                return;
+                logger.warn( `Origin not allowed, with this apiKey: ${apiKey}, from IP: ${req.ip} and path: ${req.path}`, {
+                    apiKey: apiKey,
+                    origin: req.headers.origin,
+                    operation: 'validate_api_key'
+                })
+                return res.status(403).json({ error: "Origin not allowed, with this apiKey" });
             }
+
             req.session.authMethod = "apiKey";
             req.session.apiKey = apiKey;
 
+            logger.info(`API key validated for path: ${req.path} and IP: ${req.ip}`,{
+                operation: 'validate_api_key',
+                path: req.path,
+                apiKey: apiKey
+            })
             next();
         } else {
             const CSRFToken = req.cookies.mycsrfToken;
@@ -59,20 +86,33 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
             if (req.session.csrfToken === CSRFToken && req.session.csrfToken != null && CSRFToken != null) {
                 req.session.authMethod = "csrfToken";
 
+                logger.info(`CSRF token validated for path: ${req.path} and IP: ${req.ip}`,{
+                    operation: 'validate_csrf_or_external_key',
+                    path: req.path,
+                    token: CSRFToken
+                })
                 next();
             } else {
-                failed = true;
+                logger.warn(`CSRF Token or API Key validation failed for path: ${req.path} and IP: ${req.ip}`,{
+                    operation: 'validate_csrf_or_external_key',
+                    path: req.path,
+                    token: CSRFToken
+                })
                 res.status(403).json({ error: "CSRF Token or API Key validation failed" });
             }
         }
     } catch (error) {
-        console.error('Error during API key validation:', error);
+        logger.error({
+            error: error.message,
+            stack: error.stack,
+            operation: 'validate_api_key'
+        }, "Error during API key validation");
         res.status(500).json({ error: "Internal Server Error" });
     }
-}
+};
 
 module.exports = {
     generateCSRFToken,
     validateCSRFToken,
     validateCSRFOrExternalKey
-}
+};

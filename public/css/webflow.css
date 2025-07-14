@@ -1826,7 +1826,7 @@ section .full-width-404 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-height: -webkit-fill-available;
+  max-height: 100%;
   gap: 4em;
   overflow: hidden;
 

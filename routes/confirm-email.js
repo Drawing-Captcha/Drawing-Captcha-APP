@@ -7,6 +7,9 @@ const emailService = process.env.EMAIL_SERVICE;
 const csrfMiddleware = require("../middlewares/csurfMiddleware");
 const sanitizeInput = require('../services/sanitizeInput.js');
 const isValidEmail = require('../services/isValidEmail.js');
+const xss = require('xss');
+
+// file deepcode ignore NoRateLimitingForExpensiveWebOperation: <is being handled by the emailConfirmationLimiter middleware in app.js>
 router.get('/', async (req, res) => {
     let { token } = req.query;
     token = sanitizeInput(token);
@@ -27,10 +30,9 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', csrfMiddleware.validateCSRFToken, async (req, res) => {
-    let { email } = req.body;
-    email = sanitizeInput(email);
+    let email = sanitizeInput(req.body.email);
     try {
-        if(isValidEmail(email) === false){
+        if (isValidEmail(email) === false) {
             req.session.ResendMailMessage = "Invalid email address.";
             req.session.isSuccessfullResending = false;
             return res.status(400).redirect("/resendEmailVerification");
@@ -47,12 +49,13 @@ router.post('/', csrfMiddleware.validateCSRFToken, async (req, res) => {
             return res.status(400).redirect("/resendEmailVerification");
         }
         const token = generateEmailConfirmationToken();
-        const confirmationLink = `http://${req.headers.host}/confirm-email?token=${token}`;
+        const host = xss(req.headers.host);
+        const confirmationLink = `http://${host}/confirm-email?token=${token}`;
         let emailConfirmationToken = token;
 
         let subject = 'Drawing-Captcha | Email Confirmation';
         let text = `Please click the following link to confirm your email address: ${confirmationLink}`;
-        let html = `<div style="width: 100%; height: fit-content; display: flex; align-items: center; justify-content: center;"><img src="https://docs.drawing-captcha.com/media/3yih32u5/drawing-captcha_small.png?width=240&v=1db77deb55dccb0" styles="width: 100px; height: 100px;"></div><h1>Confirm your Email for ${req.headers.host} Drawing Captcha App</h1><p>Please click the following link to confirm your email address: <a href="${confirmationLink}">Confirm Email here</a></p>`;
+        let html = `<div style="width: 100%; height: fit-content; display: flex; align-items: center; justify-content: center;"><img src="https://docs.drawing-captcha.com/media/3yih32u5/drawing-captcha_small.png?width=240&v=1db77deb55dccb0" style="width: 100px; height: 100px;"></div><h1>Confirm your Email for ${host} Drawing Captcha App</h1><p>Please click the following link to confirm your email address: <a href="${confirmationLink}">Confirm Email here</a></p>`;
 
         await sendEmail(subject, text, html, email);
         user.emailConfirmationToken = emailConfirmationToken;
@@ -63,7 +66,7 @@ router.post('/', csrfMiddleware.validateCSRFToken, async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.send("An error occurred while rensending verification to a email. Please try again later.");
+        res.send("An error occurred while resending verification email. Please try again later.");
     }
 });
 

@@ -803,6 +803,7 @@ function logout(){
                 return;
             }
           } else {
+            // file deepcode ignore ArrayMethodOnNonArray: <special case for objects>
             var keys = _.keys(obj);
             for (var i = 0, length = keys.length; i < length; i++) {
               if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker)
@@ -6116,6 +6117,7 @@ function logout(){
         return function(collection, predicate, fromIndex) {
           var iterable = Object(collection);
           if (!isArrayLike(collection)) {
+            // file deepcode ignore WrongNumberOfArguments: <frontend function not used>
             var iteratee = baseIteratee(predicate, 3);
             collection = keys(collection);
             predicate = function(key) {
@@ -12872,6 +12874,7 @@ function logout(){
           }
           if (siteId) {
             data.handler = true ? exportedSubmitWebflow : (() => {
+              // file deepcode ignore AttrAccessOnNull: <specific js>
               const hostedSubmitHandler = null.default;
               return hostedSubmitHandler(reset, loc, Webflow, collectEnterpriseTrackingCookies, preventDefault, findFields, alert, findFileUploads, disableBtn, siteId, afterSubmit, $, formUrl);
             })();

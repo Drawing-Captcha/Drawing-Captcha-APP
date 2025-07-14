@@ -11,19 +11,23 @@ const registerKeyModel = require("../models/RegisterKey.js")
 const isPasswordStrong = require("../services/isStrongPassword.js");
 const sendEmail = require('../services/sendEmail.js');
 const generateEmailConfirmationToken = require("../services/generateEmailConfirmationToken.js");
-const { send } = require('process');
 const emailService = process.env.EMAIL_SERVICE;
 let basicAuth = process.env.BASIC_AUTH === undefined || process.env.BASIC_AUTH === null ? true : process.env.BASIC_AUTH == 'true' ?? true;
-
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 if (basicAuth) {
-    router.post("/login", csrfMiddleware.validateCSRFToken, async (req, res) => {
+    router.post("/login", async (req, res) => {
+        logger.info(`Tried to log in with basicAuth with email: ${sanitizeInput(req.body.email)}, IPAddress: ${sanitizeInput(req.ip)}`, {
+            email: sanitizeInput(req.body.email),
+            operation: 'login'
+        });
         try {
-            const { email, password } = req.body;
-            const cleanedMail = sanitizeInput(email);
+            const email = sanitizeInput(req.body.email);
+            const password = sanitizeInput(req.body.password);
             let user = null;
-            if (isValidEmail(cleanedMail)) {
-                user = await UserModel.findOne({ email: cleanedMail });
+            if (isValidEmail(email)) {
+                user = await UserModel.findOne({ email: email });
             }
             if (!user) {
                 req.session.message = "Incorrect username or password.";
@@ -49,20 +53,30 @@ if (basicAuth) {
 
             req.session.save((err) => {
                 if (err) {
-                    console.error("Error saving session:", err);
+                    logger.error("Error saving session", err, {
+                        userId: email,
+                        operation: 'session.save'
+                    });
                     return res.status(500).json({ message: 'An error occurred while saving the session' });
                 }
                 res.redirect('/dashboard');
             });
         } catch (error) {
-            console.error("Error during login process:", error);
-            res.status(500).json({ message: 'An internal server error occurred.' });
+            logger.error(`Error during login process with user email: ${sanitizeInput(req.body.email)}`, error, {
+                operation: 'login',
+                email: sanitizeInput(req.body.email)
+            });
+            res.status(500).json({ message: 'An internal server error occurred during login.' });
         }
     })
 }
 
 router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
     try {
+        logger.info(`Tried to Register in with basicAuth with email: ${sanitizeInput(req.body.email)}, IPAddress: ${sanitizeInput(req.ip)}`, {
+            email: sanitizeInput(req.body.email),
+            operation: 'register'
+        });
         const { username, email, password, registerKey } = {
             username: sanitizeInput(req.body.username),
             email: sanitizeInput(req.body.email),
@@ -78,7 +92,6 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
 
         const returnedKey = registerKeyDB.RegisterKey;
         const companyKeyId = registerKeyDB.Company;
-
 
         req.session.RegisterMessage = "";
 
@@ -101,12 +114,12 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
 
             if (emailService) {
                 const token = generateEmailConfirmationToken();
-                const confirmationLink = `http://${req.headers.host}/confirm-email?token=${token}`;
+                const confirmationLink = `http://${xss(req.headers.host)}/confirm-email?token=${token}`;
                 let emailConfirmationToken = token;
 
                 let subject = 'Drawing-Captcha | Email Confirmation';
                 let text = `Please click the following link to confirm your email address: ${confirmationLink}`;
-                let html = `<div style="width: 100%; height: fit-content; display: flex; align-items: center; justify-content: center;"><img src="https://docs.drawing-captcha.com/media/3yih32u5/drawing-captcha_small.png?width=240&v=1db77deb55dccb0" styles="width: 100px; height: 100px;"></div><h1>Confirm your Email for ${req.headers.host} Drawing Captcha App</h1><p>Please click the following link to confirm your email address: <a href="${confirmationLink}">Confirm Email here</a></p>`;
+                let html = `<div style="width: 100%; height: fit-content; display: flex; align-items: center; justify-content: center;"><img src="https://docs.drawing-captcha.com/media/3yih32u5/drawing-captcha_small.png?width=240&v=1db77deb55dccb0" style="width: 100px; height: 100px;"></div><h1>Confirm your Email for ${xss(req.headers.host)} Drawing Captcha App</h1><p>Please click the following link to confirm your email address: <a href="${confirmationLink}">Confirm Email here</a></p>`;
 
                 await sendEmail(subject, text, html, email);
 
@@ -121,7 +134,7 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
                     emailConfirmationToken,
                     usedRegisterKey: true
                 });
-
+                logger.info(`Registration successful! Email verification link has been sent to ${email}`);
             } else {
                 newUser = new UserModel({
                     username,
@@ -145,7 +158,11 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
         }
 
     } catch (error) {
-        console.error("Error occurred during registration:", error);
+        logger.error("Error occurred during registration", error, {
+            operation: 'register',
+            username: sanitizeInput(req.body.username),
+            email: sanitizeInput(req.body.email)
+        });
         req.session.RegisterMessage = "An error occurred during registration. Please try again.";
         res.status(500).redirect('/register');
     }

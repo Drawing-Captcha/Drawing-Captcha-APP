@@ -1,21 +1,31 @@
 const UserModel = require("../models/User.js");
-
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 async function setUserRelationToReadOnly(companyId) {
-    console.log(`Setting all users with company ID: ${companyId} to Read Only`);
+    logger.info(`Setting all users with company ID: ${companyId} to Read Only`, {
+        companyId: companyId,
+        operation: 'set_user_read_only'
+    });
 
     try {
         const alluser = await UserModel.find({company: companyId})
-        console.log("allUsers: ", alluser)
         const users = await UserModel.updateMany(
             { company: companyId },
             { $set: { role: "read" } }
         );
 
-        console.log(`Successfully set ${users} users with company ID: ${companyId} to Read Only`);
+        logger.info(`Successfully set ${users.nModified} users with company ID: ${companyId} to Read Only`, {
+            companyId: companyId,
+            userCount: users.nModified,
+            operation: 'set_user_read_only_success'
+        });
 
     } catch (error) {
-        console.error(`An error occurred while setting all users with company ID: ${companyId} to Read Only`, error);
+        logger.error(`An error occurred while setting all users with company ID: ${companyId} to Read Only`, error, {
+            companyId: companyId,
+            operation: 'set_user_read_only_error'
+        });
     }
 }
 

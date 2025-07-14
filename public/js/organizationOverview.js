@@ -337,7 +337,6 @@ function resetCheckboxes() {
     })
 }
 
-
 async function changeDetails(e) {
     let allCompaniesData = await getCompanies();
     let elementCompany = allCompaniesData.allCompanies.find(company => e.company === company.companyId);
@@ -349,7 +348,7 @@ async function changeDetails(e) {
     btnText.innerHTML = "No company selected"
     items.forEach(item => {
         if (e.company === item.getAttribute("obj-id")) {
-            btnText.innerHTML = elementCompany.name + " Selected"
+            btnText.textContent = elementCompany.name + " Selected"
             item.classList.add("checked")
         }
     })
@@ -478,7 +477,6 @@ passwordInput.addEventListener("input", () => {
     }
 });
 
-
 function deleteUser(user) {
     if (!confirm("Are you sure you want to delete the User: " + user.username + "?")) {
         return;
@@ -496,6 +494,7 @@ function deleteUser(user) {
                     alert(data.message);
                 }
                 if (data.redirect) {
+                    // file deepcode ignore OR: <this is frontend code>
                     window.location.href = data.redirect;
                 }
                 location.reload();
@@ -618,7 +617,6 @@ function createCompanyAdminSection(company) {
     `;
 }
 
-
 async function buildCompanyShells() {
     let data = await getCompanies()
     const allCompanies = data.allCompanies;
@@ -642,7 +640,6 @@ async function buildCompanyShells() {
     await getAllUser();
 
 }
-
 
 
 document.getElementById('changeDetailsForm').addEventListener('submit', submitForm);

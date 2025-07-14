@@ -6,57 +6,20 @@ const cors = require('cors');
 const crypto = require("crypto");
 const path = require("path");
 const authMiddleware = require("./middlewares/authMiddleware.js")
-const csrf = require('csurf');
 const passport = require('passport');
 const cookieParser = require('cookie-parser');
-const connectDB = require("./config/db.js")
-const deleteAndLog = require("./services/deleteAndLog.js")
-const deleteAllFilesInDir = require("./services/deleteAllFilesInDir.js");
-const { pool, deletedBin, initializeAllowedOrigins, initializeRegisterKey } = require("./controllers/initializeController.js")
-const createInitCaptcha = require("./config/createInitCaptcha.js")
-const generateNewRegisterKey = require("./services/generateRegisterKey.js")
-const configInitDomain = require("./config/configInitDomain.js")
-const createInitColorKit = require("./config/createInitColorKit.js")
-const createDirectory = require("./services/createDirectory.js")
-const configureJWTSecret = require("./config/configJWTSecret.js")
+const createModuleLogger = require('./utils/loggerHelper');
+const logger = createModuleLogger(__filename);
+const { initializeAllowedOrigins, initializeRegisterKey } = require("./controllers/initializeController.js")
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
-const cleanSessions = require("./crons/cleanSessions.js");
 const store = require("./models/store.js")
 const csrfMiddleware = require("./middlewares/csurfMiddleware.js")
-const rateLimit = require("express-rate-limit");
 const port = process.env.PORT;
 const hasEnteredRegisterKey = require("./middlewares/hasEnteredRegisterKey.js");
-const cleanTokens = require("./crons/cleanTokens.js");
-createDirectory()
-connectDB()
-createInitCaptcha()
-createInitColorKit()
-configInitDomain()
-configureJWTSecret()
-
-setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
-setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
-setInterval(() => {
-    console.log('Running session cleanup...');
-    cleanSessions();
-}, 1000 * 60 * 60)
-setInterval(() => {
-    console.log('Running token cleanup...');
-    cleanTokens();
-}, 1000 * 60 * 5);
-
-
-async function initialize() {
-    await pool
-    await deletedBin
-}
-
-initialize().then(() => {
-    console.log("src initialized")
-})
-
+const { authLimiter, tokenLimiter, captchaLimiter, testLimiter, dashboardLimiter, socialAuthLimiter, emailConfirmationLimiter, siteVerifyLimiter } = require("./middlewares/rateLimiter.js")
+const initializeAppComposer = require("./controllers/initializeAppComposer.js")
+initializeAppComposer()
 const app = express();
-deleteAllFilesInDir("./tmpimg").then(console.log("All files deleted in ./tmpimg"))
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static("public"));
@@ -64,33 +27,17 @@ app.use('/tmpimg', express.static('tmpimg'));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+        directives: {
+            "script-src": ["'self'", "https://ajax.googleapis.com", "https://d3e54v103j8qbb.cloudfront.net", "'unsafe-inline'"],
+            "style-src": ["'self'", "https://fonts.googleapis.com", "https://fonts.gstatic.com", "https://fonts.googleapis.com/css2", "https://fonts.googleapis.com/css", "'unsafe-inline'"],
+            "script-src-attr": ["'self'", "'unsafe-inline'"]
+        }
+    },
     crossOriginEmbedderPolicy: false,
     crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: false
 }))
-const csrfProtection = csrf({ cookie: true });
-
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 40,
-    message: "Too Many Request's try later again"
-});
-const tokenLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 50,
-    message: "Too Many Request's try later again"
-});
-const captchaLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 200,
-    message: "Too Many Request's try later again"
-});
-const testLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 150,
-    message: "Too Many Request's try later again"
-});
 app.use(cors({
     origin: async function (origin, callback) {
         try {
@@ -101,16 +48,20 @@ app.use(cors({
             if (origins.includes(origin)) {
                 return callback(null, true);
             } else {
-                return callback(new Error('Not allowed by CORS'));
+                logger.warn(`CORS request from disallowed origin: ${origin}`,
+                    {
+                        origin: origin,
+                        operation: 'cors_check'
+                    });
             }
+            return callback(new Error('Not allowed by CORS'));
         } catch (error) {
-            console.error('Error fetching allowed origins:', error);
+            logger.error('Error fetching allowed origins:', { error: error.message, stack: error.stack });
             return callback(new Error('Failed to fetch allowed origins'));
         }
     },
     credentials: true
 }));
-
 app.set("view engine", "ejs")
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -119,7 +70,10 @@ app.use(session({
     saveUninitialized: false,
     store: store,
     cookie: {
-        maxAge: 4 * 60 * 60 * 1000
+        maxAge: 30 * 60 * 1000,
+        secure: process.env.NODE_ENV !== 'DEVELOPMENT',
+        httpOnly: true,
+        sameSite: 'strict'
     }
 }));
 app.use(passport.initialize())
@@ -134,57 +88,66 @@ const testConnectionRoutes = require("./routes/testConnection.js")
 const confirmEmail = require("./routes/confirm-email.js");
 const registerKeyRoutes = require("./routes/registerKey.js")
 const siteVerifyCallback = require("./routes/siteVerifyCallback.js");
-const { error } = require("console");
+
 if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
     const MicrosoftStrategy = require("./routes/strategies/microsoft.js")
-    app.use('/api/auth/microsoft', MicrosoftStrategy)
+    app.use('/api/auth/microsoft', socialAuthLimiter, MicrosoftStrategy)
 }
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     const GoogleStrategy = require("./routes/strategies/google.js")
-    app.use('/api/auth/google', GoogleStrategy)
+    app.use('/api/auth/google', socialAuthLimiter, GoogleStrategy)
 }
-
 app.use('/', indexRoutes);
-app.use('/auth', authLimiter, authRoutes)
+app.use('/auth', authLimiter, csrfMiddleware.validateCSRFToken, authRoutes)
 app.use('/captcha', captchaLimiter, csrfMiddleware.validateCSRFOrExternalKey, captchaRoutes)
-app.use('/dashboard', authMiddleware, csrfMiddleware.validateCSRFToken ,hasEnteredRegisterKey, dashboardRoutes)
-app.use('/user', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, userRoutes)
-app.use('/company', authMiddleware, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey,companyRoutes)
-app.use('/registerKey', authMiddleware, csrfMiddleware.validateCSRFToken, registerKeyRoutes)
+app.use('/dashboard', dashboardLimiter, csrfMiddleware.validateCSRFToken, authMiddleware, hasEnteredRegisterKey, dashboardRoutes)
+app.use('/user', dashboardLimiter, csrfMiddleware.validateCSRFToken, authMiddleware, hasEnteredRegisterKey, userRoutes)
+app.use('/company', dashboardLimiter, csrfMiddleware.validateCSRFToken, authMiddleware, hasEnteredRegisterKey, companyRoutes)
+app.use('/registerKey', dashboardLimiter, csrfMiddleware.validateCSRFToken, authMiddleware, registerKeyRoutes)
 app.use('/test', testLimiter, testConnectionRoutes)
-app.use("/confirm-email", confirmEmail)
-app.use("/siteVerify", tokenLimiter, csrfMiddleware.validateCSRFOrExternalKey ,siteVerifyCallback)
+app.use("/confirm-email", emailConfirmationLimiter, confirmEmail)
+app.use("/siteVerify", siteVerifyLimiter, csrfMiddleware.validateCSRFOrExternalKey, siteVerifyCallback)
 
 app.use((req, res, next) => {
-    if (!res.headersSent) {
-        res.redirect('/404');
+    if (res.statusCode === 404) {
+        return res.redirect('/404');
     }
+    next();
 });
 
 app.use((err, req, res, next) => {
-    console.error(new Date().toLocaleString(), 'Unhandled error:', err, "in", req.originalUrl, "from", req.ip, "with method", req.method);
-    res.status(500).json({
-        message: 'Internal Server Error',
-        error: 'An unexpected error occurred'
+    const errorDetails = {
+        message: err.message || 'No error message provided',
+        stack: err.stack || 'No stack trace available',
+        name: err.name || 'UnknownError',
+        path: req.originalUrl,
+        ip: req.ip,
+        method: req.method,
+    };
+
+    logger.error(`Unhandled error: ${process.env.NODE_ENV === 'DEVELOPMENT' ? err : err.message}`, errorDetails);
+
+    res.status(err.status || 500).json({
+        error: 'Internal Server Error',
+        details: process.env.NODE_ENV === 'DEVELOPMENT' ? errorDetails : undefined,
     });
-})
+});
 
 app.listen(port, async () => {
     try {
-        console.log(`Server Running on port: ${port}`);
+        logger.info(`Server Running on port: ${port}`);
         store.collection.deleteMany({}, (err) => {
             if (err) {
-                console.error('Error while trying to delete Sessions:', err);
+                logger.error('Error while trying to delete Sessions:', { error: err.message, stack: err.stack });
             } else {
-                console.log('All Sessions successfully.');
+                logger.info('All Sessions cleared successfully.');
             }
         });
-        let message = await initializeRegisterKey();
-        console.log(message)
+        await initializeRegisterKey();
     }
     catch (err) {
-        console.error('Error clearing session store:', err);
+        logger.error('Error clearing session store:', { error: err.message, stack: err.stack });
     }
 
 })

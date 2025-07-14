@@ -3,9 +3,7 @@ const xss = require('xss');
 const mongoSanitize = require('mongo-sanitize');
 
 function sanitizeInput(input) {
-    let sanitized = validator.escape(input);
-
-    sanitized = xss(sanitized);
+    let sanitized = xss(input);
 
     sanitized = mongoSanitize(sanitized);
 

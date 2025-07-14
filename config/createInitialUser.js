@@ -2,12 +2,17 @@ const UserModel = require("../models/User.js");
 const bcrypt = require("bcryptjs")
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 async function createInitialUser() {
     try {
         const existingInitialUser = await UserModel.findOne({ initialUser: true });
         if (existingInitialUser) {
-            console.log("InitialUser user already exists");
+            logger.info("InitialUser user already exists", {
+                operation: 'create_initial_user',
+                userId: existingInitialUser._id
+            });
             return;
         }
 
@@ -24,10 +29,16 @@ async function createInitialUser() {
         });
 
         await newUser.save();
-        console.log("InitialUser user created successfully");
+        logger.info("InitialUser user created successfully", {
+            operation: 'create_initial_user',
+            userId: newUser._id
+        });
     }
     catch (error) {
-        console.error("Error occurred during admin initialization:", error);
+        logger.error("Error occurred during admin initialization:", {
+            error: error,
+            operation: 'create_initial_user'
+        });
     }
 }
 

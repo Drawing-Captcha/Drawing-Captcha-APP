@@ -5,36 +5,64 @@ const { sanitizeFilter } = require("mongoose");
 const callbackTokenModel = require("../models/CallbackToken.js");
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 const JWTExpiration = process.env.JWT_TOKEN_EXPIRATION ?? 5;
 
 router.post("/callback", async (req, res) => {
     try {
         if (!req.body.token) {
-            console.warn("SiteVerifyCallback: No token provided");
+            logger.warn("SiteVerifyCallback: No token provided", {
+                operation: 'site_verify_callback',
+                ip: req.ip
+            });
             return res.status(400).json({ isValid: false, message: "No token provided" });
         }
-        console.log("SiteVerifyCallback: Received callback request with token: ", req.body.token, " and origin: ", req.headers.origin);
+        logger.info(`SiteverifyCallback Received token from IP: ${req.ip} and path: ${req.path} and origin: ${req.headers.origin}`, {
+            operation: 'site_verify_callback',
+            ip: req.ip,
+            token: req.body.token
+        })
         const token = sanitizeFilter(req.body.token);
         const callbackTokenDB = await callbackTokenModel.findOne({ token: token });
         const decodedToken = await decodeJWTToken(token);
         if (!decodedToken) {
-            console.warn("SiteVerifyCallback: Invalid token");
+            logger.warn(`SiteVerifyCallback Invalid token from IP: ${req.ip} and path: ${req.path} and origin: ${req.headers.origin}`, {
+                operation: 'site_verify_callback',
+                ip: req.ip
+            })
             return res.status(401).json({ isValid: false, message: "Invalid token" });
         }
         if (Date.now() - decodedToken.issuedAt > JWTExpiration * 60 * 1000) {
-            console.warn("SiteVerifyCallback: Token deprecated");
+            logger.warn(`SiteVerifyCallback Token: ${token} expired from IP: ${req.ip} and path: ${req.path} and origin: ${req.headers.origin}`, {
+                operation: 'site_verify_callback',
+                ip: req.ip,
+                token: token
+            })
             return res.status(400).json({ isValid: false, message: 'Invalid token' });
         }
         if (callbackTokenDB) {
-            console.warn("SiteVerifyCallback: Token already used");
+            logger.warn(`SiteVerifyCallback Token: ${token} already used from IP: ${req.ip} and path: ${req.path} and origin: ${req.headers.origin}`, {
+                operation: 'site_verify_callback',
+                ip: req.ip,
+                token: token
+            })
             return res.status(400).json({ isValid: false, message: 'Invalid token' });
         }
         if (!callbackTokenDB) {
             const callbackToken = new callbackTokenModel({ token: token, issuedAt: decodedToken.issuedAt, origin: req.headers.origin });
             await callbackToken.save();
-            console.log("SiteVerifyCallback: Token saved to database");
+            logger.info(`SiteVerifyCallback Token: ${token} saved from IP: ${req.ip} and path: ${req.path} and origin: ${req.headers.origin}`, {
+                operation: 'site_verify_callback',
+                ip: req.ip,
+                token: token
+            })
         }
-        console.log("SiteVerifyCallback: Callback successful");
+        logger.info(`SiteVerifyCallback: Callback successful from IP: ${req.ip} and path: ${req.path} and origin: ${req.headers.origin}`, {
+            operation: 'site_verify_callback',
+            ip: req.ip,
+            token: token
+        })
         res.json({ isValid: true, message: "Callback successful" });
     } catch (error) {
         console.error("SiteVerifyCallback:", error);

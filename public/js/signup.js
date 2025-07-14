@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const veryStrongLength = 12;
       const hasUpperCase = /[A-Z]/.test(password);
       const hasLowerCase = /[a-z]/.test(password);
-      const hasNumbers = /[0-9]/.test(password);
+      const hasNumbers = /\d/.test(password);
       const hasSpecialChars = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
       let strength = 0;

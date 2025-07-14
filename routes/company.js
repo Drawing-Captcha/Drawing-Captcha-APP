@@ -1,10 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const CompanyModel = require("../models/Company.js")
-const CaptchaModel = require("../models/Captcha.js")
-const csrfMiddleware = require("../middlewares/csurfMiddleware");
-const authMiddleware = require("../middlewares/authMiddleware");
-const notReadOnly = require("../middlewares/notReadOnly.js")
 const deleteAllRelations = require("../services/deleteAllCompanyRelation.js")
 const createCompanyRegisterKey = require("../services/createCompanyRegisterKey.js")
 const createCompanyColorKit = require("../services/createCompanyColorKit.js")
@@ -12,44 +8,110 @@ const crypto = require("crypto");
 const createAllowedOrigin = require('../services/createAllowedOrigin.js');
 const isAppAdmin = require("../middlewares/isAppAdmin.js")
 const isAdmin = require("../middlewares/adminMiddleware.js")
-const isCompanyRelation = require("../services/companyRelationMiddleware.js");
 const isRelatedToCompany = require('../services/companyRelationMiddleware.js');
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
+const proofRegexOrigins = require("../services/proofRegexOrigins.js")
+const sanitizeInput = require("../services/sanitizeInput.js")
 
 router.get('/', async (req, res) => {
+    logger.request(req, `USER:${req.session.user._id} get companies request with role: ${req.session.user.role}`, {
+        userRole: req.session.user?.role,
+        isAppAdmin: req.session.user?.appAdmin,
+        operation: 'get_companies'
+    });
+
     try {
         const allCompanies = await CompanyModel.find();
         let returnedCompanies = []
-        if(req.session.user.appAdmin){
+        if (req.session.user.appAdmin) {
             returnedCompanies = allCompanies;
-            console.log('returnedCompanies as appAdmin: ', returnedCompanies);
+            logger.info(`Returning all companies for app admin USER:${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin}`, {
+                userId: req.session.user?._id,
+                companyCount: returnedCompanies.length,
+                operation: 'get_companies_admin'
+            });
         }
-        else{
+        else {
             let sessionCompanies = req.session.user.company
-            console.log('sessionCompanies: ', sessionCompanies);
+            logger.info(`USER:${req.session.user._id} Filtering companies for regular user with company ${sessionCompanies}`, {
+                userId: req.session.user?._id,
+                userCompany: sessionCompanies,
+                operation: 'get_companies_user'
+            });
 
             allCompanies.forEach(company => {
-                if(sessionCompanies === company.companyId){
-                    console.log(company)
+                if (sessionCompanies === company.companyId) {
+                    logger.debug(`Company matched user company ${company.companyId} for USER:${req.session.user._id}` , {
+                        companyId: company.companyId,
+                        companyName: company.name
+                    });
                     returnedCompanies.push(company)
                 }
-            })            
-            console.log('returnedCompanies as user: ', returnedCompanies);
+            })
         }
-        console.log("companies that are being returned to the user: ", returnedCompanies)
+
         if (allCompanies) {
-            console.log("Successfully found all Companies: ", returnedCompanies);
+            logger.info(`Successfully retrieved companies for USER:${req.session.user._id}`, {
+                userId: req.session.user?._id,
+                totalCompanies: allCompanies.length,
+                returnedCompanies: returnedCompanies.length,
+                operation: 'get_companies_success'
+            });
         }
-        res.json({allCompanies: returnedCompanies, userRole: req.session.user.role})
+        res.json({ allCompanies: returnedCompanies, userRole: req.session.user.role })
     }
     catch (error) {
-        console.error("Error occurred during admin initialization:", error);
+        logger.error(`Error retrieving companies for USER:${req.session.user._id} with company ${req.session.user.company}`, error, {
+            userId: req.session.user?._id,
+            userRole: req.session.user?.role,
+            operation: 'get_companies'
+        });
+        res.status(500).json({ message: 'An error occurred while retrieving companies' });
     }
 })
 
 router.post('/', isAppAdmin, async (req, res) => {
+    logger.request(req, `Create company request from USER:${req.session.user._id} with name: ${sanitizeInput(req.body.name)}`, {
+        userId: req.session.user?._id,
+        userRole: req.session.user?.role,
+        companyName: sanitizeInput(req.body.name) || "Unknown",
+        operation: 'create_company'
+    });
+    const name = sanitizeInput(req.body.name);
+    const ppURL = sanitizeInput(req.body.ppURL);
+    const originName = sanitizeInput(req.body.originName);
+
     try {
-        let companyExists = await CompanyModel.findOne({ name: req.body.name });
+        if (!name || !originName) {
+            logger.warn(`Missing parameters for creating company from USER: ${req.session.user._id} with role: ${req.session.user.role}`, {
+                userId: req.session.user?._id,
+                userRole: req.session.user?.role,
+                companyName: name,
+                originName: originName,
+                operation: 'create_company_missing_parameters'
+            });
+            
+            return res.status(400).json({ message: "Missing parameters" });
+        }
+        if (proofRegexOrigins(originName).test === false) {
+            logger.warn(`Origin name ${originName} does not match regex for company creation from USER: ${req.session.user._id} with role: ${req.session.user.role}`, {
+                userId: req.session.user?._id,
+                userRole: req.session.user?.role,
+                companyName: name,
+                originName: originName,
+                operation: 'create_company_origin_regex_error'
+            });
+            
+            return res.status(400).json({ message: "Regex error: please define your origin like this schema: https://yourdomain.com" });
+        }
+        let companyExists = await CompanyModel.findOne({ name: name });
         if (companyExists) {
+            logger.warn(`Attempted to create company with existing name for USER: ${req.session.user._id} with role: ${req.session.user.role}`, {
+                userId: req.session.user?._id,
+                companyName: name,
+                operation: 'create_company_duplicate'
+            });
             return res.status(400).json({ message: "A company with this name already exists." });
         }
 
@@ -57,92 +119,177 @@ router.post('/', isAppAdmin, async (req, res) => {
 
         const company = new CompanyModel({
             companyId: randomUUID,
-            name: req.body.name,
-            ppURL: req.body.ppURL
+            name: name,
+            ppURL: ppURL
         });
 
         const registerKeyResult = await createCompanyRegisterKey(randomUUID);
 
         if (!registerKeyResult.success) {
+            logger.error(`Failed to create register key for company ${randomUUID}`, null, {
+                userId: req.session.user?._id,
+                companyName: name,
+                companyId: randomUUID,
+                message: registerKeyResult.message,
+                operation: 'create_company_register_key_failed'
+            });
             return res.status(400).json({ message: registerKeyResult.message });
         }
 
         await company.save();
-        
-        createCompanyColorKit(company.companyId);
-        console.log("originname: ", req.body)
-        createAllowedOrigin(company.companyId, req.body.originName);
 
+        createCompanyColorKit(company.companyId);
+        createAllowedOrigin(company.companyId, originName);
+
+        logger.info(`Company successfully created for USER: ${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin}`, {
+            userId: req.session.user?._id,
+            companyId: company.companyId,
+            companyName: company.name,
+            operation: 'create_company_success'
+        });
         return res.status(201).json({ message: "Company successfully created.", company });
 
     } catch (error) {
-        console.error(error);
+        logger.error(`Error creating company for USER: ${req.session.user._id} with role: ${req.session.user.role}`, error, {
+            userId: req.session.user?._id,
+            companyName: name,
+            operation: 'create_company'
+        });
         return res.status(500).json({ message: "An error occurred while creating the company." });
     }
 });
 
 router.put('/', isAdmin, async (req, res) => {
+    const { companyId, name, ppURL } = {
+        companyId: sanitizeInput(req.body.companyId) || "",
+        name: sanitizeInput(req.body.name) || "",
+        ppURL: sanitizeInput(req.body.ppURL) || ""
+    };
+    logger.request(req, `USER:${req.session.user._id} Update company request on company: ${companyId} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin}`, {
+        userId: req.session.user?._id,
+        userRole: req.session.user?.role,
+        companyId: companyId,
+        operation: 'update_company'
+    });
     try {
-        const { companyId, name, ppURL } = req.body;
+        if (!name && !companyId || !ppURL && !companyId) {
+            logger.warn(`Missing parameters for company update from USER: ${req.session.user._id} with role: ${req.session.user.role} for company: ${companyId}`, {
+                userId: req.session.user?._id,
+                userRole: req.session.user?.role,
+                companyId: companyId,
+                operation: 'update_company_missing_parameters'
+            });
 
-        if(!isRelatedToCompany(req, companyId)){
+            return res.status(400).json({ message: "Missing parameters" });
+        }
+        if (!isRelatedToCompany(req, companyId)) {
+            logger.warn(`Unauthorized company update attempt for company: ${companyId}, from user: ${req.session.user?._id} `, {
+                userId: req.session.user?._id,
+                userRole: req.session.user?.role,
+                companyId: companyId,
+                operation: 'update_company_unauthorized'
+            });
             return res.status(401).json({ message: "Unauthorized" });
-        }
-        if (!companyId) {
-            return res.status(400).json({ message: "Company ID is required." });
-        }
-        if (!name) {
-            return res.status(400).json({ message: "Company name is required." });
         }
 
         const company = await CompanyModel.findOne({ companyId });
         if (!company) {
+                logger.warn(`Company not found for update attempt for company: ${companyId}, from user: ${req.session.user?._id} with role: ${req.session.user.role}`, {
+                userId: req.session.user?._id,
+                companyId: companyId,
+                operation: 'update_company_not_found'
+            });
             return res.status(404).json({ message: "Company not found." });
         }
 
-        company.name = name;
+        const oldName = company.name;
+        company.name = name || company.name;
         company.ppURL = ppURL || company.ppURL;
 
         await company.save();
 
+        logger.info(`Company successfully updated for USER: ${req.session.user._id} with role: ${req.session.user.role} for company: ${companyId}` , {
+            userId: req.session.user?._id,
+            companyId: companyId,
+            oldName: oldName,
+            newName: name || company.name,
+            operation: 'update_company_success'
+        });
         res.status(200).json({ message: "Company successfully updated.", company });
     } catch (error) {
-        console.error("Error occurred while updating the company:", error);
+        logger.error(`Error updating company: ${companyId} for USER: ${req.session.user._id} with role: ${req.session.user.role}`, error, {
+            userId: req.session.user?._id,
+            companyId: companyId,
+            operation: 'update_company'
+        });
         res.status(500).json({ message: "An error occurred while updating the company." });
     }
 });
 
-router.delete('/', isAdmin, async (req, res) => {
+router.delete('/', isAppAdmin, async (req, res) => {
+    const { companyId, name, ppURL } = {
+        companyId: sanitizeInput(req.body.companyId) || "",
+        name: sanitizeInput(req.body.name) || "",
+        ppURL: sanitizeInput(req.body.ppURL) || ""
+    };
+    logger.request(req, `Delete company: ${companyId} request from USER:${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin}`, {
+        userId: req.session.user?._id,
+        userRole: req.session.user?.role,
+        companyId: companyId,
+        operation: 'delete_company'
+    });
+
     try {
-        const { companyId } = req.body;
-
-        if(!isRelatedToCompany(req, companyId)){
-            return res.status(401).json({ message: "Unauthorized" });
-
-        }
-
         if (!companyId) {
+            logger.warn(`Missing company ID in delete request from USER: ${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin}`, {
+                userId: req.session.user?._id,
+                operation: 'delete_company_invalid'
+            });
             return res.status(400).json({ message: "Company ID is required." });
         }
+        if (!isRelatedToCompany(req, companyId)) {
+            logger.warn(`Unauthorized company delete attempt for company: ${companyId}, from user: ${req.session.user?._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin}`, {
+                userId: req.session.user?._id,
+                userRole: req.session.user?.role,
+                companyId: companyId,
+                operation: 'delete_company_unauthorized'
+            });
+            return res.status(401).json({ message: "Unauthorized" });
+        }
 
-        await deleteAllRelations(companyId)
+        // Log company information before deletion
+        const company = await CompanyModel.findOne({ companyId });
+        if (!company) {
+            logger.warn(`Company: ${companyId} not found for deletion from USER: ${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin}`, {
+                userId: req.session.user?._id,
+                companyId: companyId,
+                operation: 'delete_company_not_found'
+            });
+            return res.status(404).json({ message: "Company not found." });
+        }
+        if (company) {
+            logger.info(`Deleting company : ${company.name} for USER: ${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin}`, {
+                userId: req.session.user?._id,
+                companyId: companyId,
+                companyName: company.name,
+                operation: 'delete_company_start'
+            });
+        }
 
-        // const company = await CompanyModel.findOne({ companyId });
+        await deleteAllRelations(companyId);
 
-        // if (!company) {
-        //     return res.status(404).json({ message: "Company not found." });
-        // }
-
-        // await CompanyModel.deleteOne({ companyId });
-
-        // await CaptchaModel.updateMany(
-        //     { companies: companyId },
-        //     { $pull: { companies: companyId } }
-        // );
-
+        logger.info(`Company: ${companyId} and related resources successfully deleted, from USER: ${req.session.user._id} with role: ${req.session.user.role} and appAdmin: ${req.session.user.appAdmin}`, {
+            userId: req.session.user?._id,
+            companyId: companyId,
+            operation: 'delete_company_success'
+        });
         res.status(200).json({ message: "Company and related captchas successfully updated." });
     } catch (error) {
-        console.error("Error occurred while deleting the company:", error);
+        logger.error("Error deleting company", error, {
+            userId: req.session.user?._id,
+            companyId: companyId,
+            operation: 'delete_company'
+        });
         res.status(500).json({ message: "An error occurred while deleting the company." });
     }
 });

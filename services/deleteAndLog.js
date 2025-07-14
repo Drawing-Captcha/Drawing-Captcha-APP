@@ -1,7 +1,10 @@
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
+
 function deleteAndLog() {
     deleteAllFilesInDir("./tmpimg")
-        .then(() => console.log("All files deleted in ./tmpimg"))
-        .catch(error => console.error("Error deleting files:", error));
+        .then(() => logger.info("All files deleted in ./tmpimg", { directory: "./tmpimg" }))
+        .catch(error => logger.error("Error deleting files", error, { directory: "./tmpimg" }));
 }
 
-module.exports = deleteAndLog
+module.exports = deleteAndLog;

@@ -1,16 +1,27 @@
 const UserModel = require("../models/User.js")
-
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 async function deleteUserRelation(companyId){
     try{
-        console.log(`Deleting user relations with company ID: ${companyId}`)
+        logger.info(`Deleting user relations with company ID: ${companyId}`, {
+            companyId: companyId,
+            operation: 'delete_user_relation'
+        });
         const users = await UserModel.updateMany({ company: companyId }, { $unset: { company: "" } })
 
-        console.log(`Successfully deleted ${users.nModified} users with company ID: ${companyId}`)
+        logger.info(`Successfully deleted ${users.nModified} users with company ID: ${companyId}`, {
+            companyId: companyId,
+            operation: 'delete_user_relation'
+        });
 
     }catch(error){
-        console.error(`An error occurred while deleting user relations with company ID: ${companyId}`, error)
+        logger.error(`An error occurred while deleting user relations with company ID: ${companyId}`, error, {
+            companyId: companyId,
+            operation: 'delete_user_relation_error'
+        });
     }
 
 }
 
 module.exports = deleteUserRelation;
+

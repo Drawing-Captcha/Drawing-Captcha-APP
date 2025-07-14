@@ -1,5 +1,7 @@
 const fs = require("fs");
 const path = require("path");
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 async function deleteAllFilesInDir(dirPath) {
     try {
@@ -12,7 +14,7 @@ async function deleteAllFilesInDir(dirPath) {
 
         await Promise.all(deleteFilePromises);
     } catch (err) {
-        console.log(err);
+        logger.error(`Error deleting files in directory ${dirPath}:`, { error: err.message, stack: err.stack });
     }
 }
 

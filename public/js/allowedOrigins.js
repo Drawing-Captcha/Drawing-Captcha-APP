@@ -1,8 +1,13 @@
-const toDoLabel = createForm.querySelector("label")
-const submitButton = createForm.querySelector("button")
-const inputName = createForm.querySelector("input")
 const sectionHeader = document.querySelector(".section_page-header3")
 const shellLayout = document.querySelector(".section_shell2-layout")
+const changeDetailsDialog = document.getElementById('changeDetailsDialog');
+const closeModalButton = changeDetailsDialog.querySelector(".close-button")
+const toDoTitle = changeDetailsDialog.querySelector(".toDo")
+const nameLabel = changeDetailsDialog.querySelector("#nameLabel")
+const toDoText = changeDetailsDialog.querySelector(".toDoText")
+const originInput = changeDetailsDialog.querySelector("#originInput")
+const ApiKeyNameWrapper = changeDetailsDialog.querySelector("#apiKeyNameWrapper")
+closeModalButton.addEventListener("click", hideDialog)
 let originName;
 async function getOrigins() {
     try {
@@ -97,22 +102,30 @@ async function getOrigins() {
     } catch (error) {
         console.log(error)
     }
-
 }
 
 async function addOrigin() {
-    let noCompaniesShell = document.querySelector(".not-categorized")
-    if (noCompaniesShell) {
-        noCompaniesShell.style.display = "none";
-    }
-    toDo.innerHTML = "Add new Origin 🔒";
-    toDoLabel.innerHTML = "Important: if the domain has a seperate port please define it so you can access it properly."
-    submitButton.innerHTML = "Add Origin"
-    shellLayout.style.display = "none"
-    sectionHeader.style.display = "none"
-    inputName.setAttribute("placeholder", "https://yourdomain.com")
-    createForm.setAttribute("onsubmit", "submitOrigin(event); return false;")
-    addFrom();
+    toDoTitle.innerText = "Add new Origin 🔒"
+    ApiKeyNameWrapper.style.display = "none"
+    toDoText.innerHTML = "Important: if the domain has a seperate port please define it so you can access it properly."
+    originInput.style = "border: 4px solid red";
+    originInput.addEventListener("input", async (event) => {
+        const regexResult = await proofRegexOriginsInput(event.target.value);
+        if (regexResult.test) {
+            event.target.style = "border: 4px solid #34C759;";
+        } else {
+            event.target.style = "border: 4px solid red";
+        }
+    })
+    changeDetailsDialog.setAttribute("onsubmit", "submitOrigin(event); return false;");
+    displayDialog()
+}
+
+function displayDialog() {
+    changeDetailsDialog.showModal();
+}
+function hideDialog() {
+    changeDetailsDialog.close();
 }
 
 async function submitOrigin(event) {
@@ -123,7 +136,15 @@ async function submitOrigin(event) {
             selectedCompanies.push(company.getAttribute("obj-id"))
         }
     })
-    let origin = inputName.value;
+    if (selectedCompanies.length === 0) {
+        alert("Please select one company to add the origin to.")
+        return;
+    }
+    let origin = originInput.value;
+    if (!origin) {
+        alert("Please enter a valid origin.");
+        return;
+    }
     let regexResult = await proofRegexOrigins(origin);
     if (!regexResult.test) {
         return
@@ -195,3 +216,23 @@ function putOrigin(origin, isDelete) {
             alert('An error occurred, while trying to delete Origin. Please try again later.');
         });
 }
+
+function proofRegexOriginsInput(originName) {
+    if (!originName) {
+        return;
+    }
+    originName = originName.trim();
+
+    if (originName.endsWith("/")) {
+        originName = originName.slice(0, -1)
+    }
+    const expression = /^https?:\/\/((([a-z0-9]+)*\.)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}|(localhost|127\.0\.0\.1))(:[0-9]{1,5})?(\/.*)?$/i;
+    const regex = new RegExp(expression);
+
+    if (regex.test(originName)) {
+        return { test: true, value: originName };
+    } else {
+        return { test: false, value: "" };
+    }
+}
+

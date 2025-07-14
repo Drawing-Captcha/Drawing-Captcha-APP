@@ -1,16 +1,17 @@
 const fs = require('node:fs');
+const createModuleLogger = require('../utils/loggerHelper');
+const logger = createModuleLogger(__filename);
 
 const folderName = './tmpimg';
 function createDirectory(){
     try {
         if (!fs.existsSync(folderName)) {
           fs.mkdirSync(folderName);
-          console.log("tmpimg direcory successfully created")
+          logger.info("tmpimg directory successfully created")
         }
-        else console.log("tmpimg directory already exists")
+        else logger.info("tmpimg directory already exists")
       } catch (err) {
-        console.log("tmpimg direcory failed to create")
-        console.error(err);
+        logger.error(`Error creating directory ${folderName}`, { error: err.message, stack: err.stack });
       }
 }
 
