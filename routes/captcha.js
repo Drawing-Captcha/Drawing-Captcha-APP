@@ -224,7 +224,7 @@ router.post('/checkCubes', async (req, res) => {
             sessionExists: !!existSession
         });
 
-        const selectedFields = mongoSanitize(req.body.selectedIds);
+        const selectedFields = Array.isArray(req.body.selectedIds) ? req.body.selectedIds.map(sanitizeInput) : [];
 
         if (!existSession) {
             logger.warn('Client data not found', {
