@@ -180,7 +180,7 @@ Please note to change these variables:
 - DC_ADMIN_EMAIL
 - DC_ADMIN_PASSWORD
 
-3. Final steps:
+#### Final steps:
 ```sh
 docker-compose up --build -d
 ```
