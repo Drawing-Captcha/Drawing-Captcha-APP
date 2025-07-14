@@ -14,10 +14,9 @@ const { pool, deletedBin } = require("./initializeController.js")
 const deleteAllFilesInDir = require("../services/deleteAllFilesInDir.js");
 const createModuleLogger = require('../utils/loggerHelper');
 const logger = createModuleLogger(__filename);
+const cleanTmpImages = require("../services/cleanTmpImages.js");
 
 async function initializeAppComposer() {
-    deleteAllFilesInDir("./tmpimg").then(() => logger.info("All files deleted in ./tmpimg")).catch(err => logger.error('Error deleting files in ./tmpimg:', err));
-
     setInterval(deleteAndLog, 1000 * 60 * 60 * 24);
     setInterval(generateNewRegisterKey, 1000 * 60 * 60 * 24);
     setInterval(() => {
@@ -28,7 +27,7 @@ async function initializeAppComposer() {
         logger.info('Running token cleanup...');
         cleanTokens();
     }, 1000 * 60 * 5);
-
+    setInterval(cleanTmpImages, 1 * 60 * 1000);
     createDirectory()
     connectDB()
     createInitCaptcha()
@@ -45,6 +44,11 @@ async function initializeAppComposer() {
     }).catch(err => {
         logger.error('Error initializing src:', { error: err.message, stack: err.stack });
     })
+    logger.info("Logger Test Info")
+    logger.request("test", "Logger Test Request")
+    logger.error("logger test error")
+    logger.warn("logger test warn")
+    logger.debug("logger test debug")
 }
 
 module.exports = initializeAppComposer
