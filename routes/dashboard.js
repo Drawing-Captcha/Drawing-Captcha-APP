@@ -1216,7 +1216,7 @@ router.post('/allowedOrigins', isAdmin, async (req, res) => {
 
 router.put("/allowedOrigins", isAdmin, async (req, res) => {
     if (req.body.isDelete) {
-        let origin = req.body.allowedOrigin;
+        let origin = sanitizeInput(req.body.allowedOrigin);
         let isOriginDeleted = false;
         try {
             let originExists = await AllowedOriginModel.findOne({ allowedOrigin: origin });
