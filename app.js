@@ -24,7 +24,6 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static("public"));
 app.use('/tmpimg', express.static('tmpimg'));
-app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(helmet({
     contentSecurityPolicy: {
@@ -44,9 +43,6 @@ app.use(cors({
             let origins = await initializeAllowedOrigins();
             if (!origin || origins.includes(origin) || origin === 'null') {
                 return callback(null, true);
-            }
-            if (origins.includes(origin)) {
-                return callback(null, true);
             } else {
                 logger.warn(`CORS request from disallowed origin: ${origin}`,
                     {
@@ -63,7 +59,6 @@ app.use(cors({
     credentials: true
 }));
 app.set("view engine", "ejs")
-app.use(express.urlencoded({ extended: true }));
 app.use(session({
     secret: crypto.randomUUID(),
     resave: false,
@@ -110,10 +105,7 @@ app.use("/confirm-email", emailConfirmationLimiter, confirmEmail)
 app.use("/siteVerify", siteVerifyLimiter, csrfMiddleware.validateCSRFOrExternalKey, siteVerifyCallback)
 
 app.use((req, res, next) => {
-    if (res.statusCode === 404) {
-        return res.redirect('/404');
-    }
-    next();
+    res.status(404).redirect('/404');
 });
 
 app.use((err, req, res, next) => {
