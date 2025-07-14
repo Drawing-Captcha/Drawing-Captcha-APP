@@ -1,13 +1,11 @@
-version: "3.8"
 services:
   dc_node:
     container_name: dc_node
-    image: williamspesic/drawing-captcha-app:latest
+    build: .
     ports:
       - 9091:9091
     networks:
       - dc_network
-      - nginx_default
     depends_on:
       - dc_mongo
     restart: always
@@ -39,7 +37,7 @@ services:
     expose:
       - "27017"
     volumes:
-      - drawing-captcha23:/data/db
+      - drawing-captcha:/data/db
     networks:
       - dc_network
     restart: always
@@ -50,8 +48,6 @@ services:
 
 networks:
   dc_network:
-  nginx_default:
-    external: true
 
 volumes:
-  drawing-captcha23:
+  drawing-captcha:
