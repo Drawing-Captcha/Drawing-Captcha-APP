@@ -815,7 +815,7 @@ router.post("/captchaSettings", isAdmin, async (req, res) => {
         isResetColorKit = sanitizeInput(isResetColorKit);
         company = sanitizeInput(company);
         initColorKit = sanitizeInput(initColorKit);
-        memorizeCaptcha = memorizeCaptcha;
+        memorizeCaptcha = Boolean(memorizeCaptcha);
 
         let companyId = company;
 
@@ -1159,8 +1159,8 @@ router.post('/allowedOrigins', isAdmin, async (req, res) => {
 
     try {
         let message;
-        let originName = req.body.originName;
-        let selectedCompanies = req.body.selectedCompanies;
+        let originName = sanitizeInput(req.body.originName); 
+        let selectedCompanies = Array.isArray(req.body.selectedCompanies) ? req.body.selectedCompanies.map(company => sanitizeInput(company)) : [];
         let regexResult = await proofRegexOrigins(originName);
         if (!regexResult.test) {
             logger.warn(`Invalid origin format from User ${req.session.user._id}, originName: ${originName} and AppAdmin: ${req.session.user.appAdmin}`, {
