@@ -99,15 +99,15 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     app.use('/api/auth/google', socialAuthLimiter, GoogleStrategy)
 }
 app.use('/', indexRoutes);
-app.use('/auth', authLimiter, authRoutes)
+app.use('/auth', authLimiter, csrfMiddleware.validateCSRFToken, authRoutes)
 app.use('/captcha', captchaLimiter, csrfMiddleware.validateCSRFOrExternalKey, captchaRoutes)
-app.use('/dashboard', authMiddleware, dashboardLimiter, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, dashboardRoutes)
-app.use('/user', authMiddleware, dashboardLimiter, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, userRoutes)
-app.use('/company', authMiddleware, dashboardLimiter, csrfMiddleware.validateCSRFToken, hasEnteredRegisterKey, companyRoutes)
-app.use('/registerKey', authMiddleware, dashboardLimiter, csrfMiddleware.validateCSRFToken, registerKeyRoutes)
+app.use('/dashboard', dashboardLimiter, csrfMiddleware.validateCSRFToken, authMiddleware, hasEnteredRegisterKey, dashboardRoutes)
+app.use('/user', dashboardLimiter, csrfMiddleware.validateCSRFToken, authMiddleware, hasEnteredRegisterKey, userRoutes)
+app.use('/company', dashboardLimiter, csrfMiddleware.validateCSRFToken, authMiddleware, hasEnteredRegisterKey, companyRoutes)
+app.use('/registerKey', dashboardLimiter, csrfMiddleware.validateCSRFToken, authMiddleware, registerKeyRoutes)
 app.use('/test', testLimiter, testConnectionRoutes)
 app.use("/confirm-email", emailConfirmationLimiter, confirmEmail)
-app.use("/siteVerify", tokenLimiter, siteVerifyLimiter, csrfMiddleware.validateCSRFOrExternalKey, siteVerifyCallback)
+app.use("/siteVerify", siteVerifyLimiter, csrfMiddleware.validateCSRFOrExternalKey, siteVerifyCallback)
 
 app.use((req, res, next) => {
     if (res.statusCode === 404) {
