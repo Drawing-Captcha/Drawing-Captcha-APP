@@ -615,8 +615,8 @@ router.post("/apiKey", isAdmin, async (req, res) => {
     let message;
     try {
         let name = apiKeyName;
-        let selectedCompanies = req.body.selectedCompanies;
-        let companyId = sanitizeInput(selectedCompanies[0]);
+        let selectedCompanies = Array.isArray(req.body.selectedCompanies) ? req.body.selectedCompanies.map(company => sanitizeInput(company)) : [];
+        let companyId = selectedCompanies[0];
         if (!companyId) {
             logger.warn(`Missing company ID in API key creation request from User ${req.session.user._id}, API key name: ${name}`, {
                 userId: req.session.user?._id,
@@ -994,17 +994,16 @@ router.post('/newValidation', notReadOnly, async (req, res) => {
         componentName: sanitizeInput(req.body.sessionComponentName),
         operation: 'create_new_validation'
     });
-    //Sanitizing Input has to be extended here
     let globalPool = await initializePool();
     const ID = crypto.randomUUID();
-    const validateTrueCubes = req.body.validateTrueCubes;
-    const validateMinCubes = req.body.validateMinCubes;
-    const validateMaxCubes = req.body.validateMaxCubes;
+    const validateTrueCubes = Array.isArray(req.body.validateTrueCubes) ? req.body.validateTrueCubes.map(sanitizeInput) : [];
+    const validateMinCubes = Array.isArray(req.body.validateMinCubes) ? req.body.validateMinCubes.map(sanitizeInput) : [];
+    const validateMaxCubes = Array.isArray(req.body.validateMaxCubes) ? req.body.validateMaxCubes.map(sanitizeInput) : [];
     const componentName = sanitizeInput(req.body.sessionComponentName);
-    const backgroundImage = req.body.backgroundImage;
+    const backgroundImage = sanitizeInput(req.body.backgroundImage);
     const todoTitle = sanitizeInput(req.body.todoTitle);
-    const backgroundSize = req.body.backgroundSize;
-    const selectedCompanies = req.body.selectedCompanies
+    const backgroundSize = sanitizeInput(req.body.backgroundSize);
+    const selectedCompanies = Array.isArray(req.body.selectedCompanies) ? req.body.selectedCompanies.map(sanitizeInput) : [];
 
     let companyId = selectedCompanies[0];
     if (!companyId) {
