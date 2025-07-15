@@ -20,7 +20,6 @@ const { authLimiter, tokenLimiter, captchaLimiter, testLimiter, dashboardLimiter
 const initializeAppComposer = require("./controllers/initializeAppComposer.js")
 initializeAppComposer()
 const app = express();
-app.set('trust proxy', true);
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static("public"));
@@ -68,8 +67,7 @@ app.use(session({
     cookie: {
         maxAge: 30 * 60 * 1000,
         secure: process.env.NODE_ENV !== 'DEVELOPMENT',
-        httpOnly: true,
-        sameSite: 'strict'
+        httpOnly: true
     }
 }));
 app.use(passport.initialize())
