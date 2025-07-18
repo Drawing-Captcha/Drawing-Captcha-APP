@@ -292,7 +292,7 @@ Distributed under the MIT License. See [MIT License](https://opensource.org/lice
 
 ## Contact
 
-Your Name - info@wpesic.dev
+info@wpesic.dev
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
