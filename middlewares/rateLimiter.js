@@ -1,46 +1,53 @@
 const rateLimit = require("express-rate-limit");
 
 const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 40,
+    windowMs: 3 * 60 * 1000, // 3 Minuten
+    max: 20,
     message: "Too Many Request's try later again",
-    delayMs: 1000
+    delayMs: 300
 });
+
 const tokenLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 50,
+    windowMs: 5 * 60 * 1000, // 5 Minuten
+    max: 30,
     message: "Too Many Request's try later again"
 });
+
 const captchaLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    max: 100,
+    windowMs: 3 * 60 * 1000, // 3 Minuten
+    max: 60,
     message: "Too Many Request's try later again"
 });
+
 const testLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
+    windowMs: 5 * 60 * 1000, // 5 Minuten
+    max: 30,
     message: "Too Many Request's try later again"
 });
+
 const dashboardLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
+    windowMs: 5 * 60 * 1000, // 5 Minuten
     max: 100,
     message: "Too Many Request's try later again",
-    delayMs: 2000,
+    delayMs: 500,
     headers: true
 });
+
 const socialAuthLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, 
-    max: 30, 
+    windowMs: 5 * 60 * 1000, // 5 Minuten
+    max: 20, 
     message: "Too Many Request's try later again"
 });
+
 const emailConfirmationLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
+    windowMs: 10 * 60 * 1000, // 10 Minuten
     max: 10,
     message: "Too Many Request's try later again"
 });
+
 const siteVerifyLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    max: 10,
+    windowMs: 10 * 60 * 1000, // 10 Minuten
+    max: 8,
     message: "Too Many Request's try later again"
 });
 
