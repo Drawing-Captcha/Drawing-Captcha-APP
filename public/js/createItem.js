@@ -65,7 +65,7 @@ function updateSliderValue(event) {
 
 function updateBackgroundSize() {
     backgroundSize = rangeInput.value + "%";
-    imageResizeValue.innerHTML = backgroundSize
+    imageResizeValue.textContent = backgroundSize
     var existingStyles = canvas.getAttribute('style')
     var updatedStyles = `${existingStyles} background-size: ${backgroundSize};`
     canvas.setAttribute('style', updatedStyles)
