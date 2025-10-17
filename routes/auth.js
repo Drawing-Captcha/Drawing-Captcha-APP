@@ -114,12 +114,12 @@ router.post('/register', csrfMiddleware.validateCSRFToken, async (req, res) => {
 
             if (emailService) {
                 const token = generateEmailConfirmationToken();
-                const confirmationLink = `http://${xss(req.headers.host)}/confirm-email?token=${token}`;
+                const confirmationLink = `${process.env.APP_URL}/confirm-email?token=${token}`;
                 let emailConfirmationToken = token;
 
                 let subject = 'Drawing-Captcha | Email Confirmation';
                 let text = `Please click the following link to confirm your email address: ${confirmationLink}`;
-                let html = `<div style="width: 100%; height: fit-content; display: flex; align-items: center; justify-content: center;"><img src="https://docs.drawing-captcha.com/media/3yih32u5/drawing-captcha_small.png?width=240&v=1db77deb55dccb0" style="width: 100px; height: 100px;"></div><h1>Confirm your Email for ${xss(req.headers.host)} Drawing Captcha App</h1><p>Please click the following link to confirm your email address: <a href="${confirmationLink}">Confirm Email here</a></p>`;
+                let html = `<div style="width: 100%; height: fit-content; display: flex; align-items: center; justify-content: center;"><img src="https://docs.drawing-captcha.com/media/3yih32u5/drawing-captcha_small.png?width=240&v=1db77deb55dccb0" style="width: 100px; height: 100px;"></div><h1>Confirm your Email for ${process.env.APP_URL.split("//")[1].split("/")[0]} Drawing Captcha App</h1><p>Please click the following link to confirm your email address: <a href="${confirmationLink}">Confirm Email here</a></p>`;
 
                 await sendEmail(subject, text, html, email);
 

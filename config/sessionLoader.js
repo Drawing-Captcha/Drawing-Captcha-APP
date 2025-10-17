@@ -8,13 +8,13 @@ const store = require("../models/store.js")
 
 module.exports = (app) => {
     app.use(session({
-        secret: crypto.randomUUID(),
+        secret: process.env.SESSION_SECRET || crypto.randomUUID(),
         resave: false,
         saveUninitialized: false,
         store: store,
         cookie: {
             maxAge: 30 * 60 * 1000,
-            secure: process.env.NODE_ENV !== 'DEVELOPMENT',
+            secure: (process.env.NODE_ENV || '').toLowerCase() !== 'development',
             httpOnly: true
         }
     }));

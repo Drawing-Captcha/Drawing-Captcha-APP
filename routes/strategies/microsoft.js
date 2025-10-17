@@ -14,7 +14,7 @@ if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
     tenant: process.env.MICROSOFT_TENANT_ID || 'common',
     clientID: process.env.MICROSOFT_CLIENT_ID,
     clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
-    callbackURL: `${process.env.SERVER_DOMAIN}/api/auth/microsoft/callback`,
+    callbackURL: `${process.env.APP_URL}/api/auth/microsoft/callback`,
     scope: ['user.read'],
   },
     async function (accessToken, refreshToken, profile, done) {

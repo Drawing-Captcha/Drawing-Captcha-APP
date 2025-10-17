@@ -9,7 +9,7 @@ async function configInitDomain() {
         const allowedOrigin = await AllowedOriginModel.findOne({ initOrigin: true });
         if (!allowedOrigin) {
             const newOrigin = new AllowedOriginModel({
-                allowedOrigin: process.env.SERVER_DOMAIN,
+                allowedOrigin: process.env.APP_URL,
                 initOrigin: true
             });
             await newOrigin.save();
