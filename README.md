@@ -121,12 +121,13 @@ To learn how to integrate it and enable communication with your Drawing Captcha 
    MONGO_INITDB_DATABASE=drawing-captcha
 
    # For local development
+   # NODE_ENV=development
    # MONGO_URI="mongodb://localhost:7500/drawing-captcha"
    # For deployment
    MONGO_URI="mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@dc_mongo:27017/${MONGO_INITDB_DATABASE}?authSource=admin"
 
    # Enter here your domain where you want to host your Drawing Captcha. Important: enter it with http/https
-   SERVER_DOMAIN="https://yourdomain.com"
+   APP_URL="https://yourdomain.com"
 
    # Port of your server
    PORT=9091
@@ -176,7 +177,7 @@ For more information on the environment variables, refer to the [official docume
 Please note to change these variables:
 - MONGO_INITDB_ROOT_USERNAME
 - MONGO_INITDB_ROOT_PASSWORD
-- SERVER_DOMAIN (if you want to host it somewhere)
+- APP_URL (if you want to host it somewhere)
 - DC_ADMIN_EMAIL
 - DC_ADMIN_PASSWORD
 
@@ -205,7 +206,7 @@ services:
     environment:
       MONGO_URI: ${MONGO_URI}
       PORT: ${PORT}
-      SERVER_DOMAIN: ${SERVER_DOMAIN}
+      APP_URL: ${APP_URL}
       REGISTER_KEY: ${REGISTER_KEY}
       DC_ADMIN_EMAIL: ${DC_ADMIN_EMAIL}
       DC_ADMIN_PASSWORD: ${DC_ADMIN_PASSWORD}

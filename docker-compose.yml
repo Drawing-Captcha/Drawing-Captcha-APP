@@ -12,7 +12,7 @@ services:
     environment:
       MONGO_URI: ${MONGO_URI}
       PORT: ${PORT}
-      SERVER_DOMAIN: ${SERVER_DOMAIN}
+      APP_URL: ${APP_URL}
       REGISTER_KEY: ${REGISTER_KEY}
       DC_ADMIN_EMAIL: ${DC_ADMIN_EMAIL}
       DC_ADMIN_PASSWORD: ${DC_ADMIN_PASSWORD}
