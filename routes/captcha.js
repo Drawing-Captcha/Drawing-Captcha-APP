@@ -309,7 +309,7 @@ router.post('/check-captcha', async (req, res) => {
     const givenSession = req.body.session;
     try {
         const apiKey = sanitizeInput(req.body.apiKey);
-        logger.request(req, `Checking captcha from ${req.ip} with apiKey: ${apiKey}`, {
+        logger.request(req, `Checking captcha from ${req.ip} with apiKey: [REDACTED]`, {
             operation: 'check_captcha',
             clientIdentifier: givenSession?.clientIdentifier,
             apiKey: sanitizeInput(req.body.apiKey) ? '[PRESENT]' : '[MISSING]',
