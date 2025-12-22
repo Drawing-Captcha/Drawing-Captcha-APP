@@ -132,6 +132,10 @@ To learn how to integrate it and enable communication with your Drawing Captcha 
    # Port of your server
    PORT=9091
 
+   # IMPORTANT: Set a strong session secret (required in production)
+   # Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   SESSION_SECRET="CHANGE_THIS_TO_A_RANDOM_SECRET_STRING"
+
    # This will automatically be reset:
    REGISTER_KEY="&&+%&%ajkhdjhWIIWNw7>dajh2gg"
 
@@ -177,8 +181,10 @@ For more information on the environment variables, refer to the [official docume
 Please note to change these variables:
 - MONGO_INITDB_ROOT_USERNAME
 - MONGO_INITDB_ROOT_PASSWORD
+- SESSION_SECRET (REQUIRED for production - generate a strong random string)
 - APP_URL (if you want to host it somewhere)
 - DC_ADMIN_EMAIL
+- DC_ADMIN_PASSWORD
 - DC_ADMIN_PASSWORD
 
 #### Final steps:
@@ -207,6 +213,7 @@ services:
       MONGO_URI: ${MONGO_URI}
       PORT: ${PORT}
       APP_URL: ${APP_URL}
+      SESSION_SECRET: ${SESSION_SECRET}
       REGISTER_KEY: ${REGISTER_KEY}
       DC_ADMIN_EMAIL: ${DC_ADMIN_EMAIL}
       DC_ADMIN_PASSWORD: ${DC_ADMIN_PASSWORD}
