@@ -33,8 +33,8 @@ router.post('/reload', (req, res) => {
                 const resolvedPath = path.resolve(`./tmpimg/${uniqueFileName}`);
                 const baseDir = path.resolve('./tmpimg');
                 
-                // Prevent path traversal attacks
-                if (!resolvedPath.startsWith(baseDir + path.sep) && resolvedPath !== baseDir) {
+                // Prevent path traversal attacks - path must be within baseDir
+                if (!resolvedPath.startsWith(baseDir + path.sep)) {
                     logger.error("Path traversal attempt detected:", {
                         requestedPath: resolvedPath,
                         baseDir: baseDir,
@@ -292,8 +292,8 @@ router.post('/checkCubes', async (req, res) => {
             const resolvedPath = path.resolve(filePath);
             const baseDir = path.resolve('./tmpimg');
             
-            // Prevent path traversal attacks
-            if (!resolvedPath.startsWith(baseDir + path.sep) && resolvedPath !== baseDir) {
+            // Prevent path traversal attacks - path must be within baseDir
+            if (!resolvedPath.startsWith(baseDir + path.sep)) {
                 logger.error("Path traversal attempt detected:", {
                     requestedPath: resolvedPath,
                     baseDir: baseDir,

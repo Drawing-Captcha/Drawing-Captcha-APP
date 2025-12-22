@@ -28,14 +28,14 @@ const validateCSRFToken = (req, res, next) => {
             operation: 'validate_csrf_token',
             path: req.path
             // Token not logged for security
-        })
+        });
         next();
     } else {
         logger.warn(`CSRF token validation failed for path: ${req.path} and IP: ${req.ip}`, {
             operation: 'validate_csrf_token',
             path: req.path
             // Token not logged for security
-        })
+        });
         res.redirect("/login");
     }
 };
@@ -90,14 +90,14 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
                     operation: 'validate_csrf_or_external_key',
                     path: req.path
                     // Token not logged for security
-                })
+                });
                 next();
             } else {
                 logger.warn(`CSRF Token or API Key validation failed for path: ${req.path} and IP: ${req.ip}`,{
                     operation: 'validate_csrf_or_external_key',
                     path: req.path
                     // Token not logged for security
-                })
+                });
                 res.status(403).json({ error: "CSRF Token or API Key validation failed" });
             }
         }
