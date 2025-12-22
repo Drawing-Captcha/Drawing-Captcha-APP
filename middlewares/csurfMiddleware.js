@@ -13,7 +13,7 @@ const generateCSRFToken = (req, res, next) => {
             logger.info(`CSRF Token generated for path: ${req.path} and IP: ${req.ip}`, {
                 operation: 'generate_csrf_token',
                 path: req.path,
-                token: csrfToken
+                tokenPrefix: csrfToken.substring(0, 8) + '...' // Only log token prefix for security
             });
 
         }
@@ -26,15 +26,15 @@ const validateCSRFToken = (req, res, next) => {
     if (req.session.csrfToken === csrfToken && req.session.csrfToken != null && csrfToken != null) {
         logger.info(`CSRF token validated for path: ${req.path} and IP: ${req.ip}`, {
             operation: 'validate_csrf_token',
-            path: req.path,
-            token: csrfToken
+            path: req.path
+            // Token not logged for security
         })
         next();
     } else {
         logger.warn(`CSRF token validation failed for path: ${req.path} and IP: ${req.ip}`, {
             operation: 'validate_csrf_token',
-            path: req.path,
-            token: csrfToken
+            path: req.path
+            // Token not logged for security
         })
         res.redirect("/login");
     }
@@ -46,9 +46,9 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
         const apiKey = req.body.apiKey;
 
         if (!apiKey || !uuidRegex.test(apiKey)) {
-            logger.warn(`Invalid API key: ${apiKey}, from IP: ${req.ip} and path: ${req.path}`, {
+            logger.warn(`Invalid API key format from IP: ${req.ip} and path: ${req.path}`, {
                 operation: 'validate_api_key',
-                apiKey: apiKey,
+                apiKeyProvided: !!apiKey,
                 ip: req.ip
             })
             return res.status(400).json({ error: "Invalid API key" });
@@ -63,8 +63,8 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
             });
 
             if (originRelation.length === 0) {
-                logger.warn( `Origin not allowed, with this apiKey: ${apiKey}, from IP: ${req.ip} and path: ${req.path}`, {
-                    apiKey: apiKey,
+                logger.warn(`Origin not allowed for provided apiKey from IP: ${req.ip} and path: ${req.path}`, {
+                    apiKeyPrefix: apiKey.substring(0, 8) + '...', // Only log prefix for security
                     origin: req.headers.origin,
                     operation: 'validate_api_key'
                 })
@@ -77,7 +77,7 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
             logger.info(`API key validated for path: ${req.path} and IP: ${req.ip}`,{
                 operation: 'validate_api_key',
                 path: req.path,
-                apiKey: apiKey
+                apiKeyPrefix: apiKey.substring(0, 8) + '...' // Only log prefix for security
             })
             next();
         } else {
@@ -88,15 +88,15 @@ const validateCSRFOrExternalKey = async (req, res, next) => {
 
                 logger.info(`CSRF token validated for path: ${req.path} and IP: ${req.ip}`,{
                     operation: 'validate_csrf_or_external_key',
-                    path: req.path,
-                    token: CSRFToken
+                    path: req.path
+                    // Token not logged for security
                 })
                 next();
             } else {
                 logger.warn(`CSRF Token or API Key validation failed for path: ${req.path} and IP: ${req.ip}`,{
                     operation: 'validate_csrf_or_external_key',
-                    path: req.path,
-                    token: CSRFToken
+                    path: req.path
+                    // Token not logged for security
                 })
                 res.status(403).json({ error: "CSRF Token or API Key validation failed" });
             }

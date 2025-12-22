@@ -31,10 +31,22 @@ router.post('/reload', (req, res) => {
             const uniqueFileName = sanitizeInput(session.uniqueFileName ?? "")
             if (uniqueFileName) {
                 const resolvedPath = path.resolve(`./tmpimg/${uniqueFileName}`);
+                const baseDir = path.resolve('./tmpimg');
+                
+                // Prevent path traversal attacks
+                if (!resolvedPath.startsWith(baseDir + path.sep) && resolvedPath !== baseDir) {
+                    logger.error("Path traversal attempt detected:", {
+                        requestedPath: resolvedPath,
+                        baseDir: baseDir,
+                        fileName: uniqueFileName
+                    });
+                    return res.status(400).json({ message: "Invalid file path" });
+                }
+                
                 if (resolvedPath) {
                     deleteFile.deleteFile(resolvedPath);
                 } else {
-                    logger.error("Path traversal attempt detected:", resolvedPath);
+                    logger.error("Path resolution failed:", resolvedPath);
                 }
             }    
         }
@@ -278,10 +290,19 @@ router.post('/checkCubes', async (req, res) => {
         if (existSession.session.client.uniqueFileName) {
             const filePath = `./tmpimg/${existSession.session.client.uniqueFileName}`;
             const resolvedPath = path.resolve(filePath);
-            if (resolvedPath) {
+            const baseDir = path.resolve('./tmpimg');
+            
+            // Prevent path traversal attacks
+            if (!resolvedPath.startsWith(baseDir + path.sep) && resolvedPath !== baseDir) {
+                logger.error("Path traversal attempt detected:", {
+                    requestedPath: resolvedPath,
+                    baseDir: baseDir,
+                    filePath: filePath
+                });
+            } else if (resolvedPath) {
                 await deleteFile.deleteFile(resolvedPath);
             } else {
-                console.error("Path traversal attempt detected:", filePath);
+                logger.error("Path resolution failed:", filePath);
             }
         }
         if (isValid) {
